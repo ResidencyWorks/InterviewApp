@@ -1,8 +1,11 @@
+import { timeOperation } from '@/lib/monitoring/performance'
+import { contentPackValidationService } from '@/lib/services/content-pack-validation'
 import { type NextRequest, NextResponse } from 'next/server'
 
 /**
  * Content pack upload API route handler
- * Handles content pack validation and hot-swapping
+ * Handles content pack validation and hot-swapping with performance monitoring
+ * Target: ≤1s for content pack validation
  * @param request - Next.js request object containing form data with JSON file
  * @returns Promise resolving to NextResponse with validation results or error
  */
@@ -23,30 +26,62 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Read and validate content pack
-    const content = await file.text()
-    let contentPack: any
+    // Time the entire upload and validation process
+    const { result: validationResult } = await timeOperation(
+      'content.upload',
+      async () => {
+        // Read and parse content pack
+        const content = await file.text()
+        let contentPack: any
 
-    try {
-      contentPack = JSON.parse(content)
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON file' }, { status: 400 })
-    }
+        try {
+          contentPack = JSON.parse(content)
+        } catch {
+          throw new Error('Invalid JSON file')
+        }
 
-    // TODO: Implement content pack validation
-    // This is a placeholder for the validation service
-    const validationResult = {
-      valid: true,
-      version: contentPack.version || '1.0.0',
-      timestamp: new Date().toISOString(),
-      message: 'Content pack validation not yet implemented',
-    }
+        // Validate content pack
+        const validation =
+          await contentPackValidationService.validateForHotSwap(contentPack)
+
+        if (!validation.valid) {
+          throw new Error(`Validation failed: ${validation.errors.join(', ')}`)
+        }
+
+        return {
+          valid: validation.valid,
+          version: contentPack.version || '1.0.0',
+          name: contentPack.name || 'Unnamed',
+          timestamp: new Date().toISOString(),
+          metadata: validation.metadata,
+          warnings: validation.warnings,
+          performance: {
+            duration: validation.performance.duration,
+            target: validation.performance.target,
+            targetMet: validation.performance.targetMet,
+          },
+        }
+      },
+      {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      }
+    )
 
     return NextResponse.json(validationResult)
   } catch (error) {
     console.error('Content upload API error:', error)
+
+    // Log performance metrics even for errors
+    if (error && typeof error === 'object' && 'metrics' in error) {
+      console.error('Performance metrics for failed upload:', error.metrics)
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: error instanceof Error ? error.message : 'Internal server error',
+      },
       { status: 500 }
     )
   }

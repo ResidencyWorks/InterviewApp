@@ -1,14 +1,21 @@
+import { timeOperation } from '@/lib/monitoring/performance'
 import { type NextRequest, NextResponse } from 'next/server'
 
 /**
  * Evaluation API route handler
- * Handles AI-powered evaluation of interview responses
+ * Handles AI-powered evaluation of interview responses with performance monitoring
+ * Target: ≤250ms response time
  * @param request - Next.js request object containing response text in JSON body
  * @returns Promise resolving to NextResponse with evaluation results or error
  */
 export async function POST(request: NextRequest) {
   try {
-    const { response } = await request.json()
+    const {
+      response,
+      type = 'text',
+      audio_url,
+      content_pack_id,
+    } = await request.json()
 
     if (!response) {
       return NextResponse.json(
@@ -17,26 +24,61 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // TODO: Implement OpenAI evaluation logic
-    // This is a placeholder for the evaluation service
-    const evaluationResult = {
-      duration: 0,
-      wordCount: response.split(' ').length,
-      wpm: 0,
-      categories: {
-        clarity: 0,
-        structure: 0,
-        content: 0,
-        delivery: 0,
+    // Time the entire evaluation operation
+    const { result: evaluationResult, metrics } = await timeOperation(
+      'api.evaluate',
+      async () => {
+        // TODO: Implement OpenAI evaluation logic
+        // This is a placeholder for the evaluation service
+        const result = {
+          duration: 0,
+          wordCount: response.split(' ').length,
+          wpm: 0,
+          categories: {
+            clarity: 0,
+            structure: 0,
+            content: 0,
+            delivery: 0,
+          },
+          feedback: 'Evaluation service not yet implemented',
+          score: 0,
+          timestamp: new Date().toISOString(),
+        }
+
+        // Simulate processing time for testing
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
+        return result
       },
-      feedback: 'Evaluation service not yet implemented',
-      score: 0,
-      timestamp: new Date().toISOString(),
+      {
+        type,
+        hasAudioUrl: !!audio_url,
+        contentPackId: content_pack_id,
+        responseLength: response.length,
+        wordCount: response.split(' ').length,
+      }
+    )
+
+    // Add performance metadata to response
+    const responseWithMetrics = {
+      ...evaluationResult,
+      performance: {
+        duration: metrics.duration,
+        target: 250,
+        targetMet: metrics.duration <= 250,
+        operation: metrics.operation,
+      },
     }
 
-    return NextResponse.json(evaluationResult)
+    return NextResponse.json(responseWithMetrics)
   } catch (error) {
     console.error('Evaluation API error:', error)
+
+    // Log performance metrics even for errors
+    if (error && typeof error === 'object' && 'metrics' in error) {
+      console.error('Performance metrics for failed request:', error.metrics)
+    }
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
