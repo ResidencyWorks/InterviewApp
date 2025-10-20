@@ -1,0 +1,42 @@
+# Lefthook configuration for InterviewApp
+# See: https://github.com/evilmartians/lefthook
+
+# Pre-commit hooks
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: pnpm biome check --write .
+      glob: "*.{ts,tsx,js,jsx,json,md}"
+      fail_text: "❌ Linting failed. Please fix the issues above."
+      pass_text: "✅ Linting passed"
+
+    format:
+      run: pnpm biome format --write .
+      glob: "*.{ts,tsx,js,jsx,json,md}"
+      fail_text: "❌ Formatting failed. Please fix the issues above."
+      pass_text: "✅ Formatting applied"
+
+    typecheck:
+      run: pnpm tsc --noEmit
+      fail_text: "❌ Type checking failed. Please fix the type errors above."
+      pass_text: "✅ Type checking passed"
+
+# Pre-push hooks
+pre-push:
+  parallel: true
+  commands:
+    test:
+      run: pnpm test
+      fail_text: "❌ Tests failed. Please fix the failing tests before pushing."
+      pass_text: "✅ All tests passed"
+
+    test-e2e:
+      run: pnpm test:e2e
+      fail_text: "❌ E2E tests failed. Please fix the failing tests before pushing."
+      pass_text: "✅ E2E tests passed"
+
+    build:
+      run: pnpm build
+      fail_text: "❌ Build failed. Please fix the build errors before pushing."
+      pass_text: "✅ Build successful"
