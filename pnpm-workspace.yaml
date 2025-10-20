@@ -1,0 +1,15 @@
+# pnpm workspace configuration
+# See: https://pnpm.io/workspaces
+
+packages:
+  # Include all packages in the workspace
+  - 'packages/*'
+  - 'apps/*'
+  - 'tools/*'
+
+  # Exclude specific directories
+  - '!**/node_modules'
+  - '!**/dist'
+  - '!**/build'
+  - '!**/.next'
+  - '!**/coverage'
