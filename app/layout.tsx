@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { PostHogProvider } from '../src/components/PostHogProvider'
 
 export const metadata: Metadata = {
   title: 'Interview Drills - AI-Powered Interview Preparation',
@@ -18,7 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <PostHogProvider>{children}</PostHogProvider>
+      </body>
     </html>
   )
 }

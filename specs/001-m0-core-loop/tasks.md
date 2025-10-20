@@ -61,18 +61,18 @@ description: "Task list for M0 Core Loop – Interview Drills feature implementa
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T021 [P] Implement Supabase authentication utilities in src/lib/auth/
-- [ ] T022 [P] Implement database utilities in src/lib/db/
-- [ ] T023 [P] Implement Redis utilities in src/lib/redis/
-- [ ] T024 [P] Implement OpenAI integration in src/lib/openai/
-- [ ] T025 [P] Implement analytics utilities in src/lib/analytics/
-- [ ] T026 [P] Implement monitoring utilities in src/lib/monitoring/
-- [ ] T027 [P] Create core domain models and interfaces
-- [ ] T028 [P] Setup API route structure and middleware
-- [ ] T029 [P] Configure authentication middleware for protected routes
-- [ ] T030 [P] Setup error handling and logging infrastructure
-- [ ] T031 [P] Configure content pack validation and loading system
-- [ ] T032 [P] Setup evaluation API infrastructure
+- [x] T021 [P] Implement Supabase authentication utilities in src/lib/auth/
+- [x] T022 [P] Implement database utilities in src/lib/db/
+- [x] T023 [P] Implement Redis utilities in src/lib/redis/
+- [x] T024 [P] Implement OpenAI integration in src/lib/openai/
+- [x] T025 [P] Implement analytics utilities in src/lib/analytics/
+- [x] T026 [P] Implement monitoring utilities in src/lib/monitoring/
+- [x] T027 [P] Create core domain models and interfaces
+- [x] T028 [P] Setup API route structure and middleware
+- [x] T029 [P] Configure authentication middleware for protected routes
+- [x] T030 [P] Setup error handling and logging infrastructure
+- [x] T031 [P] Configure content pack validation and loading system
+- [x] T032 [P] Setup evaluation API infrastructure
 - [ ] T033 [P] Configure webhook handling for Stripe integration
 - [ ] T033a [P] Implement performance monitoring for /api/evaluate endpoint
 - [ ] T033b [P] Implement Redis lookup performance validation

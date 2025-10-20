@@ -3,6 +3,7 @@
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Create custom types
 CREATE TYPE user_entitlement_level AS ENUM ('FREE', 'TRIAL', 'PRO');
@@ -22,7 +23,7 @@ CREATE TABLE public.users (
 
 -- User entitlements cache table
 CREATE TABLE public.user_entitlements (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   entitlement_level user_entitlement_level NOT NULL,
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -32,7 +33,7 @@ CREATE TABLE public.user_entitlements (
 
 -- Content packs table
 CREATE TABLE public.content_packs (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   version TEXT NOT NULL,
   content JSONB NOT NULL,
@@ -43,7 +44,7 @@ CREATE TABLE public.content_packs (
 
 -- Evaluation results table
 CREATE TABLE public.evaluation_results (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   content_pack_id UUID REFERENCES public.content_packs(id) ON DELETE SET NULL,
   response_text TEXT,

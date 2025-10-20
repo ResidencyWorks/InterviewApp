@@ -1,45 +1,20 @@
+// This file configures the initialization of Sentry for edge features (middleware, edge routes, and so on).
+// The config you add here will be used whenever one of the edge features is loaded.
+// Note that this config is unrelated to the Vercel Edge Runtime and is also required when running locally.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+
 import * as Sentry from '@sentry/nextjs'
 
-/**
- * Sentry edge runtime configuration
- * Handles edge runtime error monitoring
- */
-
 Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+  dsn: 'https://29f27651e88773d805d40423d4630930@o4510196119699456.ingest.us.sentry.io/4510221835239424',
 
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1,
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: process.env.NODE_ENV === 'development',
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
 
-  // Set release version
-  release: process.env.APP_VERSION || '1.0.0',
-
-  // Set environment
-  environment: process.env.NODE_ENV,
-
-  // Capture unhandled promise rejections
-  // captureUnhandledRejections: true,
-
-  // Configure which URLs to trace
-  tracePropagationTargets: [
-    'localhost',
-    /^https:\/\/.*\.vercel\.app\/api/,
-    /^https:\/\/.*\.supabase\.co/,
-  ],
-
-  // Filter out health check endpoints
-  beforeSend(event, _hint) {
-    // Filter out health check errors
-    if (
-      event.request?.url?.includes('/health') ||
-      event.request?.url?.includes('/ping')
-    ) {
-      return null
-    }
-
-    return event
-  },
+  // Enable sending user PII (Personally Identifiable Information)
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
 })

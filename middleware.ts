@@ -1,66 +1,108 @@
-import { createServerClient } from '@supabase/ssr'
-import { type NextRequest, NextResponse } from 'next/server'
+import { isProtectedPath, isPublicPath } from '@/lib/auth/auth-helpers'
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 /**
- * Next.js middleware for authentication and route protection
- * Handles Supabase session management and protected route access
+ * Protected routes configuration
+ */
+const PROTECTED_ROUTES = [
+  '/dashboard',
+  '/drill',
+  '/profile',
+  '/settings',
+  '/admin',
+]
+
+/**
+ * Public routes configuration
+ */
+const PUBLIC_ROUTES = [
+  '/',
+  '/auth',
+  '/login',
+  '/signup',
+  '/callback',
+  '/api/auth',
+  '/api/health',
+]
+
+/**
+ * Authentication middleware for protected routes
  */
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
+  const { pathname } = request.nextUrl
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          for (const { name, value, options } of cookiesToSet) {
-            response.cookies.set({ name, value, ...options })
-          }
-        },
-      },
+  // Skip middleware for static files and API routes that don't need auth
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/api/health')
+  ) {
+    return NextResponse.next()
+  }
+
+  // Check if route is public
+  if (isPublicPath(pathname, PUBLIC_ROUTES)) {
+    return NextResponse.next()
+  }
+
+  // Check if route is protected
+  if (isProtectedPath(pathname, PROTECTED_ROUTES)) {
+    try {
+      const supabase = createClient()
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
+
+      if (error || !session) {
+        // Redirect to login page
+        const loginUrl = new URL('/auth/login', request.url)
+        loginUrl.searchParams.set('redirectTo', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+
+      // Check if session is expired
+      const now = Math.floor(Date.now() / 1000)
+      if (session.expires_at && session.expires_at < now) {
+        // Try to refresh the session
+        const {
+          data: { session: refreshedSession },
+          error: refreshError,
+        } = await supabase.auth.refreshSession()
+
+        if (refreshError || !refreshedSession) {
+          // Redirect to login page
+          const loginUrl = new URL('/auth/login', request.url)
+          loginUrl.searchParams.set('redirectTo', pathname)
+          return NextResponse.redirect(loginUrl)
+        }
+      }
+
+      // Add user info to headers for API routes
+      const response = NextResponse.next()
+      response.headers.set('x-user-id', session.user.id)
+      response.headers.set('x-user-email', session.user.email || '')
+
+      return response
+    } catch (error) {
+      console.error('Auth middleware error:', error)
+
+      // Redirect to login page on error
+      const loginUrl = new URL('/auth/login', request.url)
+      loginUrl.searchParams.set('redirectTo', pathname)
+      return NextResponse.redirect(loginUrl)
     }
-  )
-
-  // Refresh session if expired - required for Server Components
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // Protected routes that require authentication
-  const protectedRoutes = ['/drill', '/loader']
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  )
-
-  // Auth routes that should redirect if already authenticated
-  const authRoutes = ['/login', '/callback']
-  const isAuthRoute = authRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  )
-
-  // Redirect to login if accessing protected route without session
-  if (isProtectedRoute && !session) {
-    const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
-    return NextResponse.redirect(redirectUrl)
   }
 
-  // Redirect to dashboard if accessing auth routes with session
-  if (isAuthRoute && session) {
-    return NextResponse.redirect(new URL('/drill', request.url))
-  }
-
-  return response
+  return NextResponse.next()
 }
 
+/**
+ * Configure which routes the middleware should run on
+ */
 export const config = {
   matcher: [
     /*
@@ -70,6 +112,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
 }
