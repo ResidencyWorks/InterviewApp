@@ -1,0 +1,500 @@
+openapi: 3.0.3
+info:
+  title: Dev Environment & Tooling API
+  description: API for development environment management and tooling configuration
+  version: 1.0.0
+  contact:
+    name: InterviewApp Team
+    email: dev@interviewapp.com
+
+servers:
+  - url: https://api.interviewapp.com/v1
+    description: Production server
+  - url: https://staging-api.interviewapp.com/v1
+    description: Staging server
+
+paths:
+  /dev-environment/setup:
+    post:
+      summary: Setup development environment
+      description: Initialize development environment with all required tools and configurations
+      operationId: setupDevEnvironment
+      tags:
+        - Development Environment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetupRequest"
+            examples:
+              basic_setup:
+                summary: Basic development setup
+                value:
+                  environment: "local"
+                  tools: ["biome", "lefthook", "vitest", "playwright"]
+                  skipValidation: false
+      responses:
+        "200":
+          description: Environment setup completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupResponse"
+              examples:
+                success:
+                  summary: Successful setup
+                  value:
+                    environmentId: "env_123"
+                    status: "completed"
+                    toolsInstalled: 4
+                    extensionsInstalled: 8
+                    setupDuration: 120
+                    warnings: []
+        "400":
+          description: Bad request - invalid setup parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error during setup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dev-environment/validate:
+    post:
+      summary: Validate development environment
+      description: Validate that all tools and configurations are working correctly
+      operationId: validateDevEnvironment
+      tags:
+        - Development Environment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidationRequest"
+      responses:
+        "200":
+          description: Validation completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationResponse"
+              examples:
+                success:
+                  summary: All validations passed
+                  value:
+                    environmentId: "env_123"
+                    status: "valid"
+                    validations:
+                      [
+                        { tool: "biome", status: "passed", duration: 1.2 },
+                        { tool: "lefthook", status: "passed", duration: 0.8 },
+                      ]
+                partial:
+                  summary: Some validations failed
+                  value:
+                    environmentId: "env_123"
+                    status: "partial"
+                    validations:
+                      [
+                        { tool: "biome", status: "passed", duration: 1.2 },
+                        {
+                          tool: "vitest",
+                          status: "failed",
+                          duration: 5.0,
+                          error: "Test configuration invalid",
+                        },
+                      ]
+        "400":
+          description: Bad request - invalid validation parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dev-environment/status:
+    get:
+      summary: Get environment status
+      description: Get current status of the development environment
+      operationId: getEnvironmentStatus
+      tags:
+        - Development Environment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: environmentId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: ID of the environment to check
+      responses:
+        "200":
+          description: Environment status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentStatusResponse"
+              examples:
+                active:
+                  summary: Active environment
+                  value:
+                    environmentId: "env_123"
+                    status: "active"
+                    tools:
+                      [
+                        {
+                          name: "biome",
+                          version: "1.4.1",
+                          status: "installed",
+                        },
+                        {
+                          name: "lefthook",
+                          version: "1.5.0",
+                          status: "installed",
+                        },
+                      ]
+                    lastValidated: "2025-01-27T10:30:00Z"
+        "404":
+          description: Environment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dev-environment/tools:
+    get:
+      summary: List available tools
+      description: Get list of available development tools and their configurations
+      operationId: listAvailableTools
+      tags:
+        - Development Tools
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [linter, formatter, test, hook, build, package_manager]
+          description: Filter tools by type
+        - name: required
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filter by required tools only
+      responses:
+        "200":
+          description: Tools list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolsListResponse"
+              examples:
+                all_tools:
+                  summary: All available tools
+                  value:
+                    tools:
+                      [
+                        {
+                          id: "biome",
+                          name: "Biome",
+                          type: "linter",
+                          version: "1.4.1",
+                          description: "Fast linter and formatter for JavaScript/TypeScript",
+                          isRequired: true,
+                          installCommand: "pnpm add -D @biomejs/biome",
+                        },
+                        {
+                          id: "lefthook",
+                          name: "Lefthook",
+                          type: "hook",
+                          version: "1.5.0",
+                          description: "Git hooks manager",
+                          isRequired: true,
+                          installCommand: "pnpm add -D lefthook",
+                        },
+                      ]
+        "400":
+          description: Bad request - invalid filter parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SetupRequest:
+      type: object
+      required:
+        - environment
+        - tools
+      properties:
+        environment:
+          type: string
+          description: Environment name
+          example: "local"
+        tools:
+          type: array
+          items:
+            type: string
+          description: List of tools to install
+          example: ["biome", "lefthook", "vitest", "playwright"]
+        skipValidation:
+          type: boolean
+          description: Skip validation after setup
+          default: false
+        forceReinstall:
+          type: boolean
+          description: Force reinstall of existing tools
+          default: false
+
+    SetupResponse:
+      type: object
+      required:
+        - environmentId
+        - status
+        - toolsInstalled
+        - extensionsInstalled
+        - setupDuration
+      properties:
+        environmentId:
+          type: string
+          format: uuid
+          description: ID of the created environment
+          example: "env_123"
+        status:
+          type: string
+          enum: [completed, partial, failed]
+          description: Setup status
+          example: "completed"
+        toolsInstalled:
+          type: number
+          description: Number of tools installed
+          example: 4
+        extensionsInstalled:
+          type: number
+          description: Number of VS Code extensions installed
+          example: 8
+        setupDuration:
+          type: number
+          description: Setup duration in seconds
+          example: 120
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Setup warnings
+          example: ["Tool X version mismatch"]
+
+    ValidationRequest:
+      type: object
+      required:
+        - environmentId
+      properties:
+        environmentId:
+          type: string
+          format: uuid
+          description: ID of the environment to validate
+          example: "env_123"
+        tools:
+          type: array
+          items:
+            type: string
+          description: Specific tools to validate (if not provided, all tools are validated)
+          example: ["biome", "lefthook"]
+
+    ValidationResponse:
+      type: object
+      required:
+        - environmentId
+        - status
+        - validations
+      properties:
+        environmentId:
+          type: string
+          format: uuid
+          description: ID of the validated environment
+          example: "env_123"
+        status:
+          type: string
+          enum: [valid, partial, invalid]
+          description: Overall validation status
+          example: "valid"
+        validations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToolValidation"
+          description: Individual tool validation results
+
+    ToolValidation:
+      type: object
+      required:
+        - tool
+        - status
+        - duration
+      properties:
+        tool:
+          type: string
+          description: Tool name
+          example: "biome"
+        status:
+          type: string
+          enum: [passed, failed, skipped]
+          description: Validation status
+          example: "passed"
+        duration:
+          type: number
+          description: Validation duration in seconds
+          example: 1.2
+        error:
+          type: string
+          description: Error message if validation failed
+          example: "Configuration file not found"
+
+    EnvironmentStatusResponse:
+      type: object
+      required:
+        - environmentId
+        - status
+        - tools
+      properties:
+        environmentId:
+          type: string
+          format: uuid
+          description: ID of the environment
+          example: "env_123"
+        status:
+          type: string
+          enum: [active, inactive, error]
+          description: Environment status
+          example: "active"
+        tools:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToolStatus"
+          description: Status of installed tools
+        lastValidated:
+          type: string
+          format: date-time
+          description: Last validation timestamp
+          example: "2025-01-27T10:30:00Z"
+
+    ToolStatus:
+      type: object
+      required:
+        - name
+        - version
+        - status
+      properties:
+        name:
+          type: string
+          description: Tool name
+          example: "biome"
+        version:
+          type: string
+          description: Installed version
+          example: "1.4.1"
+        status:
+          type: string
+          enum: [installed, outdated, error, missing]
+          description: Tool status
+          example: "installed"
+
+    ToolsListResponse:
+      type: object
+      required:
+        - tools
+      properties:
+        tools:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToolInfo"
+          description: List of available tools
+
+    ToolInfo:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - version
+        - description
+        - isRequired
+        - installCommand
+      properties:
+        id:
+          type: string
+          description: Tool identifier
+          example: "biome"
+        name:
+          type: string
+          description: Tool display name
+          example: "Biome"
+        type:
+          type: string
+          enum: [linter, formatter, test, hook, build, package_manager]
+          description: Tool type
+          example: "linter"
+        version:
+          type: string
+          description: Latest version
+          example: "1.4.1"
+        description:
+          type: string
+          description: Tool description
+          example: "Fast linter and formatter for JavaScript/TypeScript"
+        isRequired:
+          type: boolean
+          description: Whether tool is required
+          example: true
+        installCommand:
+          type: string
+          description: Command to install the tool
+          example: "pnpm add -D @biomejs/biome"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "SETUP_FAILED"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Failed to install required tools"
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error details
+          example:
+            tool: "biome"
+            exitCode: 1
+
+tags:
+  - name: Development Environment
+    description: Development environment management operations
+  - name: Development Tools
+    description: Development tools and configuration operations

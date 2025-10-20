@@ -1,0 +1,52 @@
+# InterviewApp Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-01-27
+
+## Active Technologies
+- TypeScript 5.0+ with strict mode enabled + PostHog, Sentry, Next.js 14, React, Node.js (005-monitoring-analytics)
+- PostHog for analytics data, Sentry for error logs, environment variables for configuration (005-monitoring-analytics)
+
+- (001-m0-core-loop) Next.js 14, TypeScript, Supabase, OpenAI, PostHog, Sentry
+- (002-content-pack-loader) JSON validation, Zod schemas, hot-swap, PostHog analytics, admin UI
+- (003-llm-feedback-engine) OpenAI API, Whisper, GPT-4, Zod validation, Onion Architecture
+- (004-dev-environment-tooling) Devcontainer, pnpm, Biome, lefthook, VS Code extensions, CI/CD
+- (005-monitoring-analytics) PostHog, Sentry, error tracking, analytics
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js 14 App Router
+├── components/            # Reusable UI components
+├── lib/                  # Shared utilities and configurations
+│   └── llm/             # LLM service layer (Onion Architecture)
+├── types/                # TypeScript type definitions
+└── hooks/                # Custom React hooks
+
+tests/
+├── unit/                 # Unit tests (Vitest)
+├── integration/          # Integration tests
+└── e2e/                  # End-to-end tests (Playwright)
+```
+
+## Commands
+
+# Add commands for LLM feedback service
+
+## Code Style
+
+- TypeScript strict mode
+- Biome formatting and linting
+- JSDoc comments for exported functions
+- Onion Architecture for services
+- Test-first development approach
+
+## Recent Changes
+- 005-monitoring-analytics: Added TypeScript 5.0+ with strict mode enabled + PostHog, Sentry, Next.js 14, React, Node.js
+
+- 005-monitoring-analytics: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+
+- 001-m0-core-loop: Added Next.js full-stack structure
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

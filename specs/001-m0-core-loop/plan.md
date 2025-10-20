@@ -7,25 +7,19 @@
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+Build a full-stack interview drill application with magic link authentication, AI-powered evaluation, and real-time content management. The system enables users to practice interview skills through structured drills with immediate AI feedback, while supporting dynamic content updates and comprehensive analytics tracking.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
-
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5.0+ with strict mode enabled
+**Primary Dependencies**: Next.js 14, Supabase, OpenAI API, PostHog, Sentry, shadcn/ui, Tailwind CSS
+**Storage**: Supabase PostgreSQL for user data, Redis (Upstash) for entitlement caching, file system for content packs
+**Testing**: Vitest for unit/integration tests, Playwright for E2E tests
+**Target Platform**: Web application (modern browsers), Vercel deployment
+**Project Type**: Web application (Next.js full-stack)
+**Performance Goals**: /api/evaluate ≤250ms, Redis lookups ≤50ms, content validation ≤1s
+**Constraints**: TypeScript strict mode, 80% test coverage, Biome formatting, lefthook hooks
+**Scale/Scope**: M0 MVP with 3 core user stories, 1 admin story, 5 API endpoints
 
 ## Constitution Check
 
@@ -33,43 +27,43 @@
 
 **Code Quality Gates:**
 
-- [ ] TypeScript strict mode enabled
-- [ ] Biome formatting and linting configured
-- [ ] lefthook hooks configured for pre-commit/pre-push
-- [ ] JSDoc comments planned for all exported functions
+- [x] TypeScript strict mode enabled
+- [x] Biome formatting and linting configured
+- [x] lefthook hooks configured for pre-commit/pre-push
+- [x] JSDoc comments planned for all exported functions
 
 **Architecture Gates:**
 
-- [ ] Onion Architecture pattern identified
-- [ ] Domain layer independence from frameworks confirmed
-- [ ] Interface adapters using DI pattern planned
+- [x] Onion Architecture pattern identified
+- [x] Domain layer independence from frameworks confirmed
+- [x] Interface adapters using DI pattern planned
 
 **Testing Gates:**
 
-- [ ] Test-first approach planned
-- [ ] Vitest configuration planned
-- [ ] 80% coverage target set
-- [ ] Unit and integration test strategy defined
+- [x] Test-first approach planned
+- [x] Vitest configuration planned
+- [x] 80% coverage target set
+- [x] Unit and integration test strategy defined
 
 **Tooling Gates:**
 
-- [ ] pnpm as package manager confirmed
-- [ ] Devcontainer with Node.js LTS, Biome, lefthook planned
-- [ ] No ESLint/Prettier (Biome only)
+- [x] pnpm as package manager confirmed
+- [x] Devcontainer with Node.js LTS, Biome, lefthook planned
+- [x] No ESLint/Prettier (Biome only)
 
 **Performance Gates:**
 
-- [ ] Core loop performance targets defined (≤250ms)
-- [ ] Redis lookup targets defined (≤50ms)
-- [ ] Content validation targets defined (≤1s)
+- [x] Core loop performance targets defined (≤250ms)
+- [x] Redis lookup targets defined (≤50ms)
+- [x] Content validation targets defined (≤1s)
 
 **MCP Integration Gates:**
 
-- [ ] Context7 for specs/plans identified
-- [ ] Supabase for auth/storage/DB planned
-- [ ] Vercel for deployment planned
-- [ ] PostHog for analytics planned
-- [ ] Sentry for error tracking planned
+- [x] Context7 for specs/plans identified
+- [x] Supabase for auth/storage/DB planned
+- [x] Vercel for deployment planned
+- [x] PostHog for analytics planned
+- [x] Sentry for error tracking planned
 
 ## Project Structure
 
@@ -94,43 +88,61 @@ specs/[###-feature]/
 -->
 
 ```
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+# Next.js Full-Stack Web Application
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+├── app/                    # Next.js 14 App Router
+│   ├── (auth)/            # Auth route group
+│   │   ├── login/         # Magic link login page
+│   │   └── callback/      # Auth callback handler
+│   ├── (dashboard)/       # Protected route group
+│   │   ├── drill/         # Main drill interface
+│   │   └── loader/        # Content pack loader (admin)
+│   ├── api/               # API routes
+│   │   ├── auth/          # Auth endpoints
+│   │   ├── evaluate/      # Evaluation endpoint
+│   │   ├── content/       # Content pack endpoints
+│   │   └── webhooks/      # Stripe webhooks
+│   ├── globals.css        # Global styles
+│   └── layout.tsx         # Root layout
+├── components/            # Reusable UI components
+│   ├── ui/               # shadcn/ui components
+│   ├── auth/             # Auth-related components
+│   ├── drill/            # Drill-specific components
+│   └── admin/            # Admin components
+├── lib/                  # Shared utilities and configurations
+│   ├── auth/             # Auth utilities (Supabase)
+│   ├── db/               # Database utilities
+│   ├── redis/            # Redis utilities (Upstash)
+│   ├── openai/           # OpenAI integration
+│   ├── analytics/        # PostHog integration
+│   ├── monitoring/       # Sentry integration
+│   └── validations/      # Zod schemas
+├── types/                # TypeScript type definitions
+└── hooks/                # Custom React hooks
 
 tests/
-├── contract/
-├── integration/
-└── unit/
+├── unit/                 # Unit tests (Vitest)
+├── integration/          # Integration tests
+├── e2e/                  # End-to-end tests (Playwright)
+└── fixtures/             # Test data and mocks
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+# Configuration files
+.devcontainer/            # VS Code devcontainer
+├── devcontainer.json
+└── Dockerfile
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+# Root configuration
+package.json
+pnpm-lock.yaml
+biome.json
+lefthook.yml
+tsconfig.json
+next.config.js
+tailwind.config.js
+.env.example
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Next.js 14 full-stack web application with App Router. Single codebase with clear separation between frontend components, API routes, and shared utilities. Uses modern React patterns with TypeScript throughout.
 
 ## Complexity Tracking
 

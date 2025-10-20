@@ -1,0 +1,754 @@
+openapi: 3.0.3
+info:
+  title: Monitoring & Analytics API
+  description: API for monitoring and analytics event tracking
+  version: 1.0.0
+  contact:
+    name: InterviewApp Team
+    email: dev@interviewapp.com
+
+servers:
+  - url: https://api.interviewapp.com/v1
+    description: Production server
+  - url: https://staging-api.interviewapp.com/v1
+    description: Staging server
+
+paths:
+  /analytics/track:
+    post:
+      summary: Track analytics event
+      description: Track a user action or system event for analytics
+      operationId: trackAnalyticsEvent
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyticsEventRequest"
+            examples:
+              drill_started:
+                summary: Drill started event
+                value:
+                  event: "drill_started"
+                  sessionId: "sess_123"
+                  userId: "user_456"
+                  properties:
+                    questionId: "q_001"
+                    difficulty: "medium"
+                    category: "technical"
+                  context:
+                    browser: "Chrome"
+                    os: "Windows"
+                    device: "desktop"
+                    url: "https://app.interviewapp.com/drill/123"
+              drill_submitted:
+                summary: Drill submitted event
+                value:
+                  event: "drill_submitted"
+                  sessionId: "sess_123"
+                  userId: "user_456"
+                  properties:
+                    questionId: "q_001"
+                    responseLength: 150
+                    timeSpent: 120
+                  context:
+                    browser: "Chrome"
+                    os: "Windows"
+                    device: "desktop"
+      responses:
+        "200":
+          description: Event tracked successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsEventResponse"
+              examples:
+                success:
+                  summary: Event tracked successfully
+                  value:
+                    eventId: "evt_789"
+                    status: "tracked"
+                    timestamp: "2025-01-27T10:30:00Z"
+        "400":
+          description: Bad request - invalid event data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Too many requests - rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /analytics/events:
+    get:
+      summary: Get analytics events
+      description: Retrieve analytics events with filtering and pagination
+      operationId: getAnalyticsEvents
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Filter by user ID
+        - name: sessionId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by session ID
+        - name: event
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              [
+                drill_started,
+                drill_submitted,
+                score_returned,
+                content_pack_loaded,
+              ]
+          description: Filter by event type
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date for filtering
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date for filtering
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Number of events to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of events to skip
+      responses:
+        "200":
+          description: Events retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsEventsResponse"
+        "400":
+          description: Bad request - invalid filter parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /monitoring/errors:
+    post:
+      summary: Report error
+      description: Report an error to the monitoring system
+      operationId: reportError
+      tags:
+        - Monitoring
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorEventRequest"
+            examples:
+              client_error:
+                summary: Client-side error
+                value:
+                  message: "Cannot read property 'id' of undefined"
+                  stack: "TypeError: Cannot read property 'id' of undefined\n    at Component.render (Component.js:15:20)"
+                  severity: "ERROR"
+                  category: "CLIENT_ERROR"
+                  sessionId: "sess_123"
+                  userId: "user_456"
+                  context:
+                    url: "https://app.interviewapp.com/drill/123"
+                    browser: "Chrome"
+                    component: "DrillComponent"
+                    action: "submit_response"
+              server_error:
+                summary: Server-side error
+                value:
+                  message: "Database connection failed"
+                  stack: "Error: Database connection failed\n    at Database.connect (db.js:25:10)"
+                  severity: "CRITICAL"
+                  category: "SERVER_ERROR"
+                  requestId: "req_789"
+                  context:
+                    endpoint: "/api/evaluate"
+                    method: "POST"
+                    userId: "user_456"
+      responses:
+        "200":
+          description: Error reported successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEventResponse"
+        "400":
+          description: Bad request - invalid error data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /monitoring/health:
+    get:
+      summary: Check monitoring health
+      description: Check the health status of monitoring services
+      operationId: checkMonitoringHealth
+      tags:
+        - Monitoring
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Health status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              examples:
+                healthy:
+                  summary: All services healthy
+                  value:
+                    status: "healthy"
+                    services:
+                      posthog:
+                        status: "healthy"
+                        responseTime: 45
+                        lastCheck: "2025-01-27T10:30:00Z"
+                      sentry:
+                        status: "healthy"
+                        responseTime: 32
+                        lastCheck: "2025-01-27T10:30:00Z"
+                degraded:
+                  summary: Some services degraded
+                  value:
+                    status: "degraded"
+                    services:
+                      posthog:
+                        status: "healthy"
+                        responseTime: 45
+                        lastCheck: "2025-01-27T10:30:00Z"
+                      sentry:
+                        status: "degraded"
+                        responseTime: 5000
+                        lastCheck: "2025-01-27T10:30:00Z"
+                        error: "Connection timeout"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /monitoring/config:
+    get:
+      summary: Get monitoring configuration
+      description: Get current monitoring configuration (non-sensitive data only)
+      operationId: getMonitoringConfig
+      tags:
+        - Monitoring
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
+              examples:
+                config:
+                  summary: Monitoring configuration
+                  value:
+                    environment: "production"
+                    debug: false
+                    retention:
+                      errorLogsDays: 90
+                      analyticsDataDays: 365
+                      userDataAnonymizationDays: 30
+                    performance:
+                      maxApiLatencyMs: 50
+                      maxPageLoadMs: 10
+                      enablePerformanceMonitoring: true
+        "403":
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AnalyticsEventRequest:
+      type: object
+      required:
+        - event
+        - sessionId
+      properties:
+        event:
+          type: string
+          enum:
+            [
+              drill_started,
+              drill_submitted,
+              score_returned,
+              content_pack_loaded,
+            ]
+          description: Event type
+          example: "drill_started"
+        userId:
+          type: string
+          format: uuid
+          description: User ID (optional for anonymous events)
+          example: "user_456"
+        sessionId:
+          type: string
+          description: Session identifier
+          example: "sess_123"
+        properties:
+          type: object
+          additionalProperties: true
+          description: Event-specific properties
+          example:
+            questionId: "q_001"
+            difficulty: "medium"
+        context:
+          $ref: "#/components/schemas/EventContext"
+
+    EventContext:
+      type: object
+      properties:
+        browser:
+          type: string
+          description: Browser information
+          example: "Chrome"
+        os:
+          type: string
+          description: Operating system
+          example: "Windows"
+        device:
+          type: string
+          description: Device type
+          example: "desktop"
+        url:
+          type: string
+          format: uri
+          description: URL where event occurred
+          example: "https://app.interviewapp.com/drill/123"
+        referrer:
+          type: string
+          format: uri
+          description: Referring URL
+          example: "https://app.interviewapp.com/dashboard"
+        userAgent:
+          type: string
+          description: User agent string
+          example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        screenResolution:
+          type: string
+          description: Screen resolution
+          example: "1920x1080"
+        timezone:
+          type: string
+          description: User timezone
+          example: "America/New_York"
+
+    AnalyticsEventResponse:
+      type: object
+      required:
+        - eventId
+        - status
+        - timestamp
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          description: Unique event identifier
+          example: "evt_789"
+        status:
+          type: string
+          enum: [tracked, queued, failed]
+          description: Event tracking status
+          example: "tracked"
+        timestamp:
+          type: string
+          format: date-time
+          description: When event was processed
+          example: "2025-01-27T10:30:00Z"
+
+    AnalyticsEventsResponse:
+      type: object
+      required:
+        - events
+        - total
+        - limit
+        - offset
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalyticsEvent"
+          description: List of analytics events
+        total:
+          type: integer
+          description: Total number of events matching filters
+          example: 150
+        limit:
+          type: integer
+          description: Number of events per page
+          example: 50
+        offset:
+          type: integer
+          description: Number of events skipped
+          example: 0
+
+    AnalyticsEvent:
+      type: object
+      required:
+        - id
+        - event
+        - sessionId
+        - timestamp
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique event identifier
+          example: "evt_789"
+        event:
+          type: string
+          description: Event type
+          example: "drill_started"
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+          example: "user_456"
+        sessionId:
+          type: string
+          description: Session identifier
+          example: "sess_123"
+        timestamp:
+          type: string
+          format: date-time
+          description: When event occurred
+          example: "2025-01-27T10:30:00Z"
+        properties:
+          type: object
+          additionalProperties: true
+          description: Event properties
+        context:
+          $ref: "#/components/schemas/EventContext"
+
+    ErrorEventRequest:
+      type: object
+      required:
+        - message
+        - severity
+        - category
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "Cannot read property 'id' of undefined"
+        stack:
+          type: string
+          description: Stack trace
+          example: "TypeError: Cannot read property 'id' of undefined\n    at Component.render (Component.js:15:20)"
+        severity:
+          type: string
+          enum: [CRITICAL, ERROR, WARNING, INFO, DEBUG]
+          description: Error severity level
+          example: "ERROR"
+        category:
+          type: string
+          enum:
+            [
+              CLIENT_ERROR,
+              SERVER_ERROR,
+              NETWORK_ERROR,
+              VALIDATION_ERROR,
+              AUTHENTICATION_ERROR,
+              AUTHORIZATION_ERROR,
+              RATE_LIMIT_ERROR,
+              EXTERNAL_SERVICE_ERROR,
+            ]
+          description: Error category
+          example: "CLIENT_ERROR"
+        userId:
+          type: string
+          format: uuid
+          description: User ID (optional)
+          example: "user_456"
+        sessionId:
+          type: string
+          description: Session ID (optional)
+          example: "sess_123"
+        requestId:
+          type: string
+          description: Request ID (for API errors)
+          example: "req_789"
+        context:
+          $ref: "#/components/schemas/ErrorContext"
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+          description: Error tags for classification
+          example:
+            component: "DrillComponent"
+            action: "submit_response"
+
+    ErrorContext:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL where error occurred
+          example: "https://app.interviewapp.com/drill/123"
+        userAgent:
+          type: string
+          description: User agent string
+          example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        browser:
+          type: string
+          description: Browser information
+          example: "Chrome"
+        os:
+          type: string
+          description: Operating system
+          example: "Windows"
+        device:
+          type: string
+          description: Device type
+          example: "desktop"
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+          example: "user_456"
+        sessionId:
+          type: string
+          description: Session ID
+          example: "sess_123"
+        requestId:
+          type: string
+          description: Request ID
+          example: "req_789"
+        component:
+          type: string
+          description: React component name (for client errors)
+          example: "DrillComponent"
+        action:
+          type: string
+          description: User action that triggered error
+          example: "submit_response"
+        endpoint:
+          type: string
+          description: API endpoint (for server errors)
+          example: "/api/evaluate"
+        method:
+          type: string
+          description: HTTP method (for server errors)
+          example: "POST"
+
+    ErrorEventResponse:
+      type: object
+      required:
+        - errorId
+        - status
+        - timestamp
+      properties:
+        errorId:
+          type: string
+          format: uuid
+          description: Unique error identifier
+          example: "err_789"
+        status:
+          type: string
+          enum: [reported, queued, failed, ignored]
+          description: Error reporting status
+          example: "reported"
+        timestamp:
+          type: string
+          format: date-time
+          description: When error was processed
+          example: "2025-01-27T10:30:00Z"
+        fingerprint:
+          type: string
+          description: Error fingerprint for grouping
+          example: "error_fingerprint_123"
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - services
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall health status
+          example: "healthy"
+        services:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ServiceHealth"
+          description: Health status of individual services
+
+    ServiceHealth:
+      type: object
+      required:
+        - status
+        - responseTime
+        - lastCheck
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Service health status
+          example: "healthy"
+        responseTime:
+          type: number
+          description: Response time in milliseconds
+          example: 45
+        lastCheck:
+          type: string
+          format: date-time
+          description: Last health check timestamp
+          example: "2025-01-27T10:30:00Z"
+        error:
+          type: string
+          description: Error message if service is unhealthy
+          example: "Connection timeout"
+
+    ConfigResponse:
+      type: object
+      required:
+        - environment
+        - debug
+        - retention
+        - performance
+      properties:
+        environment:
+          type: string
+          enum: [development, staging, production]
+          description: Current environment
+          example: "production"
+        debug:
+          type: boolean
+          description: Debug mode enabled
+          example: false
+        retention:
+          $ref: "#/components/schemas/RetentionConfig"
+        performance:
+          $ref: "#/components/schemas/PerformanceConfig"
+
+    RetentionConfig:
+      type: object
+      required:
+        - errorLogsDays
+        - analyticsDataDays
+        - userDataAnonymizationDays
+      properties:
+        errorLogsDays:
+          type: integer
+          description: Error log retention in days
+          example: 90
+        analyticsDataDays:
+          type: integer
+          description: Analytics data retention in days
+          example: 365
+        userDataAnonymizationDays:
+          type: integer
+          description: User data anonymization after days
+          example: 30
+
+    PerformanceConfig:
+      type: object
+      required:
+        - maxApiLatencyMs
+        - maxPageLoadMs
+        - enablePerformanceMonitoring
+      properties:
+        maxApiLatencyMs:
+          type: integer
+          description: Maximum API latency threshold in milliseconds
+          example: 50
+        maxPageLoadMs:
+          type: integer
+          description: Maximum page load threshold in milliseconds
+          example: 10
+        enablePerformanceMonitoring:
+          type: boolean
+          description: Enable performance monitoring
+          example: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid event data provided"
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error details
+          example:
+            field: "event"
+            code: "invalid_enum_value"
+
+tags:
+  - name: Analytics
+    description: Analytics event tracking operations
+  - name: Monitoring
+    description: Error monitoring and health check operations

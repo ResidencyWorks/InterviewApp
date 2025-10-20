@@ -1,0 +1,351 @@
+openapi: 3.0.3
+info:
+  title: LLM Feedback Engine API
+  description: API for AI-powered interview feedback generation
+  version: 1.0.0
+  contact:
+    name: InterviewApp Team
+    email: dev@interviewapp.com
+
+servers:
+  - url: https://api.interviewapp.com/v1
+    description: Production server
+  - url: https://staging-api.interviewapp.com/v1
+    description: Staging server
+
+paths:
+  /evaluate:
+    post:
+      summary: Evaluate interview submission
+      description: Submit interview content for AI-powered feedback generation
+      operationId: evaluateSubmission
+      tags:
+        - Evaluation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluationRequest"
+            examples:
+              text_submission:
+                summary: Text-only submission
+                value:
+                  content: "I believe my strongest technical skill is problem-solving. I enjoy breaking down complex issues into manageable parts and finding creative solutions."
+                  questionId: "q_001"
+                  metadata:
+                    difficulty: "medium"
+                    category: "technical"
+              audio_submission:
+                summary: Audio submission
+                value:
+                  content: "I believe my strongest technical skill is problem-solving..."
+                  audioUrl: "https://storage.interviewapp.com/audio/user123/submission456.wav"
+                  questionId: "q_001"
+                  metadata:
+                    difficulty: "medium"
+                    category: "technical"
+      responses:
+        "200":
+          description: Evaluation completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationResponse"
+              examples:
+                success:
+                  summary: Successful evaluation
+                  value:
+                    submissionId: "sub_123"
+                    feedback:
+                      id: "fb_456"
+                      score: 85
+                      feedback: "Strong technical foundation with clear communication. Consider providing more specific examples of problem-solving techniques."
+                      strengths:
+                        - "Clear communication"
+                        - "Technical knowledge"
+                        - "Structured thinking"
+                      improvements:
+                        - "Provide specific examples"
+                        - "Elaborate on problem-solving process"
+                      generatedAt: "2025-01-27T10:30:00Z"
+                      model: "gpt-4"
+                      processingTimeMs: 1250
+        "400":
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                validation_error:
+                  summary: Validation error
+                  value:
+                    error: "VALIDATION_ERROR"
+                    message: "Content must be at least 10 characters long"
+                    details:
+                      field: "content"
+                      code: "too_small"
+        "401":
+          description: Unauthorized - invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Too many requests - rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                rate_limited:
+                  summary: Rate limited
+                  value:
+                    error: "RATE_LIMITED"
+                    message: "Too many requests. Please try again later."
+                    retryAfter: 60
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                llm_error:
+                  summary: LLM service error
+                  value:
+                    error: "LLM_SERVICE_ERROR"
+                    message: "OpenAI API is currently unavailable"
+                    retryAfter: 300
+
+  /evaluate/{submissionId}/status:
+    get:
+      summary: Get evaluation status
+      description: Check the status of an ongoing evaluation
+      operationId: getEvaluationStatus
+      tags:
+        - Evaluation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the submission to check
+      responses:
+        "200":
+          description: Status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationStatusResponse"
+              examples:
+                processing:
+                  summary: Evaluation in progress
+                  value:
+                    submissionId: "sub_123"
+                    status: "processing"
+                    progress: 0.6
+                    estimatedCompletion: "2025-01-27T10:32:00Z"
+                completed:
+                  summary: Evaluation completed
+                  value:
+                    submissionId: "sub_123"
+                    status: "completed"
+                    feedbackId: "fb_456"
+                    completedAt: "2025-01-27T10:31:45Z"
+        "404":
+          description: Submission not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    EvaluationRequest:
+      type: object
+      required:
+        - content
+        - questionId
+      properties:
+        content:
+          type: string
+          minLength: 10
+          maxLength: 5000
+          description: Text content of the submission
+          example: "I believe my strongest technical skill is problem-solving..."
+        audioUrl:
+          type: string
+          format: uri
+          description: Optional audio file URL for speech-to-text processing
+          example: "https://storage.interviewapp.com/audio/user123/submission456.wav"
+        questionId:
+          type: string
+          minLength: 1
+          description: ID of the interview question being answered
+          example: "q_001"
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional context data
+          example:
+            difficulty: "medium"
+            category: "technical"
+            timeLimit: 300
+
+    EvaluationResponse:
+      type: object
+      required:
+        - submissionId
+        - feedback
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+          description: ID of the evaluated submission
+          example: "sub_123"
+        feedback:
+          $ref: "#/components/schemas/Feedback"
+
+    Feedback:
+      type: object
+      required:
+        - id
+        - score
+        - feedback
+        - strengths
+        - improvements
+        - generatedAt
+        - model
+        - processingTimeMs
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the feedback
+          example: "fb_456"
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Numerical score out of 100
+          example: 85
+        feedback:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          description: Detailed feedback text
+          example: "Strong technical foundation with clear communication..."
+        strengths:
+          type: array
+          items:
+            type: string
+          maxItems: 5
+          description: Array of identified strengths
+          example: ["Clear communication", "Technical knowledge"]
+        improvements:
+          type: array
+          items:
+            type: string
+          maxItems: 5
+          description: Array of suggested improvements
+          example: ["Provide specific examples", "Elaborate on process"]
+        generatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when feedback was generated
+          example: "2025-01-27T10:30:00Z"
+        model:
+          type: string
+          description: LLM model used for generation
+          example: "gpt-4"
+        processingTimeMs:
+          type: number
+          minimum: 0
+          description: Time taken to generate feedback in milliseconds
+          example: 1250
+
+    EvaluationStatusResponse:
+      type: object
+      required:
+        - submissionId
+        - status
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+          description: ID of the submission
+          example: "sub_123"
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, retrying]
+          description: Current status of the evaluation
+          example: "processing"
+        progress:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Progress of the evaluation (0-1)
+          example: 0.6
+        estimatedCompletion:
+          type: string
+          format: date-time
+          description: Estimated completion time
+          example: "2025-01-27T10:32:00Z"
+        feedbackId:
+          type: string
+          format: uuid
+          description: ID of the generated feedback (if completed)
+          example: "fb_456"
+        completedAt:
+          type: string
+          format: date-time
+          description: Actual completion time (if completed)
+          example: "2025-01-27T10:31:45Z"
+        errorMessage:
+          type: string
+          description: Error message (if failed)
+          example: "OpenAI API rate limit exceeded"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Content must be at least 10 characters long"
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error details
+          example:
+            field: "content"
+            code: "too_small"
+        retryAfter:
+          type: number
+          description: Seconds to wait before retrying (if applicable)
+          example: 60
+
+tags:
+  - name: Evaluation
+    description: Interview submission evaluation operations
