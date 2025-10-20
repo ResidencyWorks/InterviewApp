@@ -1,0 +1,109 @@
+'use client'
+
+import { Alert } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useAuth } from '@/hooks'
+import { useState } from 'react'
+
+/**
+ * Magic link login page
+ * Allows users to sign in using their email address via magic link
+ */
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const { signIn } = useAuth()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setMessage('')
+
+    try {
+      await signIn(email)
+      setMessage('Check your email for the magic link!')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send magic link')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">Interview Drills</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Practice your interview skills with AI-powered feedback
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign in to your account</CardTitle>
+            <CardDescription>
+              Enter your email address and we'll send you a magic link to sign
+              in
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              {error && <Alert variant="destructive">{error}</Alert>}
+
+              {message && <Alert>{message}</Alert>}
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || !email}
+              >
+                {loading ? 'Sending magic link...' : 'Send magic link'}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                New to Interview Drills?{' '}
+                <span className="text-blue-600">
+                  Just enter your email to get started
+                </span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            By signing in, you agree to our Terms of Service and Privacy Policy
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

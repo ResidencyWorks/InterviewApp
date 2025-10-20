@@ -91,25 +91,25 @@ description: "Task list for M0 Core Loop – Interview Drills feature implementa
 
 ### Implementation for User Story 1
 
-- [ ] T034 [US1] Create magic link login page in src/app/(auth)/login/page.tsx
-- [ ] T035 [US1] Create auth callback handler in src/app/(auth)/callback/route.ts
-- [ ] T036 [US1] Implement authentication components in src/components/auth/
-- [ ] T037 [US1] Create protected route wrapper component
-- [ ] T038 [US1] Implement route protection middleware
-- [ ] T039 [US1] Create Stripe webhook handler in src/app/api/webhooks/stripe/route.ts
-- [ ] T040 [US1] Implement entitlement caching in Redis
-- [ ] T041 [US1] Create user authentication service
-- [ ] T042 [US1] Implement session management
-- [ ] T043 [US1] Create authentication API endpoints
-- [ ] T044 [US1] Setup magic link email templates
-- [ ] T045 [US1] Implement user registration flow
-- [ ] T046 [US1] Create user profile management
-- [ ] T047 [US1] Implement logout functionality
-- [ ] T048 [US1] Create authentication error handling
-- [ ] T049 [US1] Implement authentication state management
-- [ ] T050 [US1] Create authentication tests in tests/unit/auth/
-- [ ] T051 [US1] Create authentication integration tests
-- [ ] T052 [US1] Create authentication E2E tests in tests/e2e/auth/
+- [x] T034 [US1] Create magic link login page in src/app/(auth)/login/page.tsx
+- [x] T035 [US1] Create auth callback handler in src/app/(auth)/callback/route.ts
+- [x] T036 [US1] Implement authentication components in src/components/auth/
+- [x] T037 [US1] Create protected route wrapper component
+- [x] T038 [US1] Implement route protection middleware
+- [x] T039 [US1] Create Stripe webhook handler in src/app/api/webhooks/stripe/route.ts
+- [x] T040 [US1] Implement entitlement caching in Redis
+- [x] T041 [US1] Create user authentication service
+- [x] T042 [US1] Implement session management
+- [x] T043 [US1] Create authentication API endpoints
+- [x] T044 [US1] Setup magic link email templates
+- [x] T045 [US1] Implement user registration flow
+- [x] T046 [US1] Create user profile management
+- [x] T047 [US1] Implement logout functionality
+- [x] T048 [US1] Create authentication error handling
+- [x] T049 [US1] Implement authentication state management
+- [x] T050 [US1] Create authentication tests in tests/unit/auth/
+- [x] T051 [US1] Create authentication integration tests
+- [x] T052 [US1] Create authentication E2E tests in tests/e2e/auth/
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
