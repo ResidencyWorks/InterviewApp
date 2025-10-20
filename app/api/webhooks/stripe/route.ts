@@ -1,4 +1,4 @@
-import { serverDatabaseService } from '@/lib/db/database-service'
+import { getServerDatabaseService } from '@/lib/db/database-service'
 import { userEntitlementCache } from '@/lib/redis'
 import type { UserEntitlementLevel } from '@/types'
 import { type NextRequest, NextResponse } from 'next/server'
@@ -135,7 +135,7 @@ async function handleSubscriptionCreated(
     }
 
     // Update user entitlement in database
-    const updateResult = await serverDatabaseService.update(
+    const updateResult = await getServerDatabaseService().update(
       'users',
       customerId,
       {
@@ -189,7 +189,7 @@ async function handleSubscriptionUpdated(
     }
 
     // Update user entitlement in database
-    const updateResult = await serverDatabaseService.update(
+    const updateResult = await getServerDatabaseService().update(
       'users',
       customerId,
       {
@@ -232,7 +232,7 @@ async function handleSubscriptionDeleted(
     const customerId = subscription.customer as string
 
     // Downgrade user to FREE tier
-    const updateResult = await serverDatabaseService.update(
+    const updateResult = await getServerDatabaseService().update(
       'users',
       customerId,
       {

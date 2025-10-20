@@ -365,4 +365,53 @@ export class ServerDatabaseService extends DatabaseService {
 
 // Export singleton instances
 export const databaseService = new DatabaseService()
-export const serverDatabaseService = new ServerDatabaseService()
+
+// Lazy-loaded server database service to avoid cookies() being called during build
+let _serverDatabaseService: ServerDatabaseService | null = null
+
+export function getServerDatabaseService(): ServerDatabaseService {
+  if (!_serverDatabaseService) {
+    _serverDatabaseService = new ServerDatabaseService()
+  }
+  return _serverDatabaseService
+}
+
+// For backward compatibility, but this should be avoided in build contexts
+export const serverDatabaseService = {
+  get update() {
+    return getServerDatabaseService().update.bind(getServerDatabaseService())
+  },
+  get insert() {
+    return getServerDatabaseService().insert.bind(getServerDatabaseService())
+  },
+  get delete() {
+    return getServerDatabaseService().delete.bind(getServerDatabaseService())
+  },
+  get query() {
+    return getServerDatabaseService().query.bind(getServerDatabaseService())
+  },
+  get findById() {
+    return getServerDatabaseService().findById.bind(getServerDatabaseService())
+  },
+  get paginate() {
+    return getServerDatabaseService().paginate.bind(getServerDatabaseService())
+  },
+  get rawQuery() {
+    return getServerDatabaseService().rawQuery.bind(getServerDatabaseService())
+  },
+  get transaction() {
+    return getServerDatabaseService().transaction.bind(
+      getServerDatabaseService()
+    )
+  },
+  get healthCheck() {
+    return getServerDatabaseService().healthCheck.bind(
+      getServerDatabaseService()
+    )
+  },
+  get callProcedure() {
+    return getServerDatabaseService().callProcedure.bind(
+      getServerDatabaseService()
+    )
+  },
+}
