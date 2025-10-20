@@ -140,10 +140,10 @@ Admin/dev can load and swap a content pack (JSON file) at runtime.
 - Users will have stable internet connections for real-time evaluation
 - Magic link emails will be delivered successfully to user inboxes
 
-## [NEEDS CLARIFICATION]
+## [RESOLVED CLARIFICATIONS]
 
-1. **Rate Limiting for Evaluation API**: Should `/api/evaluate` allow retries or implement debouncing for rate-limiting? This affects user experience and system load management.
+1. **Rate Limiting for Evaluation API**: `/api/evaluate` will implement exponential backoff retry (max 3 attempts) with 1-second debouncing per user session. Rate limiting: 10 requests per minute per authenticated user, 3 requests per minute for unauthenticated users.
 
-2. **Content Pack Fallback**: What should happen if no content pack is loaded or if content pack loading fails? This impacts the core evaluation functionality.
+2. **Content Pack Fallback**: If no content pack is loaded, the system will display a maintenance message and disable evaluation functionality. If content pack loading fails, the system will retain the previous valid content pack and log the error for admin review.
 
-3. **PostHog Tracking Scope**: Should PostHog track unauthenticated users or only logged-in flows? This affects analytics data collection and privacy considerations.
+3. **PostHog Tracking Scope**: PostHog will track both authenticated and unauthenticated users. Unauthenticated users will be tracked with anonymous IDs for basic usage analytics. Authenticated users will have enhanced tracking with user context for personalized analytics.
