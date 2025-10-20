@@ -13,6 +13,7 @@ const openai = new OpenAI({
 
 /**
  * Evaluation service using OpenAI
+ * Provides AI-powered evaluation of interview responses using GPT-4 and Whisper
  */
 export class OpenAIEvaluationService {
   private client: OpenAI
@@ -23,6 +24,10 @@ export class OpenAIEvaluationService {
 
   /**
    * Evaluate a text response using GPT-4
+   * @param response - Text response to evaluate
+   * @param evaluationCriteria - Criteria for evaluation
+   * @param contentPack - Optional content pack context
+   * @returns Promise resolving to evaluation response
    */
   async evaluateTextResponse(
     response: string,
@@ -84,6 +89,8 @@ export class OpenAIEvaluationService {
 
   /**
    * Transcribe audio using Whisper
+   * @param audioUrl - URL of the audio file to transcribe
+   * @returns Promise resolving to transcribed text
    */
   async transcribeAudio(audioUrl: string): Promise<string> {
     try {
@@ -110,6 +117,10 @@ export class OpenAIEvaluationService {
 
   /**
    * Evaluate an audio response
+   * @param audioUrl - URL of the audio file to evaluate
+   * @param evaluationCriteria - Criteria for evaluation
+   * @param contentPack - Optional content pack context
+   * @returns Promise resolving to evaluation response
    */
   async evaluateAudioResponse(
     audioUrl: string,
@@ -145,6 +156,10 @@ export class OpenAIEvaluationService {
 
   /**
    * Create evaluation prompt for GPT-4
+   * @param response - Response text to include in prompt
+   * @param evaluationCriteria - Evaluation criteria to include
+   * @param contentPack - Optional content pack context
+   * @returns Formatted prompt string
    */
   private createEvaluationPrompt(
     response: string,
@@ -214,6 +229,8 @@ export class OpenAIEvaluationService {
 
   /**
    * Parse evaluation response from GPT-4
+   * @param response - Raw response text from GPT-4
+   * @returns Parsed evaluation data with categories, score, and feedback
    */
   private parseEvaluationResponse(response: string): {
     categories: EvaluationCategories
@@ -282,6 +299,7 @@ export const openaiEvaluation = new OpenAIEvaluationService()
 
 /**
  * OpenAI health check
+ * @returns Promise that resolves to true if OpenAI API is accessible
  */
 export async function checkOpenAIHealth(): Promise<boolean> {
   try {
@@ -295,12 +313,17 @@ export async function checkOpenAIHealth(): Promise<boolean> {
 
 /**
  * Rate limiting utilities
+ * Provides rate limiting functionality for API requests with configurable windows and limits
  */
 export class RateLimiter {
   private requests: Map<string, number[]> = new Map()
 
   /**
    * Check if request is within rate limit
+   * @param userId - User ID to check rate limit for
+   * @param maxRequests - Maximum number of requests allowed
+   * @param windowMs - Time window in milliseconds
+   * @returns True if request is allowed, false otherwise
    */
   isAllowed(userId: string, maxRequests: number, windowMs: number): boolean {
     const now = Date.now()
@@ -322,6 +345,10 @@ export class RateLimiter {
 
   /**
    * Get remaining requests for user
+   * @param userId - User ID to check
+   * @param maxRequests - Maximum number of requests allowed
+   * @param windowMs - Time window in milliseconds
+   * @returns Number of remaining requests
    */
   getRemainingRequests(
     userId: string,

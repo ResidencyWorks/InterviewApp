@@ -5,6 +5,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 /**
  * Authentication API route handler
  * Handles magic link authentication and session management
+ * @param request - Next.js request object containing email in JSON body
+ * @returns Promise resolving to NextResponse with success/error message
  */
 export async function POST(request: NextRequest) {
   try {
@@ -57,6 +59,8 @@ export async function POST(request: NextRequest) {
 
 /**
  * Get current user session
+ * Retrieves the current authenticated user session from Supabase
+ * @returns Promise resolving to NextResponse with session data or error
  */
 export async function GET() {
   try {

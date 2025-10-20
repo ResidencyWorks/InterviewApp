@@ -23,10 +23,13 @@ export interface ErrorReport {
 
 /**
  * Error monitoring service
+ * Centralizes error handling and reporting to Sentry with analytics integration
  */
 export class ErrorMonitoringService {
   /**
    * Report an error to Sentry and analytics
+   * @param report - Error report containing error details and context
+   * @returns void
    */
   reportError(report: ErrorReport): void {
     const { message, error, context, level = 'error' } = report
@@ -76,6 +79,10 @@ export class ErrorMonitoringService {
 
   /**
    * Report a message to Sentry
+   * @param message - Message to report
+   * @param level - Log level for the message
+   * @param context - Optional context data
+   * @returns void
    */
   reportMessage(
     message: string,
@@ -101,6 +108,10 @@ export class ErrorMonitoringService {
 
   /**
    * Set user context for error reporting
+   * @param userId - User ID to associate with error reports
+   * @param email - Optional user email
+   * @param additionalContext - Optional additional user context data
+   * @returns void
    */
   setUserContext(
     userId: string,
@@ -115,7 +126,8 @@ export class ErrorMonitoringService {
   }
 
   /**
-   * Clear user context
+   * Clear user context from error reporting
+   * @returns void
    */
   clearUserContext(): void {
     Sentry.setUser(null)
@@ -123,6 +135,10 @@ export class ErrorMonitoringService {
 
   /**
    * Add breadcrumb for debugging
+   * @param message - Breadcrumb message
+   * @param category - Optional category for the breadcrumb
+   * @param level - Optional log level for the breadcrumb
+   * @returns void
    */
   addBreadcrumb(
     message: string,
@@ -138,14 +154,20 @@ export class ErrorMonitoringService {
   }
 
   /**
-   * Set custom context
+   * Set custom context for error reporting
+   * @param key - Context key
+   * @param context - Context data
+   * @returns void
    */
   setContext(key: string, context: Record<string, any>): void {
     Sentry.setContext(key, context)
   }
 
   /**
-   * Set custom tag
+   * Set custom tag for error reporting
+   * @param key - Tag key
+   * @param value - Tag value
+   * @returns void
    */
   setTag(key: string, value: string): void {
     Sentry.setTag(key, value)
@@ -157,6 +179,8 @@ export const errorMonitoring = new ErrorMonitoringService()
 
 /**
  * Error boundary helper for React components
+ * @param Component - React component to wrap with error boundary
+ * @returns Component wrapped with Sentry error boundary
  */
 export function withErrorBoundary<T extends Record<string, any>>(
   Component: React.ComponentType<T>
@@ -166,6 +190,9 @@ export function withErrorBoundary<T extends Record<string, any>>(
 
 /**
  * API error handler
+ * @param error - Error to handle
+ * @param context - Optional error context
+ * @returns void
  */
 export function handleApiError(error: unknown, context?: ErrorContext): void {
   if (error instanceof Error) {
@@ -191,6 +218,9 @@ export function handleApiError(error: unknown, context?: ErrorContext): void {
 
 /**
  * Database error handler
+ * @param error - Error to handle
+ * @param context - Optional error context
+ * @returns void
  */
 export function handleDatabaseError(
   error: unknown,
@@ -219,6 +249,9 @@ export function handleDatabaseError(
 
 /**
  * OpenAI error handler
+ * @param error - Error to handle
+ * @param context - Optional error context
+ * @returns void
  */
 export function handleOpenAIError(
   error: unknown,
@@ -247,6 +280,9 @@ export function handleOpenAIError(
 
 /**
  * Redis error handler
+ * @param error - Error to handle
+ * @param context - Optional error context
+ * @returns void
  */
 export function handleRedisError(error: unknown, context?: ErrorContext): void {
   if (error instanceof Error) {
@@ -272,6 +308,9 @@ export function handleRedisError(error: unknown, context?: ErrorContext): void {
 
 /**
  * Validation error handler
+ * @param error - Error to handle
+ * @param context - Optional error context
+ * @returns void
  */
 export function handleValidationError(
   error: unknown,
@@ -301,6 +340,10 @@ export function handleValidationError(
 
 /**
  * Performance monitoring
+ * @param name - Name of the operation being tracked
+ * @param startTime - Start time of the operation in milliseconds
+ * @param context - Optional context for the performance tracking
+ * @returns void
  */
 export function trackPerformance(
   name: string,
@@ -336,6 +379,7 @@ export function trackPerformance(
 
 /**
  * Health check for error monitoring
+ * @returns Promise that resolves to true if error monitoring is healthy
  */
 export async function checkErrorMonitoringHealth(): Promise<boolean> {
   try {

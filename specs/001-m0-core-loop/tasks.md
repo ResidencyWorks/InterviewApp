@@ -48,10 +48,10 @@ description: "Task list for M0 Core Loop – Interview Drills feature implementa
 - [x] T017 [P] Configure PostHog analytics tracking
 - [x] T018 [P] Configure Sentry error monitoring
 - [x] T019 [P] Create shared UI components in src/components/ui/
-- [ ] T020 [P] Setup custom React hooks in src/hooks/
-- [ ] T020a [P] Add JSDoc comments to all exported functions in src/lib/
-- [ ] T020b [P] Add JSDoc comments to all API endpoints in src/app/api/
-- [ ] T020c [P] Add JSDoc comments to all service classes and methods
+- [x] T020 [P] Setup custom React hooks in src/hooks/
+- [x] T020a [P] Add JSDoc comments to all exported functions in src/lib/
+- [x] T020b [P] Add JSDoc comments to all API endpoints in src/app/api/
+- [x] T020c [P] Add JSDoc comments to all service classes and methods
 
 ---
 

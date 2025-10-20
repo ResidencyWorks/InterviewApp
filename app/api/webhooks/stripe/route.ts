@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 /**
  * Stripe webhook handler
  * Processes Stripe events for subscription management
+ * @param request - Next.js request object containing Stripe webhook payload and signature
+ * @returns Promise resolving to NextResponse with webhook processing result or error
  */
 export async function POST(request: NextRequest) {
   try {

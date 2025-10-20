@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 /**
  * Content pack upload API route handler
  * Handles content pack validation and hot-swapping
+ * @param request - Next.js request object containing form data with JSON file
+ * @returns Promise resolving to NextResponse with validation results or error
  */
 export async function POST(request: NextRequest) {
   try {

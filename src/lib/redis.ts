@@ -39,10 +39,13 @@ export const cacheTTL = {
 
 /**
  * Redis cache service
+ * Provides comprehensive caching functionality with TTL support and bulk operations
  */
 export class RedisCacheService {
   /**
    * Get a value from cache
+   * @param key - Cache key to retrieve
+   * @returns Promise resolving to cached value or null if not found
    */
   async get<T>(key: string): Promise<T | null> {
     try {
@@ -56,6 +59,10 @@ export class RedisCacheService {
 
   /**
    * Set a value in cache with TTL
+   * @param key - Cache key to set
+   * @param value - Value to cache
+   * @param ttlSeconds - Optional time-to-live in seconds
+   * @returns Promise resolving to true if successful
    */
   async set<T>(key: string, value: T, ttlSeconds?: number): Promise<boolean> {
     try {
@@ -73,6 +80,8 @@ export class RedisCacheService {
 
   /**
    * Delete a key from cache
+   * @param key - Cache key to delete
+   * @returns Promise resolving to true if successful
    */
   async delete(key: string): Promise<boolean> {
     try {
@@ -86,6 +95,8 @@ export class RedisCacheService {
 
   /**
    * Delete multiple keys from cache
+   * @param keys - Array of cache keys to delete
+   * @returns Promise resolving to true if successful
    */
   async deleteMany(keys: string[]): Promise<boolean> {
     try {
@@ -100,6 +111,8 @@ export class RedisCacheService {
 
   /**
    * Check if a key exists in cache
+   * @param key - Cache key to check
+   * @returns Promise resolving to true if key exists
    */
   async exists(key: string): Promise<boolean> {
     try {
@@ -113,6 +126,8 @@ export class RedisCacheService {
 
   /**
    * Get multiple values from cache
+   * @param keys - Array of cache keys to retrieve
+   * @returns Promise resolving to array of cached values
    */
   async mget<T>(keys: string[]): Promise<(T | null)[]> {
     try {
@@ -127,6 +142,9 @@ export class RedisCacheService {
 
   /**
    * Set multiple values in cache
+   * @param keyValuePairs - Object with key-value pairs to cache
+   * @param ttlSeconds - Optional time-to-live in seconds
+   * @returns Promise resolving to true if successful
    */
   async mset(
     keyValuePairs: Record<string, any>,
@@ -154,6 +172,9 @@ export class RedisCacheService {
 
   /**
    * Increment a counter
+   * @param key - Cache key for the counter
+   * @param increment - Amount to increment by (default: 1)
+   * @returns Promise resolving to new counter value or null if failed
    */
   async incr(key: string, increment = 1): Promise<number | null> {
     try {
@@ -167,6 +188,9 @@ export class RedisCacheService {
 
   /**
    * Set expiration for a key
+   * @param key - Cache key to set expiration for
+   * @param ttlSeconds - Time-to-live in seconds
+   * @returns Promise resolving to true if successful
    */
   async expire(key: string, ttlSeconds: number): Promise<boolean> {
     try {
@@ -180,6 +204,8 @@ export class RedisCacheService {
 
   /**
    * Get TTL for a key
+   * @param key - Cache key to check TTL for
+   * @returns Promise resolving to TTL in seconds (-1 if no expiration, -2 if key doesn't exist)
    */
   async ttl(key: string): Promise<number> {
     try {
@@ -197,10 +223,13 @@ export const redisCache = new RedisCacheService()
 
 /**
  * User entitlement cache utilities
+ * Specialized cache service for managing user entitlement data with automatic TTL
  */
 export class UserEntitlementCache {
   /**
    * Get user entitlement from cache
+   * @param userId - User ID to get entitlement for
+   * @returns Promise resolving to user entitlement level or null if not found
    */
   async get(userId: string): Promise<UserEntitlementLevel | null> {
     const key = cacheKeys.userEntitlement(userId)
@@ -209,6 +238,9 @@ export class UserEntitlementCache {
 
   /**
    * Set user entitlement in cache
+   * @param userId - User ID to set entitlement for
+   * @param entitlement - Entitlement level to cache
+   * @returns Promise resolving to true if successful
    */
   async set(
     userId: string,
@@ -220,6 +252,8 @@ export class UserEntitlementCache {
 
   /**
    * Invalidate user entitlement cache
+   * @param userId - User ID to invalidate cache for
+   * @returns Promise resolving to true if successful
    */
   async invalidate(userId: string): Promise<boolean> {
     const key = cacheKeys.userEntitlement(userId)
@@ -229,10 +263,13 @@ export class UserEntitlementCache {
 
 /**
  * Content pack cache utilities
+ * Specialized cache service for managing content pack data with versioning support
  */
 export class ContentPackCache {
   /**
    * Get content pack from cache
+   * @param packId - Content pack ID to retrieve
+   * @returns Promise resolving to content pack data or null if not found
    */
   async get(packId: string): Promise<any | null> {
     const key = cacheKeys.contentPack(packId)
@@ -241,6 +278,9 @@ export class ContentPackCache {
 
   /**
    * Set content pack in cache
+   * @param packId - Content pack ID to cache
+   * @param contentPack - Content pack data to cache
+   * @returns Promise resolving to true if successful
    */
   async set(packId: string, contentPack: any): Promise<boolean> {
     const key = cacheKeys.contentPack(packId)
@@ -249,6 +289,7 @@ export class ContentPackCache {
 
   /**
    * Get active content pack from cache
+   * @returns Promise resolving to active content pack data or null if not found
    */
   async getActive(): Promise<any | null> {
     const key = cacheKeys.activeContentPack()
@@ -257,6 +298,8 @@ export class ContentPackCache {
 
   /**
    * Set active content pack in cache
+   * @param contentPack - Content pack data to set as active
+   * @returns Promise resolving to true if successful
    */
   async setActive(contentPack: any): Promise<boolean> {
     const key = cacheKeys.activeContentPack()
@@ -265,6 +308,8 @@ export class ContentPackCache {
 
   /**
    * Invalidate content pack cache
+   * @param packId - Optional specific content pack ID to invalidate
+   * @returns Promise resolving to true if successful
    */
   async invalidate(packId?: string): Promise<boolean> {
     if (packId) {
@@ -283,6 +328,7 @@ export const contentPackCache = new ContentPackCache()
 
 /**
  * Cache health check
+ * @returns Promise that resolves to true if Redis is accessible
  */
 export async function checkRedisHealth(): Promise<boolean> {
   try {

@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 /**
  * Evaluation API route handler
  * Handles AI-powered evaluation of interview responses
+ * @param request - Next.js request object containing response text in JSON body
+ * @returns Promise resolving to NextResponse with evaluation results or error
  */
 export async function POST(request: NextRequest) {
   try {
