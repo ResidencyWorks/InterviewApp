@@ -150,9 +150,9 @@ cp env.example .env.local
 ```
 
 Required variables:
-- `NEXTAUTH_SECRET` - NextAuth secret key
-- `SUPABASE_URL` - Supabase project URL
-- `SUPABASE_ANON_KEY` - Supabase anonymous key
+- `NEXT_PUBLIC_APP_URL` - Application URL
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 
 ## Troubleshooting
 

@@ -36,10 +36,11 @@ Required for production:
 ```bash
 # Application
 NODE_ENV=production
+NEXT_PUBLIC_APP_URL=https://your-domain.com
 
-# Database
-SUPABASE_URL=your-supabase-url
-SUPABASE_ANON_KEY=your-supabase-anon-key
+# Database (Supabase)
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
 # External Services
@@ -60,9 +61,9 @@ docker build -t interview-app .
 
 # Run container
 docker run -p 3000:3000 \
-  -e NEXTAUTH_SECRET=your-secret \
-  -e SUPABASE_URL=your-url \
-  -e SUPABASE_ANON_KEY=your-key \
+  -e NEXT_PUBLIC_APP_URL=http://localhost:3000 \
+  -e NEXT_PUBLIC_SUPABASE_URL=your-url \
+  -e NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key \
   interview-app
 ```
 
