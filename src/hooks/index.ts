@@ -5,8 +5,8 @@
  * Each hook is designed to be reusable and follows React best practices.
  */
 
-export { useAuth } from './useAuth'
-export { useLocalStorage } from './useLocalStorage'
-export { useDebounce } from './useDebounce'
-export { useAsync } from './useAsync'
-export { useClickOutside } from './useClickOutside'
+export { useAsync } from "./useAsync";
+export { useAuth } from "./useAuth";
+export { useClickOutside } from "./useClickOutside";
+export { useDebounce } from "./useDebounce";
+export { useLocalStorage } from "./useLocalStorage";

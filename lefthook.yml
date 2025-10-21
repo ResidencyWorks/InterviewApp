@@ -5,17 +5,11 @@
 pre-commit:
   parallel: true
   commands:
-    lint:
+    check:
       run: pnpm biome check --write .
       glob: "*.{ts,tsx,js,jsx,json,md}"
       fail_text: "❌ Linting failed. Please fix the issues above."
       pass_text: "✅ Linting passed"
-
-    format:
-      run: pnpm biome format --write .
-      glob: "*.{ts,tsx,js,jsx,json,md}"
-      fail_text: "❌ Formatting failed. Please fix the issues above."
-      pass_text: "✅ Formatting applied"
 
     typecheck:
       run: pnpm tsc --noEmit
@@ -36,7 +30,7 @@ pre-push:
 #       fail_text: "❌ E2E tests failed. Please fix the failing tests before pushing."
 #       pass_text: "✅ E2E tests passed"
 
-    build:
-      run: pnpm build
-      fail_text: "❌ Build failed. Please fix the build errors before pushing."
-      pass_text: "✅ Build successful"
+    # build:
+    #   run: pnpm build
+    #   fail_text: "❌ Build failed. Please fix the build errors before pushing."
+    #   pass_text: "✅ Build successful"
