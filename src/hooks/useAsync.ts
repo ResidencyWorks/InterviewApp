@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from "react";
 
 /**
  * State interface for async operations
  */
 interface AsyncState<T> {
-  data: T | null
-  loading: boolean
-  error: Error | null
+	data: T | null;
+	loading: boolean;
+	error: Error | null;
 }
 
 /**
@@ -26,34 +26,35 @@ interface AsyncState<T> {
  * ```
  */
 export function useAsync<T>(asyncFunction: () => Promise<T>, immediate = true) {
-  const [state, setState] = useState<AsyncState<T>>({
-    data: null,
-    loading: false,
-    error: null,
-  })
+	const [state, setState] = useState<AsyncState<T>>({
+		data: null,
+		error: null,
+		loading: false,
+	});
 
-  const execute = useCallback(async () => {
-    setState((prev) => ({ ...prev, loading: true, error: null }))
+	const execute = useCallback(async () => {
+		setState((prev) => ({ ...prev, error: null, loading: true }));
 
-    try {
-      const data = await asyncFunction()
-      setState({ data, loading: false, error: null })
-      return data
-    } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error))
-      setState({ data: null, loading: false, error: errorObj })
-      throw errorObj
-    }
-  }, [asyncFunction])
+		try {
+			const data = await asyncFunction();
+			setState({ data, error: null, loading: false });
+			return data;
+		} catch (error) {
+			const errorObj =
+				error instanceof Error ? error : new Error(String(error));
+			setState({ data: null, error: errorObj, loading: false });
+			throw errorObj;
+		}
+	}, [asyncFunction]);
 
-  useEffect(() => {
-    if (immediate) {
-      execute()
-    }
-  }, [execute, immediate])
+	useEffect(() => {
+		if (immediate) {
+			execute();
+		}
+	}, [execute, immediate]);
 
-  return {
-    ...state,
-    execute,
-  }
+	return {
+		...state,
+		execute,
+	};
 }

@@ -1,5 +1,5 @@
-import * as Sentry from '@sentry/nextjs'
-import { analytics } from './analytics'
+import * as Sentry from "@sentry/nextjs";
+import { analytics } from "./analytics";
 
 /**
  * Error monitoring utilities
@@ -7,18 +7,18 @@ import { analytics } from './analytics'
  */
 
 export interface ErrorContext {
-  userId?: string
-  userEmail?: string
-  component?: string
-  action?: string
-  metadata?: Record<string, any>
+	userId?: string;
+	userEmail?: string;
+	component?: string;
+	action?: string;
+	metadata?: Record<string, any>;
 }
 
 export interface ErrorReport {
-  message: string
-  error: Error
-  context?: ErrorContext
-  level?: 'error' | 'warning' | 'info' | 'debug'
+	message: string;
+	error: Error;
+	context?: ErrorContext;
+	level?: "error" | "warning" | "info" | "debug";
 }
 
 /**
@@ -26,156 +26,156 @@ export interface ErrorReport {
  * Centralizes error handling and reporting to Sentry with analytics integration
  */
 export class ErrorMonitoringService {
-  /**
-   * Report an error to Sentry and analytics
-   * @param report - Error report containing error details and context
-   * @returns void
-   */
-  reportError(report: ErrorReport): void {
-    const { message, error, context, level = 'error' } = report
+	/**
+	 * Report an error to Sentry and analytics
+	 * @param report - Error report containing error details and context
+	 * @returns void
+	 */
+	reportError(report: ErrorReport): void {
+		const { message, error, context, level = "error" } = report;
 
-    // Set user context in Sentry
-    if (context?.userId) {
-      Sentry.setUser({
-        id: context.userId,
-        email: context.userEmail,
-      })
-    }
+		// Set user context in Sentry
+		if (context?.userId) {
+			Sentry.setUser({
+				email: context.userEmail,
+				id: context.userId,
+			});
+		}
 
-    // Set additional context
-    if (context?.component) {
-      Sentry.setTag('component', context.component)
-    }
+		// Set additional context
+		if (context?.component) {
+			Sentry.setTag("component", context.component);
+		}
 
-    if (context?.action) {
-      Sentry.setTag('action', context.action)
-    }
+		if (context?.action) {
+			Sentry.setTag("action", context.action);
+		}
 
-    if (context?.metadata) {
-      Sentry.setContext('metadata', context.metadata)
-    }
+		if (context?.metadata) {
+			Sentry.setContext("metadata", context.metadata);
+		}
 
-    // Capture the error
-    Sentry.captureException(error, {
-      level,
-      tags: {
-        component: context?.component,
-        action: context?.action,
-      },
-      extra: {
-        message,
-        context: context?.metadata,
-      },
-    })
+		// Capture the error
+		Sentry.captureException(error, {
+			extra: {
+				context: context?.metadata,
+				message,
+			},
+			level,
+			tags: {
+				action: context?.action,
+				component: context?.component,
+			},
+		});
 
-    // Track error in analytics
-    analytics.trackError(message, {
-      error_name: error.name,
-      error_message: error.message,
-      component: context?.component,
-      action: context?.action,
-    })
-  }
+		// Track error in analytics
+		analytics.trackError(message, {
+			action: context?.action,
+			component: context?.component,
+			error_message: error.message,
+			error_name: error.name,
+		});
+	}
 
-  /**
-   * Report a message to Sentry
-   * @param message - Message to report
-   * @param level - Log level for the message
-   * @param context - Optional context data
-   * @returns void
-   */
-  reportMessage(
-    message: string,
-    level: 'error' | 'warning' | 'info' | 'debug' = 'info',
-    context?: ErrorContext
-  ): void {
-    if (context?.userId) {
-      Sentry.setUser({
-        id: context.userId,
-        email: context.userEmail,
-      })
-    }
+	/**
+	 * Report a message to Sentry
+	 * @param message - Message to report
+	 * @param level - Log level for the message
+	 * @param context - Optional context data
+	 * @returns void
+	 */
+	reportMessage(
+		message: string,
+		level: "error" | "warning" | "info" | "debug" = "info",
+		context?: ErrorContext,
+	): void {
+		if (context?.userId) {
+			Sentry.setUser({
+				email: context.userEmail,
+				id: context.userId,
+			});
+		}
 
-    Sentry.captureMessage(message, {
-      level,
-      tags: {
-        component: context?.component,
-        action: context?.action,
-      },
-      extra: context?.metadata,
-    })
-  }
+		Sentry.captureMessage(message, {
+			extra: context?.metadata,
+			level,
+			tags: {
+				action: context?.action,
+				component: context?.component,
+			},
+		});
+	}
 
-  /**
-   * Set user context for error reporting
-   * @param userId - User ID to associate with error reports
-   * @param email - Optional user email
-   * @param additionalContext - Optional additional user context data
-   * @returns void
-   */
-  setUserContext(
-    userId: string,
-    email?: string,
-    additionalContext?: Record<string, any>
-  ): void {
-    Sentry.setUser({
-      id: userId,
-      email,
-      ...additionalContext,
-    })
-  }
+	/**
+	 * Set user context for error reporting
+	 * @param userId - User ID to associate with error reports
+	 * @param email - Optional user email
+	 * @param additionalContext - Optional additional user context data
+	 * @returns void
+	 */
+	setUserContext(
+		userId: string,
+		email?: string,
+		additionalContext?: Record<string, any>,
+	): void {
+		Sentry.setUser({
+			email,
+			id: userId,
+			...additionalContext,
+		});
+	}
 
-  /**
-   * Clear user context from error reporting
-   * @returns void
-   */
-  clearUserContext(): void {
-    Sentry.setUser(null)
-  }
+	/**
+	 * Clear user context from error reporting
+	 * @returns void
+	 */
+	clearUserContext(): void {
+		Sentry.setUser(null);
+	}
 
-  /**
-   * Add breadcrumb for debugging
-   * @param message - Breadcrumb message
-   * @param category - Optional category for the breadcrumb
-   * @param level - Optional log level for the breadcrumb
-   * @returns void
-   */
-  addBreadcrumb(
-    message: string,
-    category?: string,
-    level?: 'error' | 'warning' | 'info' | 'debug'
-  ): void {
-    Sentry.addBreadcrumb({
-      message,
-      category: category || 'custom',
-      level: level || 'info',
-      timestamp: Date.now() / 1000,
-    })
-  }
+	/**
+	 * Add breadcrumb for debugging
+	 * @param message - Breadcrumb message
+	 * @param category - Optional category for the breadcrumb
+	 * @param level - Optional log level for the breadcrumb
+	 * @returns void
+	 */
+	addBreadcrumb(
+		message: string,
+		category?: string,
+		level?: "error" | "warning" | "info" | "debug",
+	): void {
+		Sentry.addBreadcrumb({
+			category: category || "custom",
+			level: level || "info",
+			message,
+			timestamp: Date.now() / 1000,
+		});
+	}
 
-  /**
-   * Set custom context for error reporting
-   * @param key - Context key
-   * @param context - Context data
-   * @returns void
-   */
-  setContext(key: string, context: Record<string, any>): void {
-    Sentry.setContext(key, context)
-  }
+	/**
+	 * Set custom context for error reporting
+	 * @param key - Context key
+	 * @param context - Context data
+	 * @returns void
+	 */
+	setContext(key: string, context: Record<string, any>): void {
+		Sentry.setContext(key, context);
+	}
 
-  /**
-   * Set custom tag for error reporting
-   * @param key - Tag key
-   * @param value - Tag value
-   * @returns void
-   */
-  setTag(key: string, value: string): void {
-    Sentry.setTag(key, value)
-  }
+	/**
+	 * Set custom tag for error reporting
+	 * @param key - Tag key
+	 * @param value - Tag value
+	 * @returns void
+	 */
+	setTag(key: string, value: string): void {
+		Sentry.setTag(key, value);
+	}
 }
 
 // Export singleton instance
-export const errorMonitoring = new ErrorMonitoringService()
+export const errorMonitoring = new ErrorMonitoringService();
 
 /**
  * Error boundary helper for React components
@@ -183,9 +183,9 @@ export const errorMonitoring = new ErrorMonitoringService()
  * @returns Component wrapped with Sentry error boundary
  */
 export function withErrorBoundary<T extends Record<string, any>>(
-  Component: React.ComponentType<T>
+	Component: React.ComponentType<T>,
 ) {
-  return Sentry.withErrorBoundary(Component, {})
+	return Sentry.withErrorBoundary(Component, {});
 }
 
 /**
@@ -195,25 +195,25 @@ export function withErrorBoundary<T extends Record<string, any>>(
  * @returns void
  */
 export function handleApiError(error: unknown, context?: ErrorContext): void {
-  if (error instanceof Error) {
-    errorMonitoring.reportError({
-      message: 'API Error',
-      error,
-      context: {
-        ...context,
-        component: 'api',
-      },
-    })
-  } else {
-    errorMonitoring.reportMessage(
-      `Unknown API error: ${String(error)}`,
-      'error',
-      {
-        ...context,
-        component: 'api',
-      }
-    )
-  }
+	if (error instanceof Error) {
+		errorMonitoring.reportError({
+			context: {
+				...context,
+				component: "api",
+			},
+			error,
+			message: "API Error",
+		});
+	} else {
+		errorMonitoring.reportMessage(
+			`Unknown API error: ${String(error)}`,
+			"error",
+			{
+				...context,
+				component: "api",
+			},
+		);
+	}
 }
 
 /**
@@ -223,28 +223,28 @@ export function handleApiError(error: unknown, context?: ErrorContext): void {
  * @returns void
  */
 export function handleDatabaseError(
-  error: unknown,
-  context?: ErrorContext
+	error: unknown,
+	context?: ErrorContext,
 ): void {
-  if (error instanceof Error) {
-    errorMonitoring.reportError({
-      message: 'Database Error',
-      error,
-      context: {
-        ...context,
-        component: 'database',
-      },
-    })
-  } else {
-    errorMonitoring.reportMessage(
-      `Unknown database error: ${String(error)}`,
-      'error',
-      {
-        ...context,
-        component: 'database',
-      }
-    )
-  }
+	if (error instanceof Error) {
+		errorMonitoring.reportError({
+			context: {
+				...context,
+				component: "database",
+			},
+			error,
+			message: "Database Error",
+		});
+	} else {
+		errorMonitoring.reportMessage(
+			`Unknown database error: ${String(error)}`,
+			"error",
+			{
+				...context,
+				component: "database",
+			},
+		);
+	}
 }
 
 /**
@@ -254,28 +254,28 @@ export function handleDatabaseError(
  * @returns void
  */
 export function handleOpenAIError(
-  error: unknown,
-  context?: ErrorContext
+	error: unknown,
+	context?: ErrorContext,
 ): void {
-  if (error instanceof Error) {
-    errorMonitoring.reportError({
-      message: 'OpenAI API Error',
-      error,
-      context: {
-        ...context,
-        component: 'openai',
-      },
-    })
-  } else {
-    errorMonitoring.reportMessage(
-      `Unknown OpenAI error: ${String(error)}`,
-      'error',
-      {
-        ...context,
-        component: 'openai',
-      }
-    )
-  }
+	if (error instanceof Error) {
+		errorMonitoring.reportError({
+			context: {
+				...context,
+				component: "openai",
+			},
+			error,
+			message: "OpenAI API Error",
+		});
+	} else {
+		errorMonitoring.reportMessage(
+			`Unknown OpenAI error: ${String(error)}`,
+			"error",
+			{
+				...context,
+				component: "openai",
+			},
+		);
+	}
 }
 
 /**
@@ -285,25 +285,25 @@ export function handleOpenAIError(
  * @returns void
  */
 export function handleRedisError(error: unknown, context?: ErrorContext): void {
-  if (error instanceof Error) {
-    errorMonitoring.reportError({
-      message: 'Redis Error',
-      error,
-      context: {
-        ...context,
-        component: 'redis',
-      },
-    })
-  } else {
-    errorMonitoring.reportMessage(
-      `Unknown Redis error: ${String(error)}`,
-      'error',
-      {
-        ...context,
-        component: 'redis',
-      }
-    )
-  }
+	if (error instanceof Error) {
+		errorMonitoring.reportError({
+			context: {
+				...context,
+				component: "redis",
+			},
+			error,
+			message: "Redis Error",
+		});
+	} else {
+		errorMonitoring.reportMessage(
+			`Unknown Redis error: ${String(error)}`,
+			"error",
+			{
+				...context,
+				component: "redis",
+			},
+		);
+	}
 }
 
 /**
@@ -313,29 +313,29 @@ export function handleRedisError(error: unknown, context?: ErrorContext): void {
  * @returns void
  */
 export function handleValidationError(
-  error: unknown,
-  context?: ErrorContext
+	error: unknown,
+	context?: ErrorContext,
 ): void {
-  if (error instanceof Error) {
-    errorMonitoring.reportError({
-      message: 'Validation Error',
-      error,
-      context: {
-        ...context,
-        component: 'validation',
-      },
-      level: 'warning',
-    })
-  } else {
-    errorMonitoring.reportMessage(
-      `Unknown validation error: ${String(error)}`,
-      'warning',
-      {
-        ...context,
-        component: 'validation',
-      }
-    )
-  }
+	if (error instanceof Error) {
+		errorMonitoring.reportError({
+			context: {
+				...context,
+				component: "validation",
+			},
+			error,
+			level: "warning",
+			message: "Validation Error",
+		});
+	} else {
+		errorMonitoring.reportMessage(
+			`Unknown validation error: ${String(error)}`,
+			"warning",
+			{
+				...context,
+				component: "validation",
+			},
+		);
+	}
 }
 
 /**
@@ -346,35 +346,35 @@ export function handleValidationError(
  * @returns void
  */
 export function trackPerformance(
-  name: string,
-  startTime: number,
-  context?: ErrorContext
+	name: string,
+	startTime: number,
+	context?: ErrorContext,
 ): void {
-  const duration = Date.now() - startTime
+	const duration = Date.now() - startTime;
 
-  // Track in analytics
-  analytics.trackApiCall(name, duration, true)
+	// Track in analytics
+	analytics.trackApiCall(name, duration, true);
 
-  // Add breadcrumb for debugging
-  errorMonitoring.addBreadcrumb(
-    `Performance: ${name} took ${duration}ms`,
-    'performance',
-    'info'
-  )
+	// Add breadcrumb for debugging
+	errorMonitoring.addBreadcrumb(
+		`Performance: ${name} took ${duration}ms`,
+		"performance",
+		"info",
+	);
 
-  // Report slow operations
-  if (duration > 5000) {
-    // 5 seconds
-    errorMonitoring.reportMessage(
-      `Slow operation: ${name} took ${duration}ms`,
-      'warning',
-      {
-        ...context,
-        component: 'performance',
-        metadata: { duration, operation: name },
-      }
-    )
-  }
+	// Report slow operations
+	if (duration > 5000) {
+		// 5 seconds
+		errorMonitoring.reportMessage(
+			`Slow operation: ${name} took ${duration}ms`,
+			"warning",
+			{
+				...context,
+				component: "performance",
+				metadata: { duration, operation: name },
+			},
+		);
+	}
 }
 
 /**
@@ -382,12 +382,12 @@ export function trackPerformance(
  * @returns Promise that resolves to true if error monitoring is healthy
  */
 export async function checkErrorMonitoringHealth(): Promise<boolean> {
-  try {
-    // Test Sentry by capturing a test message
-    Sentry.captureMessage('Health check', 'info')
-    return true
-  } catch (error) {
-    console.error('Error monitoring health check failed:', error)
-    return false
-  }
+	try {
+		// Test Sentry by capturing a test message
+		Sentry.captureMessage("Health check", "info");
+		return true;
+	} catch (error) {
+		console.error("Error monitoring health check failed:", error);
+		return false;
+	}
 }

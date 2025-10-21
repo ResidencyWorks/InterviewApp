@@ -1,5 +1,5 @@
-import type { Session, User } from '@supabase/supabase-js'
-import type { AuthError, UserProfile } from './auth-types'
+import type { Session, User } from "@supabase/supabase-js";
+import type { AuthError, UserProfile } from "./auth-types";
 
 /**
  * Check if user is authenticated
@@ -7,7 +7,7 @@ import type { AuthError, UserProfile } from './auth-types'
  * @returns True if user is authenticated
  */
 export function isAuthenticated(user: User | null): boolean {
-  return user !== null && user.aud === 'authenticated'
+	return user !== null && user.aud === "authenticated";
 }
 
 /**
@@ -17,16 +17,16 @@ export function isAuthenticated(user: User | null): boolean {
  * @returns True if user has required level or higher
  */
 export function hasEntitlement(
-  user: User | null,
-  requiredLevel: 'FREE' | 'TRIAL' | 'PRO'
+	user: User | null,
+	requiredLevel: "FREE" | "TRIAL" | "PRO",
 ): boolean {
-  if (!isAuthenticated(user)) return false
+	if (!isAuthenticated(user)) return false;
 
-  const userMetadata = user?.user_metadata as UserProfile | undefined
-  const userLevel = userMetadata?.entitlement_level || 'FREE'
+	const userMetadata = user?.user_metadata as UserProfile | undefined;
+	const userLevel = userMetadata?.entitlement_level || "FREE";
 
-  const levelHierarchy = { FREE: 0, TRIAL: 1, PRO: 2 }
-  return levelHierarchy[userLevel] >= levelHierarchy[requiredLevel]
+	const levelHierarchy = { FREE: 0, PRO: 2, TRIAL: 1 };
+	return levelHierarchy[userLevel] >= levelHierarchy[requiredLevel];
 }
 
 /**
@@ -35,10 +35,10 @@ export function hasEntitlement(
  * @returns True if session is valid
  */
 export function isSessionValid(session: Session | null): boolean {
-  if (!session) return false
+	if (!session) return false;
 
-  const now = Math.floor(Date.now() / 1000)
-  return session.expires_at ? session.expires_at > now : false
+	const now = Math.floor(Date.now() / 1000);
+	return session.expires_at ? session.expires_at > now : false;
 }
 
 /**
@@ -47,18 +47,18 @@ export function isSessionValid(session: Session | null): boolean {
  * @returns User profile or null
  */
 export function extractUserProfile(user: User | null): UserProfile | null {
-  if (!isAuthenticated(user)) return null
+	if (!isAuthenticated(user)) return null;
 
-  return {
-    id: user?.id || '',
-    email: user?.email || '',
-    full_name: user?.user_metadata?.full_name || '',
-    avatar_url: user?.user_metadata?.avatar_url || '',
-    entitlement_level: user?.user_metadata?.entitlement_level || 'FREE',
-    stripe_customer_id: user?.user_metadata?.stripe_customer_id || '',
-    created_at: user?.created_at || '',
-    updated_at: user?.updated_at || '',
-  }
+	return {
+		avatar_url: user?.user_metadata?.avatar_url || "",
+		created_at: user?.created_at || "",
+		email: user?.email || "",
+		entitlement_level: user?.user_metadata?.entitlement_level || "FREE",
+		full_name: user?.user_metadata?.full_name || "",
+		id: user?.id || "",
+		stripe_customer_id: user?.user_metadata?.stripe_customer_id || "",
+		updated_at: user?.updated_at || "",
+	};
 }
 
 /**
@@ -69,11 +69,11 @@ export function extractUserProfile(user: User | null): UserProfile | null {
  * @returns AuthError object
  */
 export function createAuthError(
-  message: string,
-  status?: number,
-  code?: string
+	message: string,
+	status?: number,
+	code?: string,
 ): AuthError {
-  return { message, status, code }
+	return { code, message, status };
 }
 
 /**
@@ -82,8 +82,8 @@ export function createAuthError(
  * @returns True if email is valid
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return emailRegex.test(email);
 }
 
 /**
@@ -92,8 +92,8 @@ export function isValidEmail(email: string): boolean {
  * @returns Redirect URL
  */
 export function getAuthRedirectUrl(pathname: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  return `${baseUrl}${pathname}`
+	const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+	return `${baseUrl}${pathname}`;
 }
 
 /**
@@ -103,15 +103,15 @@ export function getAuthRedirectUrl(pathname: string): string {
  * @returns True if path requires authentication
  */
 export function isProtectedPath(
-  pathname: string,
-  protectedPaths: string[]
+	pathname: string,
+	protectedPaths: string[],
 ): boolean {
-  return protectedPaths.some((path) => {
-    if (path.endsWith('*')) {
-      return pathname.startsWith(path.slice(0, -1))
-    }
-    return pathname === path
-  })
+	return protectedPaths.some((path) => {
+		if (path.endsWith("*")) {
+			return pathname.startsWith(path.slice(0, -1));
+		}
+		return pathname === path;
+	});
 }
 
 /**
@@ -121,12 +121,12 @@ export function isProtectedPath(
  * @returns True if path is public
  */
 export function isPublicPath(pathname: string, publicPaths: string[]): boolean {
-  return publicPaths.some((path) => {
-    if (path.endsWith('*')) {
-      return pathname.startsWith(path.slice(0, -1))
-    }
-    return pathname === path
-  })
+	return publicPaths.some((path) => {
+		if (path.endsWith("*")) {
+			return pathname.startsWith(path.slice(0, -1));
+		}
+		return pathname === path;
+	});
 }
 
 /**
@@ -135,10 +135,10 @@ export function isPublicPath(pathname: string, publicPaths: string[]): boolean {
  * @returns Display name or email
  */
 export function getUserDisplayName(user: User | null): string {
-  if (!user) return 'Anonymous'
+	if (!user) return "Anonymous";
 
-  const profile = extractUserProfile(user)
-  return profile?.full_name || user.email || 'User'
+	const profile = extractUserProfile(user);
+	return profile?.full_name || user.email || "User";
 }
 
 /**
@@ -147,8 +147,8 @@ export function getUserDisplayName(user: User | null): string {
  * @returns True if profile setup is needed
  */
 export function needsProfileSetup(user: User | null): boolean {
-  if (!isAuthenticated(user)) return false
+	if (!isAuthenticated(user)) return false;
 
-  const profile = extractUserProfile(user)
-  return !profile?.full_name || !profile?.avatar_url
+	const profile = extractUserProfile(user);
+	return !profile?.full_name || !profile?.avatar_url;
 }

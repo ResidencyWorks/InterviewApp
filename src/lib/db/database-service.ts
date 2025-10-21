@@ -1,417 +1,449 @@
-import { createClient } from '@/lib/supabase/client'
-import { createClient as createServerClient } from '@/lib/supabase/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import {
-  buildSelectQuery,
-  calculatePagination,
-  createErrorResult,
-  createSuccessResult,
-  handleDatabaseError,
-  sanitizeTableName,
-  validateQueryOptions,
-} from './database-helpers'
+	buildSelectQuery,
+	calculatePagination,
+	createErrorResult,
+	createSuccessResult,
+	handleDatabaseError,
+	sanitizeTableName,
+	validateQueryOptions,
+} from "./database-helpers";
 import type {
-  DatabaseHealthCheck,
-  DatabaseResult,
-  DatabaseServiceInterface,
-  DatabaseTransaction,
-  DeleteOptions,
-  InsertOptions,
-  PaginatedResult,
-  QueryOptions,
-  UpdateOptions,
-} from './database-types'
+	DatabaseHealthCheck,
+	DatabaseResult,
+	DatabaseServiceInterface,
+	DatabaseTransaction,
+	DeleteOptions,
+	InsertOptions,
+	PaginatedResult,
+	QueryOptions,
+	UpdateOptions,
+} from "./database-types";
 
 /**
  * Database service for client-side operations
  */
 export class DatabaseService implements DatabaseServiceInterface {
-  private supabase: SupabaseClient
+	protected supabase: SupabaseClient;
 
-  constructor(supabase?: SupabaseClient) {
-    this.supabase = supabase || createClient()
-  }
+	constructor(supabase?: SupabaseClient) {
+		this.supabase = supabase || createClient();
+	}
 
-  /**
-   * Execute a query on a table
-   * @param table - Table name
-   * @param options - Query options
-   * @returns Promise resolving to query result
-   */
-  async query<T>(
-    table: string,
-    options?: QueryOptions
-  ): Promise<DatabaseResult<T[]>> {
-    try {
-      if (!validateQueryOptions(options)) {
-        return createErrorResult('Invalid query options')
-      }
+	/**
+	 * Execute a query on a table
+	 * @param table - Table name
+	 * @param options - Query options
+	 * @returns Promise resolving to query result
+	 */
+	async query<T>(
+		table: string,
+		options?: QueryOptions,
+	): Promise<DatabaseResult<T[]>> {
+		try {
+			if (!validateQueryOptions(options)) {
+				return createErrorResult("Invalid query options");
+			}
 
-      const sanitizedTable = sanitizeTableName(table)
-      const { data, error } = await this.supabase
-        .from(sanitizedTable)
-        .select(buildSelectQuery(options?.select))
-        .limit(options?.limit || 1000)
+			const sanitizedTable = sanitizeTableName(table);
+			let query = this.supabase
+				.from(sanitizedTable)
+				.select(buildSelectQuery(options?.select));
 
-      if (error) {
-        return handleDatabaseError(error)
-      }
+			if (options?.orderBy) {
+				query = query.order(options.orderBy, {
+					ascending: (options.orderDirection || "asc") === "asc",
+				});
+			}
 
-      return createSuccessResult(data as T[])
-    } catch (error) {
-      return createErrorResult(
-        error instanceof Error ? error.message : 'Query failed'
-      )
-    }
-  }
+			if (options?.offset !== undefined || options?.limit !== undefined) {
+				const limit = options?.limit || 1000;
+				const offset = options?.offset || 0;
+				query = query.range(offset, offset + limit - 1);
+			} else {
+				query = query.limit(options?.limit || 1000);
+			}
 
-  /**
-   * Find a record by ID
-   * @param table - Table name
-   * @param id - Record ID
-   * @returns Promise resolving to record or null
-   */
-  async findById<T>(table: string, id: string): Promise<DatabaseResult<T>> {
-    try {
-      const sanitizedTable = sanitizeTableName(table)
-      const { data, error } = await this.supabase
-        .from(sanitizedTable)
-        .select('*')
-        .eq('id', id)
-        .single()
+			const { data, error } = await query;
 
-      if (error) {
-        return handleDatabaseError(error)
-      }
+			if (error) {
+				return handleDatabaseError(error);
+			}
 
-      return createSuccessResult(data)
-    } catch (error) {
-      return createErrorResult(
-        error instanceof Error ? error.message : 'Find by ID failed'
-      )
-    }
-  }
+			return createSuccessResult(data as T[]);
+		} catch (error) {
+			return createErrorResult(
+				error instanceof Error ? error.message : "Query failed",
+			);
+		}
+	}
 
-  /**
-   * Insert a new record
-   * @param table - Table name
-   * @param data - Record data
-   * @param options - Insert options
-   * @returns Promise resolving to inserted record
-   */
-  async insert<T>(
-    table: string,
-    data: any,
-    options?: InsertOptions
-  ): Promise<DatabaseResult<T>> {
-    try {
-      const sanitizedTable = sanitizeTableName(table)
-      let query: any = this.supabase.from(sanitizedTable).insert(data)
+	/**
+	 * Find a record by ID
+	 * @param table - Table name
+	 * @param id - Record ID
+	 * @returns Promise resolving to record or null
+	 */
+	async findById<T>(table: string, id: string): Promise<DatabaseResult<T>> {
+		try {
+			const sanitizedTable = sanitizeTableName(table);
+			const { data, error } = await this.supabase
+				.from(sanitizedTable)
+				.select("*")
+				.eq("id", id)
+				.single();
 
-      if (options?.returning) {
-        query = query.select(options.returning)
-      }
+			if (error) {
+				return handleDatabaseError(error);
+			}
 
-      if (options?.ignoreDuplicates) {
-        // For now, just insert - upsert can be added later
-        // query = query.upsert(data)
-      }
+			return createSuccessResult(data);
+		} catch (error) {
+			return createErrorResult(
+				error instanceof Error ? error.message : "Find by ID failed",
+			);
+		}
+	}
 
-      const { data: result, error } = await query
+	/**
+	 * Insert a new record
+	 * @param table - Table name
+	 * @param data - Record data
+	 * @param options - Insert options
+	 * @returns Promise resolving to inserted record
+	 */
+	async insert<T>(
+		table: string,
+		data: any,
+		options?: InsertOptions,
+	): Promise<DatabaseResult<T>> {
+		try {
+			const sanitizedTable = sanitizeTableName(table);
+			let query: any = this.supabase.from(sanitizedTable).insert(data);
 
-      if (error) {
-        return handleDatabaseError(error)
-      }
+			if (options?.returning) {
+				query = query.select(options.returning);
+			}
 
-      return createSuccessResult(result?.[0] || result)
-    } catch (error) {
-      return createErrorResult(
-        error instanceof Error ? error.message : 'Insert failed'
-      )
-    }
-  }
+			if (options?.ignoreDuplicates) {
+				// For now, just insert - upsert can be added later
+				// query = query.upsert(data)
+			}
 
-  /**
-   * Update a record
-   * @param table - Table name
-   * @param id - Record ID
-   * @param data - Update data
-   * @param options - Update options
-   * @returns Promise resolving to updated record
-   */
-  async update<T>(
-    table: string,
-    id: string,
-    data: any,
-    options?: UpdateOptions
-  ): Promise<DatabaseResult<T>> {
-    try {
-      const sanitizedTable = sanitizeTableName(table)
-      let query: any = this.supabase
-        .from(sanitizedTable)
-        .update(data)
-        .eq('id', id)
+			const { data: result, error } = await query;
 
-      if (options?.returning) {
-        query = query.select(options.returning)
-      }
+			if (error) {
+				return handleDatabaseError(error);
+			}
 
-      if (options?.count) {
-        // Count functionality can be added later
-        // query = query.select('*', { count: options.count })
-      }
+			return createSuccessResult(result?.[0] || result);
+		} catch (error) {
+			return createErrorResult(
+				error instanceof Error ? error.message : "Insert failed",
+			);
+		}
+	}
 
-      const { data: result, error } = await query
+	/**
+	 * Update a record
+	 * @param table - Table name
+	 * @param id - Record ID
+	 * @param data - Update data
+	 * @param options - Update options
+	 * @returns Promise resolving to updated record
+	 */
+	async update<T>(
+		table: string,
+		id: string,
+		data: any,
+		options?: UpdateOptions,
+	): Promise<DatabaseResult<T>> {
+		try {
+			const sanitizedTable = sanitizeTableName(table);
+			let query: any = this.supabase
+				.from(sanitizedTable)
+				.update(data)
+				.eq("id", id);
 
-      if (error) {
-        return handleDatabaseError(error)
-      }
+			if (options?.returning) {
+				query = query.select(options.returning);
+			}
 
-      return createSuccessResult(result?.[0] || result)
-    } catch (error) {
-      return createErrorResult(
-        error instanceof Error ? error.message : 'Update failed'
-      )
-    }
-  }
+			if (options?.count) {
+				// Count functionality can be added later
+				// query = query.select('*', { count: options.count })
+			}
 
-  /**
-   * Delete a record
-   * @param table - Table name
-   * @param id - Record ID
-   * @param options - Delete options
-   * @returns Promise resolving to success status
-   */
-  async delete(
-    table: string,
-    id: string,
-    options?: DeleteOptions
-  ): Promise<DatabaseResult<boolean>> {
-    try {
-      const sanitizedTable = sanitizeTableName(table)
-      let query: any = this.supabase.from(sanitizedTable).delete().eq('id', id)
+			const { data: result, error } = await query;
 
-      if (options?.returning) {
-        query = query.select(options.returning)
-      }
+			if (error) {
+				return handleDatabaseError(error);
+			}
 
-      if (options?.count) {
-        // Count functionality can be added later
-        // query = query.select('*', { count: options.count })
-      }
+			return createSuccessResult(result?.[0] || result);
+		} catch (error) {
+			return createErrorResult(
+				error instanceof Error ? error.message : "Update failed",
+			);
+		}
+	}
 
-      const { error } = await query
+	/**
+	 * Delete a record
+	 * @param table - Table name
+	 * @param id - Record ID
+	 * @param options - Delete options
+	 * @returns Promise resolving to success status
+	 */
+	async delete(
+		table: string,
+		id: string,
+		options?: DeleteOptions,
+	): Promise<DatabaseResult<boolean>> {
+		try {
+			const sanitizedTable = sanitizeTableName(table);
+			let query: any = this.supabase.from(sanitizedTable).delete().eq("id", id);
 
-      if (error) {
-        return handleDatabaseError(error)
-      }
+			if (options?.returning) {
+				query = query.select(options.returning);
+			}
 
-      return createSuccessResult(true)
-    } catch (error) {
-      return createErrorResult(
-        error instanceof Error ? error.message : 'Delete failed'
-      )
-    }
-  }
+			if (options?.count) {
+				// Count functionality can be added later
+				// query = query.select('*', { count: options.count })
+			}
 
-  /**
-   * Get paginated results
-   * @param table - Table name
-   * @param page - Page number
-   * @param limit - Items per page
-   * @param options - Query options
-   * @returns Promise resolving to paginated result
-   */
-  async paginate<T>(
-    table: string,
-    page: number,
-    limit: number,
-    options?: QueryOptions
-  ): Promise<DatabaseResult<PaginatedResult<T>>> {
-    try {
-      const offset = (page - 1) * limit
-      const queryOptions = { ...options, limit, offset }
+			const { error } = await query;
 
-      // Get data
-      const dataResult = await this.query<T>(table, queryOptions)
-      if (!dataResult.success) {
-        return createErrorResult(dataResult.error || 'Pagination failed')
-      }
+			if (error) {
+				return handleDatabaseError(error);
+			}
 
-      // Get count
-      const countResult = await this.query<{ count: number }>(table, {
-        ...options,
-        select: 'count',
-      })
+			return createSuccessResult(true);
+		} catch (error) {
+			return createErrorResult(
+				error instanceof Error ? error.message : "Delete failed",
+			);
+		}
+	}
 
-      const count = countResult.data?.[0]?.count || 0
-      const pagination = calculatePagination(count, page, limit)
+	/**
+	 * Get paginated results
+	 * @param table - Table name
+	 * @param page - Page number
+	 * @param limit - Items per page
+	 * @param options - Query options
+	 * @returns Promise resolving to paginated result
+	 */
+	async paginate<T>(
+		table: string,
+		page: number,
+		limit: number,
+		options?: QueryOptions,
+	): Promise<DatabaseResult<PaginatedResult<T>>> {
+		try {
+			const offset = (page - 1) * limit;
+			const queryOptions = { ...options, limit, offset };
 
-      return createSuccessResult({
-        data: dataResult.data || [],
-        ...pagination,
-      } as PaginatedResult<T>)
-    } catch (error) {
-      return createErrorResult(
-        error instanceof Error ? error.message : 'Pagination failed'
-      )
-    }
-  }
+			// Get data
+			const dataResult = await this.query<T>(table, queryOptions);
+			if (!dataResult.success) {
+				return createErrorResult(dataResult.error || "Pagination failed");
+			}
 
-  /**
-   * Execute raw SQL query
-   * @param sql - SQL query
-   * @param params - Query parameters
-   * @returns Promise resolving to query result
-   */
-  async rawQuery<T>(sql: string, params?: any[]): Promise<DatabaseResult<T[]>> {
-    try {
-      const { data, error } = await this.supabase.rpc('execute_sql', {
-        sql,
-        params: params || [],
-      })
+			// Get count
+			const countResult = await this.query<{ count: number }>(table, {
+				...options,
+				select: "count",
+			});
 
-      if (error) {
-        return handleDatabaseError(error)
-      }
+			const count = countResult.data?.[0]?.count || 0;
+			const pagination = calculatePagination(count, page, limit);
 
-      return createSuccessResult(data || [])
-    } catch (error) {
-      return createErrorResult(
-        error instanceof Error ? error.message : 'Raw query failed'
-      )
-    }
-  }
+			return createSuccessResult({
+				data: dataResult.data || [],
+				...pagination,
+			} as PaginatedResult<T>);
+		} catch (error) {
+			return createErrorResult(
+				error instanceof Error ? error.message : "Pagination failed",
+			);
+		}
+	}
 
-  /**
-   * Start a database transaction
-   * @returns Promise resolving to transaction object
-   */
-  async transaction(): Promise<DatabaseTransaction> {
-    // Note: Supabase doesn't support explicit transactions in the client
-    // This is a placeholder for future implementation
-    throw new Error(
-      'Transactions not supported in client-side database service'
-    )
-  }
+	/**
+	 * Execute raw SQL query
+	 * @param sql - SQL query
+	 * @param params - Query parameters
+	 * @returns Promise resolving to query result
+	 */
+	async rawQuery<T>(sql: string, params?: any[]): Promise<DatabaseResult<T[]>> {
+		try {
+			const { data, error } = await this.supabase.rpc("execute_sql", {
+				params: params || [],
+				sql,
+			});
 
-  /**
-   * Check database health
-   * @returns Promise resolving to health check result
-   */
-  async healthCheck(): Promise<DatabaseHealthCheck> {
-    const startTime = Date.now()
+			if (error) {
+				return handleDatabaseError(error);
+			}
 
-    try {
-      const { error } = await this.supabase
-        .from('_health_check')
-        .select('*')
-        .limit(1)
-      const latency = Date.now() - startTime
+			return createSuccessResult(data || []);
+		} catch (error) {
+			return createErrorResult(
+				error instanceof Error ? error.message : "Raw query failed",
+			);
+		}
+	}
 
-      return {
-        status: error ? 'unhealthy' : 'healthy',
-        latency,
-        error: error?.message,
-        timestamp: new Date().toISOString(),
-      }
-    } catch (error) {
-      return {
-        status: 'unhealthy',
-        latency: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Health check failed',
-        timestamp: new Date().toISOString(),
-      }
-    }
-  }
+	/**
+	 * Start a database transaction
+	 * @returns Promise resolving to transaction object
+	 */
+	async transaction(): Promise<DatabaseTransaction> {
+		// Note: Supabase doesn't support explicit transactions in the client
+		// This is a placeholder for future implementation
+		throw new Error(
+			"Transactions not supported in client-side database service",
+		);
+	}
+
+	/**
+	 * Check database health
+	 * @returns Promise resolving to health check result
+	 */
+	async healthCheck(): Promise<DatabaseHealthCheck> {
+		const startTime = Date.now();
+
+		try {
+			const { error } = await this.supabase
+				.from("_health_check")
+				.select("*")
+				.limit(1);
+			const latency = Date.now() - startTime;
+
+			return {
+				error: error?.message,
+				latency,
+				status: error ? "unhealthy" : "healthy",
+				timestamp: new Date().toISOString(),
+			};
+		} catch (error) {
+			return {
+				error: error instanceof Error ? error.message : "Health check failed",
+				latency: Date.now() - startTime,
+				status: "unhealthy",
+				timestamp: new Date().toISOString(),
+			};
+		}
+	}
 }
 
 /**
  * Database service for server-side operations
  */
 export class ServerDatabaseService extends DatabaseService {
-  constructor() {
-    super(createServerClient())
-  }
+	async initialize() {
+		this.supabase = await createServerClient();
+	}
 
-  /**
-   * Execute a stored procedure
-   * @param procedure - Procedure name
-   * @param params - Procedure parameters
-   * @returns Promise resolving to procedure result
-   */
-  async callProcedure<T>(
-    procedure: string,
-    params?: any
-  ): Promise<DatabaseResult<T>> {
-    try {
-      const { data, error } = await (this as any).supabase.rpc(
-        procedure,
-        params
-      )
+	/**
+	 * Execute a stored procedure
+	 * @param procedure - Procedure name
+	 * @param params - Procedure parameters
+	 * @returns Promise resolving to procedure result
+	 */
+	async callProcedure<T>(
+		procedure: string,
+		params?: any,
+	): Promise<DatabaseResult<T>> {
+		try {
+			const { data, error } = await (this as any).supabase.rpc(
+				procedure,
+				params,
+			);
 
-      if (error) {
-        return handleDatabaseError(error)
-      }
+			if (error) {
+				return handleDatabaseError(error);
+			}
 
-      return createSuccessResult(data)
-    } catch (error) {
-      return createErrorResult(
-        error instanceof Error ? error.message : 'Procedure call failed'
-      )
-    }
-  }
+			return createSuccessResult(data);
+		} catch (error) {
+			return createErrorResult(
+				error instanceof Error ? error.message : "Procedure call failed",
+			);
+		}
+	}
 }
 
 // Export singleton instances
-export const databaseService = new DatabaseService()
+export const databaseService = new DatabaseService();
 
 // Lazy-loaded server database service to avoid cookies() being called during build
-let _serverDatabaseService: ServerDatabaseService | null = null
+let _serverDatabaseService: ServerDatabaseService | null = null;
 
-export function getServerDatabaseService(): ServerDatabaseService {
-  if (!_serverDatabaseService) {
-    _serverDatabaseService = new ServerDatabaseService()
-  }
-  return _serverDatabaseService
+export async function getServerDatabaseService(): Promise<ServerDatabaseService> {
+	if (!_serverDatabaseService) {
+		_serverDatabaseService = new ServerDatabaseService();
+		await _serverDatabaseService.initialize();
+	}
+	return _serverDatabaseService;
 }
 
 // For backward compatibility, but this should be avoided in build contexts
 export const serverDatabaseService = {
-  get update() {
-    return getServerDatabaseService().update.bind(getServerDatabaseService())
-  },
-  get insert() {
-    return getServerDatabaseService().insert.bind(getServerDatabaseService())
-  },
-  get delete() {
-    return getServerDatabaseService().delete.bind(getServerDatabaseService())
-  },
-  get query() {
-    return getServerDatabaseService().query.bind(getServerDatabaseService())
-  },
-  get findById() {
-    return getServerDatabaseService().findById.bind(getServerDatabaseService())
-  },
-  get paginate() {
-    return getServerDatabaseService().paginate.bind(getServerDatabaseService())
-  },
-  get rawQuery() {
-    return getServerDatabaseService().rawQuery.bind(getServerDatabaseService())
-  },
-  get transaction() {
-    return getServerDatabaseService().transaction.bind(
-      getServerDatabaseService()
-    )
-  },
-  get healthCheck() {
-    return getServerDatabaseService().healthCheck.bind(
-      getServerDatabaseService()
-    )
-  },
-  get callProcedure() {
-    return getServerDatabaseService().callProcedure.bind(
-      getServerDatabaseService()
-    )
-  },
-}
+	get callProcedure() {
+		return async <T>(procedure: string, params?: any) =>
+			(await getServerDatabaseService()).callProcedure<T>(procedure, params);
+	},
+	get delete() {
+		return async (table: string, id: string, options?: DeleteOptions) =>
+			(await getServerDatabaseService()).delete(table, id, options);
+	},
+	get findById() {
+		return async <T>(table: string, id: string) =>
+			(await getServerDatabaseService()).findById<T>(table, id);
+	},
+	get healthCheck() {
+		return async () => (await getServerDatabaseService()).healthCheck();
+	},
+	get insert() {
+		return async <T>(table: string, data: any, options?: InsertOptions) =>
+			(await getServerDatabaseService()).insert<T>(table, data, options);
+	},
+	get paginate() {
+		return async <T>(
+			table: string,
+			page: number,
+			limit: number,
+			options?: QueryOptions,
+		) =>
+			(await getServerDatabaseService()).paginate<T>(
+				table,
+				page,
+				limit,
+				options,
+			);
+	},
+	get query() {
+		return async <T>(table: string, options?: QueryOptions) =>
+			(await getServerDatabaseService()).query<T>(table, options);
+	},
+	get rawQuery() {
+		return async <T>(sql: string, params?: any[]) =>
+			(await getServerDatabaseService()).rawQuery<T>(sql, params);
+	},
+	get transaction() {
+		return async () => (await getServerDatabaseService()).transaction();
+	},
+	get update() {
+		return async (
+			table: string,
+			id: string,
+			data: any,
+			options?: UpdateOptions,
+		) => (await getServerDatabaseService()).update(table, id, data, options);
+	},
+};

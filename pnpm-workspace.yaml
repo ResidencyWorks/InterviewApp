@@ -1,15 +1,17 @@
-# pnpm workspace configuration
-# See: https://pnpm.io/workspaces
-
 packages:
-  # Include all packages in the workspace
-  - 'packages/*'
-  - 'apps/*'
-  - 'tools/*'
-
-  # Exclude specific directories
+  - packages/*
+  - apps/*
+  - tools/*
   - '!**/node_modules'
   - '!**/dist'
   - '!**/build'
   - '!**/.next'
   - '!**/coverage'
+
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - '@sentry/cli'
+  - core-js
+  - esbuild
+  - lefthook
+  - sharp

@@ -1,7 +1,7 @@
 {
-  "mcpServers": {
-    "Sentry": {
-      "url": "https://mcp.sentry.dev/mcp/residencyworks/javascript-nextjs"
-    }
-  }
+	"mcpServers": {
+		"Sentry": {
+			"url": "https://mcp.sentry.dev/mcp/residencyworks/javascript-nextjs"
+		}
+	}
 }

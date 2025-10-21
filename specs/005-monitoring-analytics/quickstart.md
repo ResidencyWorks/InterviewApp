@@ -33,8 +33,8 @@ Create `.env.local` with your monitoring credentials:
 
 ```bash
 # PostHog Configuration
-NEXT_PUBLIC_POSTHOG_API_KEY=phc_your_api_key
-NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+POSTHOG_API_KEY=phc_your_api_key
+POSTHOG_HOST=https://app.posthog.com
 
 # Sentry Configuration
 SENTRY_DSN=https://your-dsn@sentry.io/project-id
@@ -65,8 +65,8 @@ initSentry({
 
 // Initialize PostHog
 if (typeof window !== 'undefined') {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_API_KEY!, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
+  posthog.init(process.env.POSTHOG_API_KEY!, {
+    api_host: process.env.POSTHOG_HOST || 'https://app.posthog.com',
     person_profiles: 'identified_only',
     capture_pageview: false, // We'll handle this manually
     capture_pageleave: true,
@@ -391,11 +391,11 @@ export class ErrorBoundary extends React.Component<
 
 ```bash
 # Required
-NEXT_PUBLIC_POSTHOG_API_KEY=phc_your_api_key
+POSTHOG_API_KEY=phc_your_api_key
 SENTRY_DSN=https://your-dsn@sentry.io/project-id
 
 # Optional
-NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+POSTHOG_HOST=https://app.posthog.com
 SENTRY_ORG=your-org
 SENTRY_PROJECT=your-project
 SENTRY_AUTH_TOKEN=your-auth-token

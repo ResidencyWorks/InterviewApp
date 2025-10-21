@@ -1,330 +1,330 @@
-import { analytics } from '@/lib/analytics'
-import { contentPackService } from '@/lib/content'
-import { errorMonitoring } from '@/lib/error-monitoring'
-import { openaiEvaluation } from '@/lib/openai'
+import { analytics } from "@/lib/analytics";
+import { contentPackService } from "@/lib/content";
+import { errorMonitoring } from "@/lib/error-monitoring";
+import { openaiEvaluation } from "@/lib/openai";
 import type {
-  EvaluationCategories,
-  EvaluationRequest,
-  EvaluationResponse,
-} from '@/types/evaluation'
-import type { EvaluationConfig, EvaluationEngine } from './evaluation-types'
+	EvaluationCategories,
+	EvaluationRequest,
+	EvaluationResponse,
+} from "@/types/evaluation";
+import type { EvaluationConfig, EvaluationEngine } from "./evaluation-types";
 
 /**
  * OpenAI-based evaluation engine
  */
 export class OpenAIEvaluationEngine implements EvaluationEngine {
-  private config: EvaluationConfig
+	private config: EvaluationConfig;
 
-  constructor(config: Partial<EvaluationConfig> = {}) {
-    this.config = {
-      maxResponseLength: 10000,
-      minResponseLength: 10,
-      maxAudioDuration: 300, // 5 minutes
-      timeoutMs: 30000, // 30 seconds
-      retryAttempts: 3,
-      cacheResults: true,
-      cacheTTL: 3600000, // 1 hour
-      ...config,
-    }
-  }
+	constructor(config: Partial<EvaluationConfig> = {}) {
+		this.config = {
+			cacheResults: true,
+			cacheTTL: 3600000, // 1 hour
+			maxAudioDuration: 300, // 5 minutes
+			maxResponseLength: 10000,
+			minResponseLength: 10,
+			retryAttempts: 3,
+			timeoutMs: 30000, // 30 seconds
+			...config,
+		};
+	}
 
-  /**
-   * Validate evaluation request
-   * @param request - Evaluation request to validate
-   * @returns Validation result
-   */
-  validate(request: EvaluationRequest): { valid: boolean; error?: string } {
-    // Check response length
-    if (request.response.length > this.config.maxResponseLength) {
-      return {
-        valid: false,
-        error: `Response too long. Maximum ${this.config.maxResponseLength} characters allowed.`,
-      }
-    }
+	/**
+	 * Validate evaluation request
+	 * @param request - Evaluation request to validate
+	 * @returns Validation result
+	 */
+	validate(request: EvaluationRequest): { valid: boolean; error?: string } {
+		// Check response length
+		if (request.response.length > this.config.maxResponseLength) {
+			return {
+				error: `Response too long. Maximum ${this.config.maxResponseLength} characters allowed.`,
+				valid: false,
+			};
+		}
 
-    if (request.response.length < this.config.minResponseLength) {
-      return {
-        valid: false,
-        error: `Response too short. Minimum ${this.config.minResponseLength} characters required.`,
-      }
-    }
+		if (request.response.length < this.config.minResponseLength) {
+			return {
+				error: `Response too short. Minimum ${this.config.minResponseLength} characters required.`,
+				valid: false,
+			};
+		}
 
-    // Check audio duration if audio type
-    if (request.type === 'audio' && request.audio_url) {
-      // This would need to be implemented with audio analysis
-      // For now, we'll skip this validation
-    }
+		// Check audio duration if audio type
+		if (request.type === "audio" && request.audio_url) {
+			// This would need to be implemented with audio analysis
+			// For now, we'll skip this validation
+		}
 
-    return { valid: true }
-  }
+		return { valid: true };
+	}
 
-  /**
-   * Evaluate a response
-   * @param request - Evaluation request
-   * @returns Promise resolving to evaluation response
-   */
-  async evaluate(request: EvaluationRequest): Promise<EvaluationResponse> {
-    const startTime = Date.now()
+	/**
+	 * Evaluate a response
+	 * @param request - Evaluation request
+	 * @returns Promise resolving to evaluation response
+	 */
+	async evaluate(request: EvaluationRequest): Promise<EvaluationResponse> {
+		const startTime = Date.now();
 
-    try {
-      // Validate request
-      const validation = this.validate(request)
-      if (!validation.valid) {
-        throw new Error(validation.error)
-      }
+		try {
+			// Validate request
+			const validation = this.validate(request);
+			if (!validation.valid) {
+				throw new Error(validation.error);
+			}
 
-      // Get content pack if specified
-      let contentPack = null
-      if (request.content_pack_id) {
-        contentPack = await contentPackService.get(request.content_pack_id)
-      }
+			// Get content pack if specified
+			let contentPack = null;
+			if (request.content_pack_id) {
+				contentPack = await contentPackService.get(request.content_pack_id);
+			}
 
-      // Get evaluation criteria
-      const evaluationCriteria =
-        contentPack?.content.evaluation_criteria || this.getDefaultCriteria()
+			// Get evaluation criteria
+			const evaluationCriteria =
+				contentPack?.content.evaluation_criteria || this.getDefaultCriteria();
 
-      let evaluation: EvaluationResponse
+			let evaluation: EvaluationResponse;
 
-      if (request.type === 'audio') {
-        // Evaluate audio response
-        evaluation = await openaiEvaluation.evaluateAudioResponse(
-          request.audio_url || '',
-          evaluationCriteria,
-          contentPack?.content
-        )
-      } else {
-        // Evaluate text response
-        evaluation = await openaiEvaluation.evaluateTextResponse(
-          request.response,
-          evaluationCriteria,
-          contentPack?.content
-        )
-      }
+			if (request.type === "audio") {
+				// Evaluate audio response
+				evaluation = await openaiEvaluation.evaluateAudioResponse(
+					request.audio_url || "",
+					evaluationCriteria,
+					contentPack?.content,
+				);
+			} else {
+				// Evaluate text response
+				evaluation = await openaiEvaluation.evaluateTextResponse(
+					request.response,
+					evaluationCriteria,
+					contentPack?.content,
+				);
+			}
 
-      // Track analytics
-      analytics.trackEvaluationCompleted(
-        'system', // TODO: Get from context
-        {
-          score: evaluation.score,
-          categories: evaluation.categories as unknown as Record<
-            string,
-            number
-          >,
-          duration: evaluation.duration,
-          word_count: evaluation.word_count,
-        },
-        request.content_pack_id
-      )
+			// Track analytics
+			analytics.trackEvaluationCompleted(
+				"system", // TODO: Get from context
+				{
+					categories: evaluation.categories as unknown as Record<
+						string,
+						number
+					>,
+					duration: evaluation.duration,
+					score: evaluation.score,
+					word_count: evaluation.word_count,
+				},
+				request.content_pack_id,
+			);
 
-      return evaluation
-    } catch (error) {
-      const duration = Date.now() - startTime
+			return evaluation;
+		} catch (error) {
+			const duration = Date.now() - startTime;
 
-      // Track error analytics
-      analytics.trackEvaluationFailed(
-        'system', // TODO: Get from context
-        error instanceof Error ? error.message : 'Unknown error',
-        request.content_pack_id
-      )
+			// Track error analytics
+			analytics.trackEvaluationFailed(
+				"system", // TODO: Get from context
+				error instanceof Error ? error.message : "Unknown error",
+				request.content_pack_id,
+			);
 
-      // Report error
-      errorMonitoring.reportError({
-        message: 'Evaluation failed',
-        error: error instanceof Error ? error : new Error('Unknown error'),
-        context: {
-          component: 'evaluation_engine',
-          action: 'evaluate',
-          metadata: {
-            requestType: request.type,
-            responseLength: request.response.length,
-            contentPackId: request.content_pack_id,
-            duration,
-          },
-        },
-      })
+			// Report error
+			errorMonitoring.reportError({
+				context: {
+					action: "evaluate",
+					component: "evaluation_engine",
+					metadata: {
+						contentPackId: request.content_pack_id,
+						duration,
+						requestType: request.type,
+						responseLength: request.response.length,
+					},
+				},
+				error: error instanceof Error ? error : new Error("Unknown error"),
+				message: "Evaluation failed",
+			});
 
-      throw error
-    }
-  }
+			throw error;
+		}
+	}
 
-  /**
-   * Get default evaluation criteria
-   * @returns Default evaluation criteria
-   */
-  private getDefaultCriteria() {
-    return {
-      clarity: {
-        weight: 0.25,
-        description: 'How clear and understandable is the response?',
-        factors: [
-          'Clear articulation',
-          'Logical flow',
-          'Appropriate vocabulary',
-          'Conciseness',
-        ],
-      },
-      structure: {
-        weight: 0.25,
-        description: 'How well-organized and logical is the response?',
-        factors: [
-          'Clear introduction',
-          'Logical progression',
-          'Effective conclusion',
-          'Coherent paragraphs',
-        ],
-      },
-      content: {
-        weight: 0.25,
-        description: 'How relevant and substantive is the content?',
-        factors: [
-          'Relevance to question',
-          'Depth of analysis',
-          'Use of examples',
-          'Originality of thought',
-        ],
-      },
-      delivery: {
-        weight: 0.25,
-        description: 'How confident and engaging is the delivery?',
-        factors: [
-          'Confidence level',
-          'Engagement with audience',
-          'Appropriate tone',
-          'Professional presentation',
-        ],
-      },
-    }
-  }
+	/**
+	 * Get default evaluation criteria
+	 * @returns Default evaluation criteria
+	 */
+	private getDefaultCriteria() {
+		return {
+			clarity: {
+				description: "How clear and understandable is the response?",
+				factors: [
+					"Clear articulation",
+					"Logical flow",
+					"Appropriate vocabulary",
+					"Conciseness",
+				],
+				weight: 0.25,
+			},
+			content: {
+				description: "How relevant and substantive is the content?",
+				factors: [
+					"Relevance to question",
+					"Depth of analysis",
+					"Use of examples",
+					"Originality of thought",
+				],
+				weight: 0.25,
+			},
+			delivery: {
+				description: "How confident and engaging is the delivery?",
+				factors: [
+					"Confidence level",
+					"Engagement with audience",
+					"Appropriate tone",
+					"Professional presentation",
+				],
+				weight: 0.25,
+			},
+			structure: {
+				description: "How well-organized and logical is the response?",
+				factors: [
+					"Clear introduction",
+					"Logical progression",
+					"Effective conclusion",
+					"Coherent paragraphs",
+				],
+				weight: 0.25,
+			},
+		};
+	}
 
-  /**
-   * Calculate weighted score
-   * @param categories - Evaluation categories
-   * @param criteria - Evaluation criteria
-   * @returns Weighted score
-   */
-  private calculateWeightedScore(
-    categories: EvaluationCategories,
-    criteria: any
-  ): number {
-    let totalScore = 0
-    let totalWeight = 0
+	/**
+	 * Calculate weighted score
+	 * @param categories - Evaluation categories
+	 * @param criteria - Evaluation criteria
+	 * @returns Weighted score
+	 */
+	private calculateWeightedScore(
+		categories: EvaluationCategories,
+		criteria: any,
+	): number {
+		let totalScore = 0;
+		let totalWeight = 0;
 
-    for (const [category, score] of Object.entries(categories)) {
-      const categoryCriteria = criteria[category]
-      if (categoryCriteria) {
-        totalScore += score * categoryCriteria.weight
-        totalWeight += categoryCriteria.weight
-      }
-    }
+		for (const [category, score] of Object.entries(categories)) {
+			const categoryCriteria = criteria[category];
+			if (categoryCriteria) {
+				totalScore += score * categoryCriteria.weight;
+				totalWeight += categoryCriteria.weight;
+			}
+		}
 
-    return totalWeight > 0 ? totalScore / totalWeight : 0
-  }
+		return totalWeight > 0 ? totalScore / totalWeight : 0;
+	}
 
-  /**
-   * Generate detailed feedback
-   * @param categories - Evaluation categories
-   * @param criteria - Evaluation criteria
-   * @returns Detailed feedback string
-   */
-  private generateDetailedFeedback(
-    categories: EvaluationCategories,
-    criteria: any
-  ): string {
-    const feedback: string[] = []
+	/**
+	 * Generate detailed feedback
+	 * @param categories - Evaluation categories
+	 * @param criteria - Evaluation criteria
+	 * @returns Detailed feedback string
+	 */
+	private generateDetailedFeedback(
+		categories: EvaluationCategories,
+		criteria: any,
+	): string {
+		const feedback: string[] = [];
 
-    for (const [category, score] of Object.entries(categories)) {
-      const categoryCriteria = criteria[category]
-      if (categoryCriteria) {
-        const level =
-          score >= 80
-            ? 'excellent'
-            : score >= 60
-              ? 'good'
-              : score >= 40
-                ? 'fair'
-                : 'needs improvement'
-        feedback.push(
-          `${categoryCriteria.description}: ${level} (${score}/100)`
-        )
-      }
-    }
+		for (const [category, score] of Object.entries(categories)) {
+			const categoryCriteria = criteria[category];
+			if (categoryCriteria) {
+				const level =
+					score >= 80
+						? "excellent"
+						: score >= 60
+							? "good"
+							: score >= 40
+								? "fair"
+								: "needs improvement";
+				feedback.push(
+					`${categoryCriteria.description}: ${level} (${score}/100)`,
+				);
+			}
+		}
 
-    return feedback.join('\n\n')
-  }
+		return feedback.join("\n\n");
+	}
 }
 
 /**
  * Mock evaluation engine for testing
  */
 export class MockEvaluationEngine implements EvaluationEngine {
-  private config: EvaluationConfig
+	private config: EvaluationConfig;
 
-  constructor(config: Partial<EvaluationConfig> = {}) {
-    this.config = {
-      maxResponseLength: 10000,
-      minResponseLength: 10,
-      maxAudioDuration: 300,
-      timeoutMs: 5000,
-      retryAttempts: 1,
-      cacheResults: false,
-      cacheTTL: 0,
-      ...config,
-    }
-  }
+	constructor(config: Partial<EvaluationConfig> = {}) {
+		this.config = {
+			cacheResults: false,
+			cacheTTL: 0,
+			maxAudioDuration: 300,
+			maxResponseLength: 10000,
+			minResponseLength: 10,
+			retryAttempts: 1,
+			timeoutMs: 5000,
+			...config,
+		};
+	}
 
-  validate(request: EvaluationRequest): { valid: boolean; error?: string } {
-    if (request.response.length < this.config.minResponseLength) {
-      return {
-        valid: false,
-        error: `Response too short. Minimum ${this.config.minResponseLength} characters required.`,
-      }
-    }
+	validate(request: EvaluationRequest): { valid: boolean; error?: string } {
+		if (request.response.length < this.config.minResponseLength) {
+			return {
+				error: `Response too short. Minimum ${this.config.minResponseLength} characters required.`,
+				valid: false,
+			};
+		}
 
-    if (request.response.length > this.config.maxResponseLength) {
-      return {
-        valid: false,
-        error: `Response too long. Maximum ${this.config.maxResponseLength} characters allowed.`,
-      }
-    }
+		if (request.response.length > this.config.maxResponseLength) {
+			return {
+				error: `Response too long. Maximum ${this.config.maxResponseLength} characters allowed.`,
+				valid: false,
+			};
+		}
 
-    return { valid: true }
-  }
+		return { valid: true };
+	}
 
-  async evaluate(request: EvaluationRequest): Promise<EvaluationResponse> {
-    // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+	async evaluate(request: EvaluationRequest): Promise<EvaluationResponse> {
+		// Simulate processing time
+		await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const wordCount = request.response.split(/\s+/).length
-    const duration = 1.0 // Mock duration
+		const wordCount = request.response.split(/\s+/).length;
+		const duration = 1.0; // Mock duration
 
-    // Generate mock scores
-    const categories: EvaluationCategories = {
-      clarity: Math.floor(Math.random() * 40) + 60, // 60-100
-      structure: Math.floor(Math.random() * 40) + 60,
-      content: Math.floor(Math.random() * 40) + 60,
-      delivery: Math.floor(Math.random() * 40) + 60,
-    }
+		// Generate mock scores
+		const categories: EvaluationCategories = {
+			clarity: Math.floor(Math.random() * 40) + 60, // 60-100
+			content: Math.floor(Math.random() * 40) + 60,
+			delivery: Math.floor(Math.random() * 40) + 60,
+			structure: Math.floor(Math.random() * 40) + 60,
+		};
 
-    const score = Math.floor(
-      (categories.clarity +
-        categories.structure +
-        categories.content +
-        categories.delivery) /
-        4
-    )
+		const score = Math.floor(
+			(categories.clarity +
+				categories.structure +
+				categories.content +
+				categories.delivery) /
+				4,
+		);
 
-    return {
-      duration,
-      word_count: wordCount,
-      wpm: wordCount / (duration / 60),
-      categories,
-      feedback: `Mock evaluation completed. Your response scored ${score}/100 overall.`,
-      score,
-      timestamp: new Date().toISOString(),
-    }
-  }
+		return {
+			categories,
+			duration,
+			feedback: `Mock evaluation completed. Your response scored ${score}/100 overall.`,
+			score,
+			timestamp: new Date().toISOString(),
+			word_count: wordCount,
+			wpm: wordCount / (duration / 60),
+		};
+	}
 }
 
 // Export singleton instances
-export const openaiEngine = new OpenAIEvaluationEngine()
-export const mockEngine = new MockEvaluationEngine()
+export const openaiEngine = new OpenAIEvaluationEngine();
+export const mockEngine = new MockEvaluationEngine();
