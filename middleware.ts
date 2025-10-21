@@ -54,37 +54,20 @@ export async function middleware(request: NextRequest) {
 			const response = NextResponse.next();
 			const supabase = createClient(request, response);
 			const {
-				data: { session },
+				data: { user },
 				error,
-			} = await supabase.auth.getSession();
+			} = await supabase.auth.getUser();
 
-			if (error || !session) {
+			if (error || !user) {
 				// Redirect to login page
 				const loginUrl = new URL("/auth/login", request.url);
 				loginUrl.searchParams.set("redirectTo", pathname);
 				return NextResponse.redirect(loginUrl);
 			}
 
-			// Check if session is expired
-			const now = Math.floor(Date.now() / 1000);
-			if (session.expires_at && session.expires_at < now) {
-				// Try to refresh the session
-				const {
-					data: { session: refreshedSession },
-					error: refreshError,
-				} = await supabase.auth.refreshSession();
-
-				if (refreshError || !refreshedSession) {
-					// Redirect to login page
-					const loginUrl = new URL("/auth/login", request.url);
-					loginUrl.searchParams.set("redirectTo", pathname);
-					return NextResponse.redirect(loginUrl);
-				}
-			}
-
 			// Add user info to headers for API routes
-			response.headers.set("x-user-id", session.user.id);
-			response.headers.set("x-user-email", session.user.email || "");
+			response.headers.set("x-user-id", user.id);
+			response.headers.set("x-user-email", user.email || "");
 
 			return response;
 		} catch (error) {

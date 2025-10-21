@@ -17,22 +17,26 @@ export function useAuth() {
 	const supabase = createClient();
 
 	useEffect(() => {
-		// Get initial session
-		const getInitialSession = async () => {
+		// Get initial user
+		const getInitialUser = async () => {
 			const {
-				data: { session },
-			} = await supabase.auth.getSession();
-			setUser(session?.user ?? null);
+				data: { user },
+			} = await supabase.auth.getUser();
+			setUser(user);
 			setLoading(false);
 		};
 
-		getInitialSession();
+		getInitialUser();
 
 		// Listen for auth changes
 		const {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange(async (_event, session) => {
-			setUser(session?.user ?? null);
+			// Use getUser() for security instead of relying on session data
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
+			setUser(user);
 			setLoading(false);
 		});
 

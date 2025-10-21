@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Get current user session
- * Retrieves the current authenticated user session from Supabase
- * @returns Promise resolving to NextResponse with session data or error
+ * Get current user
+ * Retrieves the current authenticated user from Supabase
+ * @returns Promise resolving to NextResponse with user data or error
  */
 export async function GET() {
 	try {
@@ -84,17 +84,17 @@ export async function GET() {
 		);
 
 		const {
-			data: { session },
+			data: { user },
 			error,
-		} = await supabase.auth.getSession();
+		} = await supabase.auth.getUser();
 
 		if (error) {
 			return NextResponse.json({ error: error.message }, { status: 400 });
 		}
 
-		return NextResponse.json({ session });
+		return NextResponse.json({ user });
 	} catch (error) {
-		console.error("Session API error:", error);
+		console.error("User API error:", error);
 		return NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },

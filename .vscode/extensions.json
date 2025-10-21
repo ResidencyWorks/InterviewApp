@@ -9,8 +9,5 @@
 		"supabase.postgrestools",
 		"1Password.op-vscode"
 	],
-	"unwantedRecommendations": [
-		"ms-vscode.vscode-typescript",
-		"hookyqr.beautify"
-	]
+	"unwantedRecommendations": ["ms-vscode.vscode-typescript", "hookyqr.beautify"]
 }

@@ -28,7 +28,6 @@ export default function DashboardPage() {
 							Premium Plan
 						</Badge>
 						<Avatar>
-							<AvatarImage src="/placeholder-avatar.jpg" alt="User" />
 							<AvatarFallback className="bg-gray-200 text-gray-800">
 								U
 							</AvatarFallback>
