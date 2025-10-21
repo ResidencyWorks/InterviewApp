@@ -1,313 +1,360 @@
 # Data Model: Content Pack Loader
 
-**Feature**: 002-content-pack-loader
+**Feature**: Content Pack Loader
 **Date**: 2025-01-27
-**Purpose**: Define core entities and their relationships for the content pack management system
+**Branch**: `002-content-pack-loader`
 
 ## Core Entities
 
 ### ContentPack
 
-**Purpose**: Represents a JSON content pack containing evaluation criteria, questions, and metadata
+Represents a content pack configuration file containing evaluation criteria, content, and metadata.
 
-**Attributes**:
+```typescript
+interface ContentPack {
+  id: string;                    // UUID v4
+  version: string;               // Semantic version (e.g., "1.2.3")
+  name: string;                  // Human-readable name
+  description?: string;          // Optional description
+  schemaVersion: string;         // Schema version for validation
+  content: ContentPackData;      // The actual content data
+  metadata: ContentPackMetadata; // Additional metadata
+  status: ContentPackStatus;     // Current status
+  createdAt: Date;              // Creation timestamp
+  updatedAt: Date;              // Last update timestamp
+  activatedAt?: Date;           // When this pack was activated
+  activatedBy?: string;         // User ID who activated it
+  uploadedBy: string;           // User ID who uploaded it
+  fileSize: number;             // Original file size in bytes
+  checksum: string;             // SHA-256 hash of content
+}
 
-- `id: string` - Unique identifier for the content pack
-- `version: string` - Semantic version (e.g., "1.0.0")
-- `metadata: ContentPackMetadata` - Metadata about the content pack
-- `questions: Question[]` - Array of interview questions
-- `evaluationCriteria: EvaluationCriteria[]` - Array of evaluation criteria
-- `settings: ContentPackSettings` - Optional settings and configuration
-- `isActive: boolean` - Whether this pack is currently active
-- `uploadedAt: Date` - Timestamp when pack was uploaded
-- `activatedAt?: Date` - Timestamp when pack was activated
-- `fileSize: number` - Size of the original JSON file in bytes
-- `checksum: string` - SHA-256 checksum of the file content
+enum ContentPackStatus {
+  UPLOADED = 'uploaded',         // Just uploaded, not validated
+  VALIDATING = 'validating',     // Currently being validated
+  VALID = 'valid',              // Validated successfully
+  INVALID = 'invalid',          // Validation failed
+  ACTIVATED = 'activated',      // Currently active in system
+  ARCHIVED = 'archived'         // Replaced by newer version
+}
+```
 
-**Validation Rules**:
+### ContentPackData
 
-- `version` must follow semantic versioning (x.y.z format)
-- `questions` array must have at least 1 question
-- `evaluationCriteria` array must have at least 1 criterion
-- `fileSize` must be positive and ≤ 10MB
-- `checksum` must be valid SHA-256 hash
+The actual content data structure (flexible based on schema version).
 
-**State Transitions**:
-
-- `uploaded` → `validated` → `activated` | `rejected`
+```typescript
+interface ContentPackData {
+  // Structure depends on schema version
+  // This is the validated JSON content from the uploaded file
+  [key: string]: any;
+}
+```
 
 ### ContentPackMetadata
 
-**Purpose**: Metadata about the content pack for tracking and organization
+Additional metadata about the content pack.
 
-**Attributes**:
-
-- `name: string` - Human-readable name of the content pack
-- `description?: string` - Optional description of the content pack
-- `author: string` - Author of the content pack
-- `createdAt: string` - ISO datetime when pack was created
-- `tags?: string[]` - Optional tags for categorization
-- `category?: string` - Optional category (e.g., "technical", "behavioral")
-
-**Validation Rules**:
-
-- `name` must be non-empty string
-- `author` must be non-empty string
-- `createdAt` must be valid ISO datetime string
-- `tags` array must have max 10 items if provided
-
-### Question
-
-**Purpose**: Represents an interview question within a content pack
-
-**Attributes**:
-
-- `id: string` - Unique identifier for the question
-- `text: string` - The question text
-- `type: QuestionType` - Type of question (open-ended, multiple-choice, etc.)
-- `difficulty: DifficultyLevel` - Difficulty level of the question
-- `category: string` - Category of the question
-- `timeLimit?: number` - Optional time limit in seconds
-- `expectedAnswer?: string` - Optional expected answer or guidance
-- `keywords?: string[]` - Optional keywords for evaluation
-
-**Validation Rules**:
-
-- `text` must be between 10 and 1000 characters
-- `type` must be valid QuestionType enum value
-- `difficulty` must be valid DifficultyLevel enum value
-- `timeLimit` must be positive if provided
-- `keywords` array must have max 20 items if provided
-
-### EvaluationCriteria
-
-**Purpose**: Represents criteria for evaluating responses to questions
-
-**Attributes**:
-
-- `id: string` - Unique identifier for the criterion
-- `name: string` - Name of the evaluation criterion
-- `description: string` - Description of what this criterion measures
-- `weight: number` - Weight of this criterion in overall scoring (0-1)
-- `rubric: RubricLevel[]` - Rubric levels for scoring
-- `isRequired: boolean` - Whether this criterion is required for evaluation
-
-**Validation Rules**:
-
-- `name` must be non-empty string
-- `description` must be between 10 and 500 characters
-- `weight` must be between 0 and 1
-- `rubric` array must have at least 2 levels
-- `isRequired` must be boolean
-
-### RubricLevel
-
-**Purpose**: Represents a level in the evaluation rubric
-
-**Attributes**:
-
-- `level: number` - Numeric level (e.g., 1-5)
-- `name: string` - Name of the level (e.g., "Poor", "Good", "Excellent")
-- `description: string` - Description of performance at this level
-- `score: number` - Score associated with this level (0-100)
-
-**Validation Rules**:
-
-- `level` must be positive integer
-- `name` must be non-empty string
-- `description` must be between 5 and 200 characters
-- `score` must be between 0 and 100
+```typescript
+interface ContentPackMetadata {
+  author?: string;              // Content pack author
+  tags?: string[];             // Categorization tags
+  dependencies?: string[];     // Required system dependencies
+  compatibility?: {            // System compatibility info
+    minVersion?: string;
+    maxVersion?: string;
+    features?: string[];
+  };
+  customFields?: Record<string, any>; // Additional custom metadata
+}
+```
 
 ### ValidationResult
 
-**Purpose**: Represents the outcome of content pack validation
+Represents the outcome of content pack validation.
 
-**Attributes**:
+```typescript
+interface ValidationResult {
+  isValid: boolean;             // Overall validation result
+  errors: ValidationError[];    // List of validation errors
+  warnings: ValidationWarning[]; // List of validation warnings
+  validatedAt: Date;           // When validation was performed
+  validatedBy: string;         // System/user that performed validation
+  schemaVersion: string;       // Schema version used for validation
+  validationTimeMs: number;    // Time taken for validation
+}
 
-- `isValid: boolean` - Whether validation passed
-- `errors: ValidationError[]` - Array of validation errors
-- `warnings: ValidationWarning[]` - Array of validation warnings
-- `validatedAt: Date` - Timestamp when validation was performed
-- `validationDuration: number` - Time taken for validation in milliseconds
-- `schemaVersion: string` - Version of the schema used for validation
+interface ValidationError {
+  path: string;                // JSON path to the error
+  message: string;             // Human-readable error message
+  code: string;                // Error code for programmatic handling
+  severity: 'error' | 'warning'; // Error severity
+}
 
-**Validation Rules**:
-
-- `isValid` must be boolean
-- `errors` array must be empty if `isValid` is true
-- `validatedAt` must be valid Date
-- `validationDuration` must be positive number
-- `schemaVersion` must be valid semantic version
-
-### ValidationError
-
-**Purpose**: Represents a specific validation error
-
-**Attributes**:
-
-- `path: string` - JSON path to the invalid field
-- `message: string` - Human-readable error message
-- `code: string` - Error code for programmatic handling
-- `severity: ErrorSeverity` - Severity level of the error
-- `suggestion?: string` - Optional suggestion for fixing the error
-
-**Validation Rules**:
-
-- `path` must be valid JSON path string
-- `message` must be non-empty string
-- `code` must be valid error code
-- `severity` must be valid ErrorSeverity enum value
+interface ValidationWarning {
+  path: string;                // JSON path to the warning
+  message: string;             // Human-readable warning message
+  code: string;                // Warning code
+  suggestion?: string;         // Optional suggestion for resolution
+}
+```
 
 ### LoadEvent
 
-**Purpose**: Represents the event logged to PostHog when content pack is loaded
+Represents the logging event sent to PostHog when content pack is successfully loaded.
 
-**Attributes**:
+```typescript
+interface LoadEvent {
+  event: 'content_pack_loaded';
+  properties: {
+    contentPackId: string;      // ID of the loaded content pack
+    version: string;            // Content pack version
+    schemaVersion: string;      // Schema version used
+    fileSize: number;           // Original file size
+    uploadDurationMs: number;   // Time from upload to activation
+    validationDurationMs: number; // Time spent validating
+    activatedBy: string;        // User who activated it
+    previousPackId?: string;    // ID of previously active pack
+    timestamp: Date;           // When the event occurred
+  };
+}
+```
 
-- `eventName: string` - Name of the event (e.g., "content_pack_loaded")
-- `userId: string` - ID of the user who loaded the pack
-- `contentPackId: string` - ID of the loaded content pack
-- `version: string` - Version of the content pack
-- `timestamp: Date` - When the event occurred
-- `metadata: Record<string, any>` - Additional event metadata
-- `duration: number` - Time taken for the operation in milliseconds
+### UploadQueue
 
-**Validation Rules**:
+Represents the queue management system for handling concurrent content pack uploads.
 
-- `eventName` must be non-empty string
-- `userId` must be valid user ID
-- `contentPackId` must be valid content pack ID
-- `version` must be valid semantic version
-- `timestamp` must be valid Date
-- `duration` must be positive number
+```typescript
+interface UploadQueue {
+  id: string;                  // Queue instance ID
+  currentUpload?: UploadItem;  // Currently processing upload
+  pendingUploads: UploadItem[]; // Queue of pending uploads
+  completedUploads: UploadItem[]; // Recently completed uploads
+  maxConcurrentUploads: number; // Maximum concurrent uploads (always 1)
+  createdAt: Date;            // Queue creation time
+  updatedAt: Date;            // Last queue update
+}
 
-## Enums
+interface UploadItem {
+  id: string;                  // Upload item ID
+  userId: string;              // User who initiated upload
+  fileName: string;            // Original file name
+  fileSize: number;            // File size in bytes
+  status: UploadStatus;        // Current upload status
+  progress: number;            // Upload progress (0-100)
+  startedAt: Date;            // When upload started
+  completedAt?: Date;          // When upload completed
+  error?: string;              // Error message if failed
+  contentPackId?: string;      // Associated content pack ID
+}
 
-### QuestionType
+enum UploadStatus {
+  QUEUED = 'queued',           // Waiting in queue
+  UPLOADING = 'uploading',     // Currently uploading
+  VALIDATING = 'validating',   // Currently validating
+  COMPLETED = 'completed',     // Successfully completed
+  FAILED = 'failed'            // Upload or validation failed
+}
+```
 
-- `OPEN_ENDED` - Open-ended text response
-- `MULTIPLE_CHOICE` - Multiple choice selection
-- `CODING` - Coding challenge
-- `SCENARIO` - Scenario-based question
+### ContentPackSchema
 
-### DifficultyLevel
+Represents the Zod schema definition for content pack structure validation.
 
-- `EASY` - Easy difficulty
-- `MEDIUM` - Medium difficulty
-- `HARD` - Hard difficulty
+```typescript
+interface ContentPackSchema {
+  version: string;             // Schema version
+  name: string;               // Schema name
+  description?: string;       // Schema description
+  schema: z.ZodSchema<any>;   // The actual Zod schema
+  createdAt: Date;           // When schema was created
+  isActive: boolean;         // Whether this schema is currently active
+  supportedVersions: string[]; // Content pack versions this schema supports
+}
 
-### ErrorSeverity
+// Example schema structure (version 1.0.0)
+const ContentPackSchemaV1 = z.object({
+  version: z.string().regex(/^\d+\.\d+\.\d+$/),
+  name: z.string().min(1).max(100),
+  description: z.string().optional(),
+  content: z.object({
+    evaluations: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      criteria: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        weight: z.number().min(0).max(1),
+        description: z.string()
+      })),
+      questions: z.array(z.object({
+        id: z.string(),
+        text: z.string(),
+        type: z.enum(['multiple-choice', 'text', 'rating']),
+        options: z.array(z.string()).optional()
+      }))
+    })),
+    categories: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string()
+    }))
+  }),
+  metadata: z.object({
+    author: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+    dependencies: z.array(z.string()).optional(),
+    compatibility: z.object({
+      minVersion: z.string().optional(),
+      maxVersion: z.string().optional(),
+      features: z.array(z.string()).optional()
+    }).optional()
+  })
+});
+```
 
-- `ERROR` - Critical error that prevents activation
-- `WARNING` - Warning that doesn't prevent activation
-- `INFO` - Informational message
+## Database Schema (Supabase)
+
+### content_packs table
+
+```sql
+CREATE TABLE content_packs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  version VARCHAR(50) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  schema_version VARCHAR(50) NOT NULL,
+  content JSONB NOT NULL,
+  metadata JSONB,
+  status VARCHAR(20) NOT NULL DEFAULT 'uploaded',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  activated_at TIMESTAMP WITH TIME ZONE,
+  activated_by UUID REFERENCES auth.users(id),
+  uploaded_by UUID REFERENCES auth.users(id) NOT NULL,
+  file_size BIGINT NOT NULL,
+  checksum VARCHAR(64) NOT NULL,
+
+  -- Indexes
+  CONSTRAINT content_packs_status_check CHECK (status IN ('uploaded', 'validating', 'valid', 'invalid', 'activated', 'archived')),
+  CONSTRAINT content_packs_version_check CHECK (version ~ '^\d+\.\d+\.\d+$')
+);
+
+-- Indexes
+CREATE INDEX idx_content_packs_status ON content_packs(status);
+CREATE INDEX idx_content_packs_activated_at ON content_packs(activated_at);
+CREATE INDEX idx_content_packs_uploaded_by ON content_packs(uploaded_by);
+CREATE INDEX idx_content_packs_content_gin ON content_packs USING GIN(content);
+CREATE UNIQUE INDEX idx_content_packs_active ON content_packs(status) WHERE status = 'activated';
+```
+
+### validation_results table
+
+```sql
+CREATE TABLE validation_results (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content_pack_id UUID REFERENCES content_packs(id) ON DELETE CASCADE,
+  is_valid BOOLEAN NOT NULL,
+  errors JSONB,
+  warnings JSONB,
+  validated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  validated_by VARCHAR(255) NOT NULL,
+  schema_version VARCHAR(50) NOT NULL,
+  validation_time_ms INTEGER NOT NULL
+);
+
+-- Indexes
+CREATE INDEX idx_validation_results_content_pack_id ON validation_results(content_pack_id);
+CREATE INDEX idx_validation_results_validated_at ON validation_results(validated_at);
+```
+
+### upload_queue table
+
+```sql
+CREATE TABLE upload_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  file_size BIGINT NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'queued',
+  progress INTEGER DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
+  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE,
+  error_message TEXT,
+  content_pack_id UUID REFERENCES content_packs(id),
+
+  CONSTRAINT upload_queue_status_check CHECK (status IN ('queued', 'uploading', 'validating', 'completed', 'failed'))
+);
+
+-- Indexes
+CREATE INDEX idx_upload_queue_user_id ON upload_queue(user_id);
+CREATE INDEX idx_upload_queue_status ON upload_queue(status);
+CREATE INDEX idx_upload_queue_started_at ON upload_queue(started_at);
+```
+
+## State Transitions
+
+### ContentPack Status Flow
+
+```
+UPLOADED → VALIDATING → VALID → ACTIVATED
+    ↓           ↓           ↓
+  INVALID   INVALID    ARCHIVED
+```
+
+**Transition Rules**:
+- `UPLOADED` → `VALIDATING`: When validation starts
+- `VALIDATING` → `VALID`: When validation succeeds
+- `VALIDATING` → `INVALID`: When validation fails
+- `VALID` → `ACTIVATED`: When content pack is activated
+- `ACTIVATED` → `ARCHIVED`: When a new content pack is activated
+- `VALID` → `ARCHIVED`: When a new content pack is activated (without being activated)
+
+### Upload Status Flow
+
+```
+QUEUED → UPLOADING → VALIDATING → COMPLETED
+   ↓         ↓           ↓
+ FAILED   FAILED     FAILED
+```
+
+**Transition Rules**:
+- `QUEUED` → `UPLOADING`: When upload processing starts
+- `UPLOADING` → `VALIDATING`: When file upload completes
+- `VALIDATING` → `COMPLETED`: When validation succeeds
+- Any status → `FAILED`: When an error occurs
+
+## Validation Rules
+
+### Content Pack Validation
+
+1. **File Format**: Must be valid JSON
+2. **File Size**: Must be ≤ 10MB
+3. **Schema Compliance**: Must match current schema version
+4. **Required Fields**: All required fields must be present
+5. **Data Types**: All fields must match expected types
+6. **Business Rules**: Custom validation rules (e.g., unique IDs, valid ranges)
+
+### Upload Validation
+
+1. **User Authentication**: User must be authenticated admin
+2. **File Type**: Must be JSON file
+3. **File Size**: Must be ≤ 10MB
+4. **Rate Limiting**: Max 5 uploads per user per hour
+5. **Queue Capacity**: Max 10 pending uploads per user
 
 ## Relationships
 
-### ContentPack → Question (1:Many)
+### Content Pack Relationships
 
-- Each content pack can have multiple questions
-- Questions are scoped to their content pack
-- Questions are deleted when content pack is deleted
+- **One-to-Many**: ContentPack → ValidationResult (one pack can have multiple validation attempts)
+- **One-to-Many**: User → ContentPack (one user can upload multiple packs)
+- **One-to-One**: ContentPack → UploadItem (one pack per upload)
+- **One-to-Many**: User → UploadItem (one user can have multiple uploads)
 
-### ContentPack → EvaluationCriteria (1:Many)
+### System Relationships
 
-- Each content pack can have multiple evaluation criteria
-- Criteria are scoped to their content pack
-- Criteria are deleted when content pack is deleted
-
-### ContentPack → ValidationResult (1:1)
-
-- Each content pack has exactly one validation result
-- Validation result is created when pack is validated
-- Validation result is updated on re-validation
-
-### ContentPack → LoadEvent (1:Many)
-
-- Each content pack can have multiple load events
-- Load events track activation history
-- Load events are preserved for analytics
-
-## Data Flow
-
-1. **Upload**: User uploads JSON file via drag-and-drop interface
-2. **Validation**: System validates file against Zod schema
-3. **Storage**: Valid content pack is stored in memory and database
-4. **Activation**: User confirms activation of validated pack
-5. **Hot-Swap**: System replaces active content pack in memory
-6. **Logging**: System logs activation event to PostHog
-7. **Notification**: Dependent services are notified of content change
-
-## Validation Schemas
-
-### ContentPack Schema
-
-```typescript
-const ContentPackSchema = z.object({
-  version: z.string().regex(/^\d+\.\d+\.\d+$/),
-  metadata: ContentPackMetadataSchema,
-  questions: z.array(QuestionSchema).min(1),
-  evaluationCriteria: z.array(EvaluationCriteriaSchema).min(1),
-  settings: ContentPackSettingsSchema.optional()
-});
-```
-
-### Question Schema
-
-```typescript
-const QuestionSchema = z.object({
-  id: z.string().uuid(),
-  text: z.string().min(10).max(1000),
-  type: z.enum(['OPEN_ENDED', 'MULTIPLE_CHOICE', 'CODING', 'SCENARIO']),
-  difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
-  category: z.string().min(1),
-  timeLimit: z.number().positive().optional(),
-  expectedAnswer: z.string().optional(),
-  keywords: z.array(z.string()).max(20).optional()
-});
-```
-
-### EvaluationCriteria Schema
-
-```typescript
-const EvaluationCriteriaSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1),
-  description: z.string().min(10).max(500),
-  weight: z.number().min(0).max(1),
-  rubric: z.array(RubricLevelSchema).min(2),
-  isRequired: z.boolean()
-});
-```
-
-## Error Handling
-
-### Validation Errors
-
-- Invalid JSON format
-- Schema validation failures
-- Missing required fields
-- Invalid data types or values
-- File size or format violations
-
-### Upload Errors
-
-- File too large (>10MB)
-- Invalid file type (not JSON)
-- Network timeout during upload
-- Insufficient permissions
-
-### Activation Errors
-
-- Content pack not validated
-- Concurrent activation attempts
-- Memory allocation failures
-- PostHog logging failures
-
-## Performance Considerations
-
-- **Memory Management**: Content packs are stored in memory for fast access
-- **Validation Caching**: Validation results are cached to avoid re-validation
-- **Atomic Updates**: Content pack replacement is atomic to prevent partial states
-- **Event Batching**: PostHog events are batched to reduce API calls
-- **File Cleanup**: Temporary upload files are cleaned up after processing
+- **One-to-One**: System → ContentPack (only one active content pack at a time)
+- **One-to-Many**: ContentPack → LoadEvent (one pack can generate multiple load events)
+- **One-to-One**: UploadQueue → UploadItem (one current upload per queue)

@@ -1,25 +1,31 @@
 # Implementation Plan: Content Pack Loader
 
-**Branch**: `002-content-pack-loader` | **Date**: 2025-01-27 | **Spec**: [link]
+**Branch**: `002-content-pack-loader` | **Date**: 2025-01-27 | **Spec**: `/specs/002-content-pack-loader/spec.md`
 **Input**: Feature specification from `/specs/002-content-pack-loader/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Build a dev/admin-only content pack loader for JSON content packs with drag-and-drop UI, Zod validation, hot-swap capabilities, and PostHog analytics. The system enables developers to upload, validate, and activate content packs without redeployment, with fallback handling and comprehensive error tracking via Sentry. Includes role-based access control via Supabase and devcontainer integration.
+Admin users can upload, validate, and hot-swap content pack JSON files without application redeployment. The system provides comprehensive validation using Zod schemas, persists content packs in Supabase with file system fallback, implements queue-based upload processing, and includes graceful error handling for PostHog logging failures.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.0+ with strict mode enabled
-**Primary Dependencies**: Next.js 14, Supabase, PostHog, Sentry, shadcn/ui, Zod, multer
-**Storage**: In-memory for active content packs, Supabase for role management, file system for temporary uploads
-**Testing**: Vitest for unit tests, Playwright for E2E tests
-**Target Platform**: Web application (admin interface), Vercel deployment
-**Project Type**: Web application (Next.js admin interface)
-**Performance Goals**: Content pack validation ≤1s, hot-swap ≤500ms, file upload ≤30s for 10MB
-**Constraints**: Admin-only access, role-based security, devcontainer integration
-**Scale/Scope**: M0 MVP with 3 user stories, 1 admin interface, 4 API endpoints
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
+
+**Language/Version**: TypeScript 5.x with strict mode
+**Primary Dependencies**: Next.js 14, Zod, Supabase, PostHog, shadcn/ui, Tailwind CSS
+**Storage**: Supabase PostgreSQL with file system fallback
+**Testing**: Vitest with 80% coverage target
+**Target Platform**: Web application (Vercel deployment)
+**Project Type**: Web application (frontend + backend)
+**Performance Goals**: Content pack validation ≤1s, upload/validation ≤30s, hot-swap without redeploy
+**Constraints**: ≤10MB content pack files, admin-only access, graceful PostHog failure handling, devcontainer integration, Sentry error tracking
+**Scale/Scope**: Admin users, content pack management, evaluation system integration
 
 ## Constitution Check
 
@@ -53,9 +59,9 @@ Build a dev/admin-only content pack loader for JSON content packs with drag-and-
 
 **Performance Gates:**
 
-- [x] Content pack validation performance targets defined (≤1s)
-- [x] Hot-swap performance targets defined (≤500ms)
-- [x] File upload performance targets defined (≤30s for 10MB)
+- [x] Core loop performance targets defined (≤250ms)
+- [x] Redis lookup targets defined (≤50ms)
+- [x] Content validation targets defined (≤1s)
 
 **MCP Integration Gates:**
 
@@ -70,7 +76,7 @@ Build a dev/admin-only content pack loader for JSON content packs with drag-and-
 ### Documentation (this feature)
 
 ```
-specs/002-content-pack-loader/
+specs/[###-feature]/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
@@ -82,61 +88,34 @@ specs/002-content-pack-loader/
 ### Source Code (repository root)
 
 ```
-# Content Pack Loader Integration
 src/
-├── app/
-│   ├── (admin)/              # Admin route group (protected)
-│   │   └── content-loader/   # Content pack loader interface
-│   └── api/
-│       ├── content/          # Content pack API endpoints
-│       │   ├── upload/       # File upload endpoint
-│       │   ├── validate/     # Validation endpoint
-│       │   ├── activate/     # Activation endpoint
-│       │   └── status/       # Status endpoint
-│       └── admin/            # Admin-only endpoints
-├── components/
-│   ├── admin/               # Admin-specific components
-│   │   ├── ContentPackUploader.tsx
-│   │   ├── ValidationResults.tsx
-│   │   ├── FallbackWarning.tsx
-│   │   └── ContentPackStatus.tsx
-│   └── ui/                  # shadcn/ui components
-├── lib/
-│   ├── content/             # Content pack management
-│   │   ├── domain/          # Domain layer
-│   │   │   ├── entities/    # ContentPack, ValidationResult
-│   │   │   ├── services/    # ContentPackService
-│   │   │   └── interfaces/  # Service contracts
-│   │   ├── application/     # Application layer
-│   │   │   ├── services/    # ContentPackManagementService
-│   │   │   └── use-cases/   # Upload, Validate, Activate
-│   │   ├── infrastructure/  # Infrastructure layer
-│   │   │   ├── validation/  # Zod schema validation
-│   │   │   ├── storage/     # File system operations
-│   │   │   └── analytics/   # PostHog integration
-│   │   └── types/           # TypeScript definitions
-│   ├── auth/               # Auth utilities (Supabase)
-│   └── admin/              # Admin utilities
-├── types/                  # TypeScript type definitions
-└── hooks/                  # Custom React hooks
-    └── useContentPack.ts   # Content pack management hook
+├── app/                    # Next.js 14 App Router
+│   ├── admin/             # Admin-only content pack management
+│   │   ├── content-packs/ # Content pack upload/management UI
+│   │   └── page.tsx       # Admin dashboard
+│   ├── api/               # API routes
+│   │   ├── content-packs/ # Content pack CRUD operations
+│   │   └── upload/        # File upload handling
+│   └── globals.css        # Global styles
+├── components/            # Reusable UI components
+│   ├── ui/               # shadcn/ui components
+│   ├── admin/            # Admin-specific components
+│   └── content-pack/     # Content pack specific components
+├── lib/                  # Core business logic
+│   ├── domain/           # Domain entities and services
+│   ├── infrastructure/   # External service adapters
+│   ├── validation/       # Zod schemas
+│   └── utils/            # Utility functions
+├── types/                # TypeScript type definitions
+└── hooks/                # React hooks
 
 tests/
-├── unit/
-│   └── content/           # Unit tests for content pack logic
-├── integration/
-│   └── content/           # Integration tests
-└── e2e/
-    └── admin/             # E2E tests for admin interface
-
-# Devcontainer integration
-.devcontainer/
-├── devcontainer.json
-└── scripts/
-    └── setup-content-loader.sh  # Content loader setup script
+├── unit/                 # Unit tests for domain logic
+├── integration/          # API integration tests
+└── e2e/                  # End-to-end tests
 ```
 
-**Structure Decision**: Next.js 14 admin interface with Onion Architecture for content pack management. Clear separation between admin UI, API endpoints, and core business logic. Devcontainer integration for development environment setup.
+**Structure Decision**: Web application using Next.js 14 App Router with Onion Architecture. Domain layer (`lib/domain/`) remains independent of frameworks, while infrastructure adapters (`lib/infrastructure/`) handle external services like Supabase and PostHog.
 
 ## Complexity Tracking
 
@@ -144,4 +123,5 @@ tests/
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [None currently identified] | [N/A] | [N/A] |
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

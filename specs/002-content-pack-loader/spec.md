@@ -22,7 +22,7 @@
 
 ### User Story 1 - Upload and Validate Content Pack (Priority: P1)
 
-As a developer, I want to upload a content pack JSON file and have it validated before activation so that I can ensure the content is properly formatted and safe to load.
+As an admin user, I want to upload a content pack JSON file and have it validated before activation so that I can ensure the content is properly formatted and safe to load.
 
 **Why this priority**: Content validation is critical for system stability. Without proper validation, malformed content packs could break the evaluation system, making this the most important user journey.
 
@@ -39,7 +39,7 @@ As a developer, I want to upload a content pack JSON file and have it validated 
 
 ### User Story 2 - Hot-Swap Content Pack (Priority: P1)
 
-As a developer, I want to activate a validated content pack without redeploying the application so that I can update evaluation content quickly and efficiently.
+As an admin user, I want to activate a validated content pack without redeploying the application so that I can update evaluation content quickly and efficiently.
 
 **Why this priority**: Hot-swapping is the core value proposition of this feature. Without this capability, developers would need to redeploy the entire application for content updates, making this equally critical as validation.
 
@@ -56,7 +56,7 @@ As a developer, I want to activate a validated content pack without redeploying 
 
 ### User Story 3 - Handle Fallback Content (Priority: P2)
 
-As a developer, I want to see a warning when no valid content pack is loaded so that I know the system is using fallback/default content.
+As an admin user, I want to see a warning when no valid content pack is loaded so that I know the system is using fallback/default content.
 
 **Why this priority**: While not critical for core functionality, this provides important operational visibility and helps developers understand the system state.
 
@@ -101,12 +101,29 @@ As a developer, I want to see a warning when no valid content pack is loaded so 
 - **FR-011**: System MUST support content pack versioning and metadata tracking
 - **FR-012**: System MUST handle validation timeouts gracefully
 - **FR-013**: System MUST provide clear feedback during validation and activation processes
+- **FR-014**: System MUST persist content packs in Supabase database for session continuity
+- **FR-015**: System MUST implement file system fallback when Supabase is unavailable
+- **FR-016**: System MUST load persisted content packs on application startup
+- **FR-017**: System MUST restrict content pack upload access to admin users only
+- **FR-018**: System MUST authenticate admin users before allowing content pack operations
+- **FR-019**: System MUST provide admin-specific UI for content pack management
+- **FR-020**: System MUST define comprehensive Zod schema for content pack validation
+- **FR-021**: System MUST support schema versioning for backward compatibility
+- **FR-022**: System MUST validate all required fields and data types per schema
+- **FR-023**: System MUST implement graceful degradation when PostHog logging fails
+- **FR-024**: System MUST retry PostHog logging with exponential backoff
+- **FR-025**: System MUST not block content pack activation due to PostHog failures
+- **FR-026**: System MUST implement queue-based processing for content pack uploads
+- **FR-027**: System MUST process only one content pack upload at a time
+- **FR-028**: System MUST provide queue status feedback to admin users
 
 ### Key Entities *(include if feature involves data)*
 
-- **ContentPack**: Represents the JSON configuration file containing evaluation criteria, content, and metadata
+- **ContentPack**: Represents the JSON configuration file containing evaluation criteria, content, and metadata with versioned schema
 - **ValidationResult**: Represents the outcome of content pack validation with success status and error details
 - **LoadEvent**: Represents the logging event sent to PostHog when content pack is successfully loaded
+- **ContentPackSchema**: Represents the Zod schema definition for content pack structure validation
+- **UploadQueue**: Represents the queue management system for handling concurrent content pack uploads
 
 ## Success Criteria *(mandatory)*
 
@@ -120,7 +137,7 @@ As a developer, I want to see a warning when no valid content pack is loaded so 
 - **SC-001**: Developers can upload and validate content packs within 30 seconds
 - **SC-002**: Content pack hot-swap completes successfully without application redeploy in 100% of valid cases
 - **SC-003**: Content pack validation rejects 100% of malformed or invalid JSON files
-- **SC-004**: PostHog logging succeeds for 99% of successful content pack loads
+- **SC-004**: PostHog logging succeeds for 99% of successful content pack loads with retry mechanism
 - **SC-005**: Fallback warning UI appears within 2 seconds when no valid content pack is loaded
 - **SC-006**: Content pack validation completes within 10 seconds for files up to 10MB
 - **SC-007**: System handles concurrent content pack uploads without conflicts
@@ -135,8 +152,12 @@ As a developer, I want to see a warning when no valid content pack is loaded so 
 - Content pack files will be reasonably sized (under 10MB)
 - The evaluation system will gracefully handle content pack changes during active evaluations
 
-## [NEEDS CLARIFICATION]
+## Clarifications
 
-1. **Content Pack Persistence**: Should content pack changes persist between sessions (e.g., stored in Supabase)? This affects whether content packs need to be reloaded after application restarts.
+### Session 2025-01-27
 
-2. **Access Control**: Who is allowed to upload packs — dev only, or admin users via UI? This impacts security and user management requirements.
+- Q: Content Pack Persistence Strategy - Should content pack changes persist between sessions? → A: Store in Supabase with fallback to file system
+- Q: Access Control Strategy - Who is allowed to upload content packs? → A: Admin users only via UI
+- Q: Content Pack Schema Definition - How should content pack structure be validated? → A: Define comprehensive Zod schema with versioning support
+- Q: Error Handling Strategy for PostHog Failures - How should the system handle PostHog logging failures? → A: Graceful degradation with retry mechanism
+- Q: Concurrent Upload Handling Strategy - How should the system handle multiple simultaneous uploads? → A: Queue-based processing with single active upload
