@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { isProtectedPath, isPublicPath } from "@/lib/auth/auth-helpers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/middleware";
 
 /**
  * Protected routes configuration
@@ -51,7 +51,8 @@ export async function middleware(request: NextRequest) {
 	// Check if route is protected
 	if (isProtectedPath(pathname, PROTECTED_ROUTES)) {
 		try {
-			const supabase = await createClient();
+			const response = NextResponse.next();
+			const supabase = createClient(request, response);
 			const {
 				data: { session },
 				error,
@@ -82,7 +83,6 @@ export async function middleware(request: NextRequest) {
 			}
 
 			// Add user info to headers for API routes
-			const response = NextResponse.next();
 			response.headers.set("x-user-id", session.user.id);
 			response.headers.set("x-user-email", session.user.email || "");
 

@@ -7,11 +7,12 @@ const nextConfig = {
 		ignoreDuringBuilds: true,
 	},
 
-	// Experimental features
-	experimental: {
-		// Enable server components logging
-		serverComponentsExternalPackages: ["@supabase/ssr"],
-	},
+	// External packages for server-side rendering
+	serverExternalPackages: [
+		"require-in-the-middle",
+		"@supabase/ssr",
+		"@opentelemetry/instrumentation",
+	],
 	images: {
 		domains: ["localhost"],
 	},

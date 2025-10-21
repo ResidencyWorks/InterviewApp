@@ -4,14 +4,14 @@
  */
 
 import type { User } from "@supabase/supabase-js";
-import type { UserEntitlementLevel } from "./database";
+import type { Enums } from "./database";
 
 export interface UserProfile {
 	id: string;
 	email: string;
 	full_name: string | null;
 	avatar_url: string | null;
-	entitlement_level: UserEntitlementLevel;
+	entitlement_level: Enums<"user_entitlement_level">;
 	stripe_customer_id: string | null;
 	created_at: string;
 	updated_at: string;
@@ -36,7 +36,7 @@ export interface AuthSession {
 export interface UserEntitlement {
 	id: string;
 	user_id: string;
-	entitlement_level: UserEntitlementLevel;
+	entitlement_level: Enums<"user_entitlement_level">;
 	expires_at: string;
 	created_at: string;
 	updated_at: string;

@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { analytics } from "@/lib/analytics";
 import { databaseService } from "@/lib/db";
 import { errorMonitoring } from "@/lib/error-monitoring";
+import { cacheKeys, cacheTTL, redisCache } from "@/lib/redis";
 import type {
 	EvaluationRequest,
 	EvaluationResponse,
@@ -80,6 +81,10 @@ export class EvaluationService implements EvaluationServiceInterface {
 				updatedResult,
 			);
 
+			// Cache the completed result
+			const cacheKey = cacheKeys.evaluationResult(resultId);
+			await redisCache.set(cacheKey, updatedResult, cacheTTL.evaluationResult);
+
 			// Track completion
 			analytics.trackEvaluationCompleted(
 				"system", // TODO: Get from auth context
@@ -152,10 +157,25 @@ export class EvaluationService implements EvaluationServiceInterface {
 	 */
 	async getResult(id: string): Promise<EvaluationResult | null> {
 		try {
+			// Try cache first
+			const cacheKey = cacheKeys.evaluationResult(id);
+			const cachedResult = await redisCache.get<EvaluationResult>(cacheKey);
+
+			if (cachedResult) {
+				return cachedResult;
+			}
+
+			// Fallback to database
 			const result = await databaseService.findById<EvaluationResult>(
 				"evaluation_results",
 				id,
 			);
+
+			if (result.data) {
+				// Cache the result for future requests
+				await redisCache.set(cacheKey, result.data, cacheTTL.evaluationResult);
+			}
+
 			return result.data;
 		} catch (error) {
 			console.error("Error getting evaluation result:", error);

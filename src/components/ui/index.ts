@@ -49,6 +49,11 @@ export {
 export type { InputProps } from "./input";
 export { Input } from "./input";
 export { Label } from "./label";
+export { Popover, PopoverContent, PopoverTrigger } from "./popover";
+export type { ScoreChipProps } from "./score-chip";
+export { ScoreChip } from "./score-chip";
+export type { ScorePopoverProps } from "./score-popover";
+export { ScorePopover } from "./score-popover";
 
 export {
 	Select,
@@ -62,5 +67,6 @@ export {
 	SelectTrigger,
 	SelectValue,
 } from "./select";
+export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 export type { TextareaProps } from "./textarea";
 export { Textarea } from "./textarea";

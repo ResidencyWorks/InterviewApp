@@ -90,8 +90,8 @@ export default function DashboardPage() {
 				{/* Main Content */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 					{/* Recent Activity */}
-					<div className="lg:col-span-2">
-						<Card>
+					<div className="lg:col-span-2 lg:row-span-2">
+						<Card className="h-100">
 							<CardHeader>
 								<CardTitle>Recent Activity</CardTitle>
 								<CardDescription>

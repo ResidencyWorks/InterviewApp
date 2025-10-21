@@ -123,32 +123,32 @@ description: "Task list for M0 Core Loop – Interview Drills feature implementa
 
 ### Implementation for User Story 2
 
-- [ ] T053 [US2] Create evaluation API endpoint in src/app/api/evaluate/route.ts
-- [ ] T054 [US2] Implement OpenAI Whisper integration for speech-to-text
-- [ ] T055 [US2] Implement OpenAI GPT integration for evaluation
-- [ ] T056 [US2] Create evaluation result data models
-- [ ] T057 [US2] Implement evaluation service in src/lib/services/evaluation.ts
-- [ ] T058 [US2] Create drill interface page in src/app/(dashboard)/drill/page.tsx
-- [ ] T059 [US2] Implement response submission components
-- [ ] T060 [US2] Create evaluation result display components
-- [ ] T061 [US2] Implement score chip UI with popovers
-- [ ] T061a [US2] Create ScoreChip component in src/components/ui/score-chip.tsx
-- [ ] T061b [US2] Create ScorePopover component in src/components/ui/score-popover.tsx
-- [ ] T061c [US2] Implement chip color coding based on score ranges
-- [ ] T061d [US2] Add accessibility attributes for screen readers
-- [ ] T062 [US2] Create audio recording functionality
-- [ ] T063 [US2] Implement text input for written responses
-- [ ] T064 [US2] Create evaluation result validation
-- [ ] T065 [US2] Implement error handling for evaluation failures
-- [ ] T066 [US2] Create evaluation performance monitoring
-- [ ] T067 [US2] Implement evaluation result caching
-- [ ] T068 [US2] Create evaluation analytics tracking
-- [ ] T068a [US2] Implement score_returned event logging to PostHog
-- [ ] T068b [US2] Add user context to PostHog events for authenticated users
-- [ ] T068c [US2] Implement anonymous user tracking for unauthenticated users
-- [ ] T069 [US2] Create evaluation tests in tests/unit/evaluation/
-- [ ] T070 [US2] Create evaluation integration tests
-- [ ] T071 [US2] Create evaluation E2E tests in tests/e2e/evaluation/
+- [x] T053 [US2] Create evaluation API endpoint in src/app/api/evaluate/route.ts
+- [x] T054 [US2] Implement OpenAI Whisper integration for speech-to-text
+- [x] T055 [US2] Implement OpenAI GPT integration for evaluation
+- [x] T056 [US2] Create evaluation result data models
+- [x] T057 [US2] Implement evaluation service in src/lib/services/evaluation.ts
+- [x] T058 [US2] Create drill interface page in src/app/(dashboard)/drill/page.tsx
+- [x] T059 [US2] Implement response submission components
+- [x] T060 [US2] Create evaluation result display components
+- [x] T061 [US2] Implement score chip UI with popovers
+- [x] T061a [US2] Create ScoreChip component in src/components/ui/score-chip.tsx
+- [x] T061b [US2] Create ScorePopover component in src/components/ui/score-popover.tsx
+- [x] T061c [US2] Implement chip color coding based on score ranges
+- [x] T061d [US2] Add accessibility attributes for screen readers
+- [x] T062 [US2] Create audio recording functionality
+- [x] T063 [US2] Implement text input for written responses
+- [x] T064 [US2] Create evaluation result validation
+- [x] T065 [US2] Implement error handling for evaluation failures
+- [x] T066 [US2] Create evaluation performance monitoring
+- [x] T067 [US2] Implement evaluation result caching
+- [x] T068 [US2] Create evaluation analytics tracking
+- [x] T068a [US2] Implement score_returned event logging to PostHog
+- [x] T068b [US2] Add user context to PostHog events for authenticated users
+- [x] T068c [US2] Implement anonymous user tracking for unauthenticated users
+- [x] T069 [US2] Create evaluation tests in tests/unit/evaluation/
+- [x] T070 [US2] Create evaluation integration tests
+- [x] T071 [US2] Create evaluation E2E tests in tests/e2e/evaluation/
 
 **Checkpoint**: At this point, User Story 2 should be fully functional and testable independently
 
