@@ -16,27 +16,109 @@ export function useAuth() {
 	const [loading, setLoading] = useState(true);
 	const supabase = createClient();
 
+	// Debug: Log Supabase configuration
+	console.log(
+		"useAuth - Supabase URL:",
+		process.env.NEXT_PUBLIC_SUPABASE_URL ? "present" : "missing",
+	);
+	console.log(
+		"useAuth - Supabase Anon Key:",
+		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "present" : "missing",
+	);
+
 	useEffect(() => {
-		// Get initial session
-		const getInitialSession = async () => {
-			const {
-				data: { session },
-			} = await supabase.auth.getSession();
-			setUser(session?.user ?? null);
-			setLoading(false);
+		let mounted = true;
+
+		// Get initial user
+		const getInitialUser = async () => {
+			try {
+				console.log("useAuth - Attempting to get user...");
+
+				const {
+					data: { user },
+					error,
+				} = await supabase.auth.getUser();
+
+				console.log("useAuth - getUser result:", {
+					user: user ? { id: user.id, email: user.email } : null,
+					error: error
+						? { message: error.message, status: error.status }
+						: null,
+				});
+
+				if (error) {
+					console.error("useAuth - Error getting user:", error);
+				}
+
+				if (mounted) {
+					setUser(user);
+					setLoading(false);
+				}
+			} catch (error) {
+				console.error("useAuth - Exception getting user:", error);
+				if (mounted) {
+					setLoading(false);
+				}
+			}
 		};
 
-		getInitialSession();
-
-		// Listen for auth changes
+		// Listen for auth changes first
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange(async (_event, session) => {
-			setUser(session?.user ?? null);
-			setLoading(false);
+		} = supabase.auth.onAuthStateChange(async (event, session) => {
+			console.log(
+				"useAuth - Auth state changed:",
+				event,
+				session ? "session present" : "no session",
+			);
+
+			if (mounted) {
+				if (event === "SIGNED_IN" && session) {
+					// User just signed in, use the session user directly
+					console.log(
+						"useAuth - Signed in - user:",
+						session.user
+							? { id: session.user.id, email: session.user.email }
+							: null,
+					);
+					setUser(session.user);
+					setLoading(false);
+				} else if (event === "SIGNED_OUT") {
+					// User signed out
+					console.log("useAuth - Signed out");
+					setUser(null);
+					setLoading(false);
+				} else {
+					// Other events, get user from auth
+					const {
+						data: { user },
+					} = await supabase.auth.getUser();
+					console.log(
+						"useAuth - Auth change - user:",
+						user ? { id: user.id, email: user.email } : null,
+					);
+					setUser(user);
+					setLoading(false);
+				}
+			}
 		});
 
-		return () => subscription.unsubscribe();
+		// Get initial user after setting up the listener
+		getInitialUser();
+
+		// Timeout to prevent infinite loading
+		const timeout = setTimeout(() => {
+			console.log("useAuth - Timeout reached, setting loading to false");
+			if (mounted) {
+				setLoading(false);
+			}
+		}, 5000); // 5 second timeout
+
+		return () => {
+			mounted = false;
+			clearTimeout(timeout);
+			subscription.unsubscribe();
+		};
 	}, [supabase.auth]);
 
 	/**

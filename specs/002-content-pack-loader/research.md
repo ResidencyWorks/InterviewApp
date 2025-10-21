@@ -1,231 +1,249 @@
 # Research: Content Pack Loader
 
-**Feature**: 002-content-pack-loader
+**Feature**: Content Pack Loader
 **Date**: 2025-01-27
-**Purpose**: Resolve technical unknowns and establish implementation patterns
+**Branch**: `002-content-pack-loader`
 
-## Research Tasks
+## Technology Decisions
 
-### 1. File Upload and Validation Patterns
+### Content Pack Validation
 
-**Task**: Research file upload patterns for Next.js with drag-and-drop UI and Zod validation
-
-**Decision**: Use Next.js API routes with multer for file handling, react-dropzone for drag-and-drop UI, and Zod for schema validation
+**Decision**: Use Zod for comprehensive schema validation with versioning support
 
 **Rationale**:
-
-- Next.js API routes provide server-side file handling with proper security
-- multer handles multipart form data efficiently
-- react-dropzone provides excellent UX for drag-and-drop functionality
-- Zod provides runtime validation with TypeScript integration
+- Zod provides TypeScript-first schema validation with excellent type inference
+- Built-in support for schema versioning and backward compatibility
+- Integrates seamlessly with Next.js and provides clear error messages
+- Supports complex validation rules and custom validators
+- Performance is excellent for files up to 10MB
 
 **Alternatives considered**:
+- JSON Schema: More verbose, less TypeScript integration
+- Joi: JavaScript-focused, less type safety
+- Custom validation: Would require significant development effort
 
-- Client-side only validation: Insufficient security, can be bypassed
-- Third-party file upload services: Additional cost and complexity
-- Custom file upload implementation: More development time and maintenance
+### Content Pack Persistence
 
-**Implementation details**:
-
-- Use `multer` for file upload handling in API routes
-- Use `react-dropzone` for drag-and-drop UI component
-- Implement Zod schemas for content pack validation
-- Add file size limits (10MB) and type validation (JSON only)
-- Implement progress indicators for large file uploads
-
-### 2. Hot-Swap Content Management
-
-**Task**: Research patterns for hot-swapping content in memory without application restart
-
-**Decision**: Use in-memory singleton service with atomic content replacement and event-driven updates
+**Decision**: Store in Supabase PostgreSQL with file system fallback
 
 **Rationale**:
-
-- Singleton pattern ensures single source of truth for active content
-- Atomic replacement prevents partial state during updates
-- Event-driven updates notify dependent services of content changes
-- Memory-based approach provides fastest access times
+- Supabase provides managed PostgreSQL with built-in auth integration
+- File system fallback ensures system resilience when database is unavailable
+- PostgreSQL JSONB support is perfect for content pack storage
+- Built-in real-time capabilities for future enhancements
+- Follows constitution requirement for Supabase as primary database
 
 **Alternatives considered**:
+- In-memory only: Would lose data on restart
+- File system only: Less queryable, no concurrent access control
+- External object storage: Adds complexity without clear benefits
 
-- Database-based content storage: Slower access, requires DB queries
-- File system watching: Complex setup, platform-dependent
-- External content service: Additional infrastructure complexity
+### Upload Queue Management
 
-**Implementation details**:
-
-- Create `ContentPackManager` singleton service
-- Implement atomic content replacement with rollback capability
-- Use EventEmitter for content change notifications
-- Add content versioning and metadata tracking
-- Implement graceful degradation when content is unavailable
-
-### 3. Role-Based Access Control with Supabase
-
-**Task**: Research Supabase role-based access control patterns for admin-only features
-
-**Decision**: Use Supabase RLS (Row Level Security) with custom admin roles and JWT-based authentication
+**Decision**: Implement queue-based processing with single active upload
 
 **Rationale**:
-
-- Supabase RLS provides database-level security
-- JWT tokens enable stateless authentication
-- Custom roles allow fine-grained permission control
-- Integrates well with existing Supabase auth system
+- Prevents conflicts and race conditions during concurrent uploads
+- Provides clear feedback to admin users about upload status
+- Simplifies error handling and rollback scenarios
+- Ensures consistent system state during content pack transitions
+- Can be implemented with in-memory queue initially, database-backed later
 
 **Alternatives considered**:
+- Multiple concurrent uploads: Complex conflict resolution needed
+- Last upload wins: Could lose important content packs
+- Reject new uploads: Poor user experience
 
-- Custom auth system: More development time and security concerns
-- Third-party auth providers: Additional cost and complexity
-- Simple API key authentication: Less secure, no user management
+### Error Handling Strategy
 
-**Implementation details**:
-
-- Create `admin` and `developer` roles in Supabase
-- Implement RLS policies for content pack management
-- Use Supabase client for role verification in API routes
-- Add middleware for admin route protection
-- Implement role-based UI component rendering
-
-### 4. PostHog Analytics Integration
-
-**Task**: Research PostHog event tracking patterns for content pack operations
-
-**Decision**: Use PostHog client-side and server-side tracking with structured event schemas
+**Decision**: Graceful degradation with retry mechanism for PostHog failures
 
 **Rationale**:
-
-- PostHog provides comprehensive analytics and event tracking
-- Both client and server tracking ensure complete coverage
-- Structured event schemas enable better data analysis
-- Integrates with existing project monitoring setup
+- Content pack loading should not be blocked by analytics failures
+- Exponential backoff prevents overwhelming PostHog during outages
+- Maintains system functionality while preserving observability
+- Follows resilience best practices for external service dependencies
+- Can implement circuit breaker pattern for future enhancement
 
 **Alternatives considered**:
+- Fail on PostHog errors: Would block critical functionality
+- Skip logging entirely: Would lose important analytics data
+- File system logging: Adds complexity without clear benefits
 
-- Custom analytics solution: More development time and maintenance
-- Google Analytics: Less detailed event tracking capabilities
-- No analytics: Poor visibility into feature usage
+### Admin Access Control
 
-**Implementation details**:
-
-- Track events: `content_pack_uploaded`, `content_pack_validated`, `content_pack_activated`, `content_pack_failed`
-- Include metadata: version, timestamp, file size, validation duration
-- Implement error tracking for failed operations
-- Add user identification for admin actions
-- Use PostHog's feature flags for gradual rollout
-
-### 5. Error Handling and Monitoring
-
-**Task**: Research error handling patterns for file operations with Sentry integration
-
-**Decision**: Use structured error types with Sentry context and graceful degradation
+**Decision**: Admin users only via UI with authentication and auth-only route protection
 
 **Rationale**:
-
-- Structured errors provide better debugging information
-- Sentry context helps trace issues across file operations
-- Graceful degradation maintains system stability
-- Integrates with existing error tracking setup
-
-**Alternatives considered**:
-
-- Generic error handling: Insufficient context for debugging
-- No error tracking: Poor observability and debugging experience
-- Custom error reporting: More development time and maintenance
-
-**Implementation details**:
-
-- Custom error types: `ValidationError`, `UploadError`, `ActivationError`, `PermissionError`
-- Sentry context: user ID, file name, file size, operation type
-- Implement retry logic for transient failures
-- Add error boundaries for UI error handling
-- Log detailed error information for debugging
-
-### 6. Devcontainer Integration
-
-**Task**: Research devcontainer integration patterns for content pack loader setup
-
-**Decision**: Use devcontainer with custom setup scripts and environment configuration
-
-**Rationale**:
-
-- Devcontainer ensures consistent development environment
-- Setup scripts automate configuration and dependencies
-- Environment configuration enables easy customization
-- Integrates with existing devcontainer setup
+- Content packs affect evaluation system behavior - requires admin privileges
+- UI-based access provides better user experience than CLI
+- Integrates with existing Supabase auth system with role-based access control
+- Provides audit trail and user management capabilities
+- Follows principle of least privilege for system modifications
+- Auth-only routes ensure secure access to admin functionality
 
 **Alternatives considered**:
+- Developer access: Too broad for production systems
+- Any authenticated user: Security risk for system configuration
+- No access control: Major security vulnerability
 
-- Manual setup instructions: Error-prone and time-consuming
-- Docker Compose: More complex for development workflow
-- No containerization: Environment inconsistencies
+## Integration Patterns
 
-**Implementation details**:
+### Supabase Integration
 
-- Add content pack loader setup script to devcontainer
-- Configure file upload limits and validation settings
-- Set up test content packs for development
-- Add environment variables for configuration
-- Include development tools and debugging utilities
+**Pattern**: Repository pattern with interface abstraction
 
-### 7. Content Pack Schema Design
+**Implementation**:
+- Create `IContentPackRepository` interface in domain layer
+- Implement `SupabaseContentPackRepository` in infrastructure layer
+- Use dependency injection to provide repository to services
+- Handle connection failures gracefully with fallback to file system
 
-**Task**: Research JSON schema design patterns for content pack validation
+### PostHog Integration
 
-**Decision**: Use Zod schemas with versioned content pack structure and comprehensive validation
+**Pattern**: Event-driven logging with retry mechanism
 
-**Rationale**:
+**Implementation**:
+- Create `IAnalyticsService` interface in domain layer
+- Implement `PostHogAnalyticsService` in infrastructure layer
+- Use exponential backoff for retry logic
+- Implement circuit breaker pattern for repeated failures
+- Log events asynchronously to avoid blocking main flow
 
-- Zod provides TypeScript-first schema validation
-- Versioned structure enables backward compatibility
-- Comprehensive validation prevents runtime errors
-- Clear error messages aid debugging
+### Devcontainer Integration
 
-**Alternatives considered**:
+**Pattern**: Development environment setup with content pack loader tools
 
-- JSON Schema: More verbose and less TypeScript integration
-- Manual validation: Error-prone and maintenance heavy
-- No validation: Runtime errors and poor developer experience
+**Implementation**:
+- Include content pack validation tools in devcontainer
+- Pre-configure Supabase and PostHog connections for development
+- Include sample content packs for testing
+- Set up hot-reload for content pack changes during development
+- Include debugging tools for content pack validation
 
-**Implementation details**:
+### Sentry Error Integration
 
-```typescript
-const ContentPackSchema = z.object({
-  version: z.string().regex(/^\d+\.\d+\.\d+$/),
-  metadata: z.object({
-    name: z.string().min(1),
-    description: z.string().optional(),
-    author: z.string().min(1),
-    createdAt: z.string().datetime(),
-    tags: z.array(z.string()).optional()
-  }),
-  questions: z.array(QuestionSchema).min(1),
-  evaluationCriteria: z.array(CriteriaSchema).min(1),
-  settings: z.object({
-    timeLimit: z.number().positive().optional(),
-    difficulty: z.enum(['easy', 'medium', 'hard']).optional()
-  }).optional()
-});
-```
+**Pattern**: Comprehensive error tracking with context
 
-## Research Summary
+**Implementation**:
+- Integrate Sentry SDK for client and server-side error tracking
+- Capture content pack validation errors with full context
+- Track upload failures with file metadata (excluding sensitive content)
+- Monitor PostHog logging failures and retry attempts
+- Set up alerts for critical content pack loader errors
+- Include user context and content pack metadata in error reports
 
-All technical unknowns have been resolved with concrete implementation decisions. The Content Pack Loader will use:
+### File Upload Handling
 
-1. **File Upload**: Next.js API routes with multer and react-dropzone
-2. **Hot-Swap**: In-memory singleton service with atomic replacement
-3. **Access Control**: Supabase RLS with custom admin roles
-4. **Analytics**: PostHog with structured event tracking
-5. **Error Handling**: Structured errors with Sentry integration
-6. **Devcontainer**: Custom setup scripts and environment configuration
-7. **Validation**: Zod schemas with versioned content pack structure
+**Pattern**: Stream-based processing with validation
 
-These decisions align with the project constitution and provide a robust, secure, and maintainable content pack management system.
+**Implementation**:
+- Use Next.js API routes with multipart form handling
+- Stream file uploads to avoid memory issues with large files
+- Validate file type and size before processing
+- Implement progress tracking for user feedback
+- Use temporary storage during validation, permanent storage after activation
 
-## Clarifications Resolved
+## Performance Considerations
 
-Based on the research, the following clarifications from the spec have been resolved:
+### Content Pack Validation
 
-1. **Content Pack Persistence**: Content packs will be stored in memory for hot-swapping. A database table will track metadata and versions for audit purposes, but the active content remains in memory for performance.
+**Target**: ≤1 second for files up to 10MB
 
-2. **Access Control**: Admin-only access will be implemented using Supabase roles. Only users with `admin` or `developer` roles can access the content pack loader interface and API endpoints.
+**Strategy**:
+- Use Zod's streaming validation for large files
+- Implement validation caching for repeated schema checks
+- Use Web Workers for validation to avoid blocking UI
+- Implement progressive validation (basic structure first, then detailed validation)
+
+### Hot-Swap Performance
+
+**Target**: No application redeploy required
+
+**Strategy**:
+- Load new content pack into memory before activation
+- Use atomic swap to replace old content pack
+- Implement rollback mechanism if activation fails
+- Use event-driven architecture to notify evaluation system of changes
+
+### Database Performance
+
+**Target**: ≤50ms for content pack lookups
+
+**Strategy**:
+- Use PostgreSQL JSONB indexing for content pack queries
+- Implement connection pooling for Supabase
+- Use read replicas for content pack retrieval
+- Cache frequently accessed content packs in memory
+
+## Security Considerations
+
+### File Upload Security
+
+**Measures**:
+- Validate file type and size before processing
+- Scan uploaded files for malicious content
+- Use temporary storage with automatic cleanup
+- Implement rate limiting for upload endpoints
+- Validate JSON structure before schema validation
+
+### Access Control
+
+**Measures**:
+- Require admin authentication for all content pack operations
+- Implement role-based access control (RBAC)
+- Log all content pack operations for audit trail
+- Use HTTPS for all file uploads
+- Implement CSRF protection for admin endpoints
+
+### Data Protection
+
+**Measures**:
+- Encrypt content packs at rest in Supabase
+- Use secure file system permissions for fallback storage
+- Implement data retention policies for old content packs
+- Use secure random IDs for content pack identification
+- Implement backup and recovery procedures
+
+## Monitoring and Observability
+
+### Metrics to Track
+
+**Performance Metrics**:
+- Content pack validation time
+- Upload processing time
+- Hot-swap activation time
+- Database query performance
+- PostHog logging success rate
+
+**Business Metrics**:
+- Number of content packs uploaded per day
+- Content pack activation success rate
+- Admin user activity
+- Fallback usage frequency
+- Error rates by operation type
+
+### Logging Strategy
+
+**Structured Logging**:
+- Use consistent log format across all services
+- Include correlation IDs for request tracing
+- Log all content pack operations with user context
+- Implement log aggregation with Sentry integration
+- Use different log levels for different environments
+
+### Alerting
+
+**Critical Alerts**:
+- Content pack validation failures
+- Database connection failures
+- PostHog logging failures (after retry exhaustion)
+- File system fallback activation
+- Admin authentication failures
+
+**Warning Alerts**:
+- Slow content pack validation (>5 seconds)
+- High error rates (>5% in 5 minutes)
+- Queue backup (multiple pending uploads)
+- Database performance degradation
+- PostHog retry attempts

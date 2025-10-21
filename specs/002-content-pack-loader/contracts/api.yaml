@@ -1,0 +1,723 @@
+openapi: 3.0.3
+info:
+  title: Content Pack Loader API
+  description: API for managing content packs in the InterviewApp system
+  version: 1.0.0
+  contact:
+    name: InterviewApp Team
+    email: support@interviewapp.com
+
+servers:
+  - url: https://api.interviewapp.com/v1
+    description: Production server
+  - url: https://staging-api.interviewapp.com/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /content-packs:
+    get:
+      summary: List content packs
+      description: Retrieve a list of content packs with optional filtering
+      tags:
+        - Content Packs
+      parameters:
+        - name: status
+          in: query
+          description: Filter by content pack status
+          schema:
+            type: string
+            enum: [uploaded, validating, valid, invalid, activated, archived]
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of results to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of content packs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContentPack'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Upload content pack
+      description: Upload a new content pack file for validation
+      tags:
+        - Content Packs
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Content pack JSON file
+                name:
+                  type: string
+                  description: Human-readable name for the content pack
+                description:
+                  type: string
+                  description: Optional description
+              required:
+                - file
+                - name
+      responses:
+        '201':
+          description: Content pack uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContentPack'
+                  uploadId:
+                    type: string
+                    description: Upload queue ID for tracking progress
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /content-packs/{id}:
+    get:
+      summary: Get content pack
+      description: Retrieve a specific content pack by ID
+      tags:
+        - Content Packs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content pack ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Content pack details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContentPack'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update content pack
+      description: Update content pack metadata
+      tags:
+        - Content Packs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content pack ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Human-readable name
+                description:
+                  type: string
+                  description: Description
+                metadata:
+                  type: object
+                  description: Additional metadata
+      responses:
+        '200':
+          description: Content pack updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContentPack'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete content pack
+      description: Delete a content pack (only if not activated)
+      tags:
+        - Content Packs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content pack ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Content pack deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot delete activated content pack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /content-packs/{id}/activate:
+    post:
+      summary: Activate content pack
+      description: Activate a validated content pack
+      tags:
+        - Content Packs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content pack ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Content pack activated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContentPack'
+                  previousPackId:
+                    type: string
+                    description: ID of the previously active content pack
+        '400':
+          description: Content pack cannot be activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /content-packs/{id}/validate:
+    post:
+      summary: Validate content pack
+      description: Re-validate a content pack
+      tags:
+        - Content Packs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content pack ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Validation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ValidationResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /content-packs/active:
+    get:
+      summary: Get active content pack
+      description: Retrieve the currently active content pack
+      tags:
+        - Content Packs
+      responses:
+        '200':
+          description: Active content pack
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContentPack'
+        '404':
+          description: No active content pack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /uploads:
+    get:
+      summary: List uploads
+      description: Retrieve upload queue status for the current user
+      tags:
+        - Uploads
+      parameters:
+        - name: status
+          in: query
+          description: Filter by upload status
+          schema:
+            type: string
+            enum: [queued, uploading, validating, completed, failed]
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: List of uploads
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UploadItem'
+                  currentUpload:
+                    $ref: '#/components/schemas/UploadItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /uploads/{id}:
+    get:
+      summary: Get upload status
+      description: Retrieve the status of a specific upload
+      tags:
+        - Uploads
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Upload ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Upload status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UploadItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ContentPack:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        version:
+          type: string
+          description: Semantic version
+          example: "1.2.3"
+        name:
+          type: string
+          description: Human-readable name
+          example: "Interview Questions v1.2"
+        description:
+          type: string
+          description: Optional description
+          example: "Updated interview questions for 2025"
+        schemaVersion:
+          type: string
+          description: Schema version used for validation
+          example: "1.0.0"
+        content:
+          type: object
+          description: The actual content data
+        metadata:
+          type: object
+          description: Additional metadata
+        status:
+          type: string
+          enum: [uploaded, validating, valid, invalid, activated, archived]
+          description: Current status
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        activatedAt:
+          type: string
+          format: date-time
+          description: When this pack was activated
+        activatedBy:
+          type: string
+          format: uuid
+          description: User ID who activated it
+        uploadedBy:
+          type: string
+          format: uuid
+          description: User ID who uploaded it
+        fileSize:
+          type: integer
+          description: Original file size in bytes
+        checksum:
+          type: string
+          description: SHA-256 hash of content
+      required:
+        - id
+        - version
+        - name
+        - schemaVersion
+        - content
+        - status
+        - createdAt
+        - updatedAt
+        - uploadedBy
+        - fileSize
+        - checksum
+
+    ValidationResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Validation result ID
+        contentPackId:
+          type: string
+          format: uuid
+          description: Associated content pack ID
+        isValid:
+          type: boolean
+          description: Overall validation result
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          description: List of validation errors
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationWarning'
+          description: List of validation warnings
+        validatedAt:
+          type: string
+          format: date-time
+          description: When validation was performed
+        validatedBy:
+          type: string
+          description: System/user that performed validation
+        schemaVersion:
+          type: string
+          description: Schema version used for validation
+        validationTimeMs:
+          type: integer
+          description: Time taken for validation in milliseconds
+      required:
+        - id
+        - contentPackId
+        - isValid
+        - errors
+        - warnings
+        - validatedAt
+        - validatedBy
+        - schemaVersion
+        - validationTimeMs
+
+    ValidationError:
+      type: object
+      properties:
+        path:
+          type: string
+          description: JSON path to the error
+          example: "content.evaluations[0].criteria[1].weight"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Weight must be between 0 and 1"
+        code:
+          type: string
+          description: Error code for programmatic handling
+          example: "INVALID_RANGE"
+        severity:
+          type: string
+          enum: [error, warning]
+          description: Error severity
+      required:
+        - path
+        - message
+        - code
+        - severity
+
+    ValidationWarning:
+      type: object
+      properties:
+        path:
+          type: string
+          description: JSON path to the warning
+        message:
+          type: string
+          description: Human-readable warning message
+        code:
+          type: string
+          description: Warning code
+        suggestion:
+          type: string
+          description: Optional suggestion for resolution
+      required:
+        - path
+        - message
+        - code
+
+    UploadItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Upload item ID
+        userId:
+          type: string
+          format: uuid
+          description: User who initiated upload
+        fileName:
+          type: string
+          description: Original file name
+          example: "interview-questions-v1.2.json"
+        fileSize:
+          type: integer
+          description: File size in bytes
+        status:
+          type: string
+          enum: [queued, uploading, validating, completed, failed]
+          description: Current upload status
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Upload progress percentage
+        startedAt:
+          type: string
+          format: date-time
+          description: When upload started
+        completedAt:
+          type: string
+          format: date-time
+          description: When upload completed
+        error:
+          type: string
+          description: Error message if failed
+        contentPackId:
+          type: string
+          format: uuid
+          description: Associated content pack ID
+      required:
+        - id
+        - userId
+        - fileName
+        - fileSize
+        - status
+        - progress
+        - startedAt
+
+    Pagination:
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: Maximum number of results
+        offset:
+          type: integer
+          description: Number of results skipped
+        total:
+          type: integer
+          description: Total number of results
+        hasMore:
+          type: boolean
+          description: Whether there are more results
+      required:
+        - limit
+        - offset
+        - total
+        - hasMore
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          description: When the error occurred
+      required:
+        - error
+        - message
+        - timestamp
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Content Packs
+    description: Content pack management operations
+  - name: Uploads
+    description: Upload queue and status operations

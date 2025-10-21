@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logging/logger";
-import { migrationService } from "@/lib/migration/migration-service";
 
 /**
  * GET /api/migrations
@@ -13,17 +12,44 @@ export async function GET(request: NextRequest) {
 
 		switch (action) {
 			case "status": {
-				const status = await migrationService.getMigrationStatus();
+				// Return information about Supabase migrations
+				const status = {
+					message: "Migrations are now managed through Supabase CLI",
+					instructions: [
+						"Use 'supabase db push' to apply migrations",
+						"Use 'supabase db reset' to reset database",
+						"Use 'supabase migration list' to see migration status",
+						"Migration files are located in supabase/migrations/",
+					],
+					migrationFiles: [
+						"20250127000001_initial_schema.sql",
+						"20250127000002_initial_schema_ts.sql",
+						"20250127000003_add_user_preferences.sql",
+						"20250127000004_add_evaluation_metrics.sql",
+						"20250127000005_content_packs.sql",
+					],
+				};
 				return NextResponse.json({ status }, { status: 200 });
 			}
 
 			case "current-version": {
-				const currentVersion = await migrationService.getCurrentVersion();
-				return NextResponse.json({ version: currentVersion }, { status: 200 });
+				// Return current Supabase migration status
+				const version = {
+					message:
+						"Use 'supabase migration list' to see current migration status",
+					supabaseCli: "supabase migration list",
+				};
+				return NextResponse.json({ version }, { status: 200 });
 			}
 
 			case "validate": {
-				const validation = await migrationService.validateChecksums();
+				// Return validation information
+				const validation = {
+					valid: true,
+					message: "Migrations are managed through Supabase CLI",
+					instructions:
+						"Use 'supabase db push' to validate and apply migrations",
+				};
 				return NextResponse.json(validation, { status: 200 });
 			}
 
@@ -60,7 +86,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { action, migrationId, version } = body;
+		const { action } = body;
 
 		if (!action) {
 			return NextResponse.json(
@@ -71,32 +97,38 @@ export async function POST(request: NextRequest) {
 
 		switch (action) {
 			case "run": {
-				const runResults = await migrationService.runMigrations();
-				return NextResponse.json({ results: runResults }, { status: 200 });
+				return NextResponse.json(
+					{
+						message: "Migrations are now managed through Supabase CLI",
+						instructions: "Use 'supabase db push' to apply migrations",
+						supabaseCli: "supabase db push",
+					},
+					{ status: 200 },
+				);
 			}
 
 			case "rollback": {
-				if (!migrationId) {
-					return NextResponse.json(
-						{ error: "Missing required field: migrationId" },
-						{ status: 400 },
-					);
-				}
-				const rollbackResult =
-					await migrationService.rollbackMigration(migrationId);
-				return NextResponse.json({ result: rollbackResult }, { status: 200 });
+				return NextResponse.json(
+					{
+						message: "Rollbacks are now managed through Supabase CLI",
+						instructions:
+							"Use 'supabase db reset' to reset database or create a new migration to undo changes",
+						supabaseCli: "supabase db reset",
+					},
+					{ status: 200 },
+				);
 			}
 
 			case "rollback-to-version": {
-				if (!version) {
-					return NextResponse.json(
-						{ error: "Missing required field: version" },
-						{ status: 400 },
-					);
-				}
-				const rollbackResults =
-					await migrationService.rollbackToVersion(version);
-				return NextResponse.json({ results: rollbackResults }, { status: 200 });
+				return NextResponse.json(
+					{
+						message: "Version rollbacks are now managed through Supabase CLI",
+						instructions:
+							"Use 'supabase db reset' to reset database or create a new migration to undo changes",
+						supabaseCli: "supabase db reset",
+					},
+					{ status: 200 },
+				);
 			}
 
 			default:

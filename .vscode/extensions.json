@@ -4,8 +4,10 @@
 		"bradlc.vscode-tailwindcss",
 		"ms-vscode.vscode-json",
 		"biomejs.biome",
-		"esbenp.prettier-vscode",
-		"ms-vscode.vscode-eslint"
+		"Prisma.prisma",
+		"posthog.posthog-vscode",
+		"supabase.postgrestools",
+		"1Password.op-vscode"
 	],
 	"unwantedRecommendations": ["ms-vscode.vscode-typescript", "hookyqr.beautify"]
 }

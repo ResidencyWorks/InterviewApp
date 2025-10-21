@@ -79,7 +79,7 @@ describe("ScoreChip", () => {
 	it("should apply custom className", () => {
 		render(<ScoreChip score={85} className="custom-class" />);
 
-		const container = screen.getByText("85%").closest("div");
+		const container = screen.getByText("85%").closest("div")?.parentElement;
 		expect(container).toHaveClass("custom-class");
 	});
 });

@@ -1,4 +1,8 @@
+"use client";
+
+import { Settings, Upload } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +14,36 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardPage() {
+	const { user } = useAuth();
+	const isAdmin = user?.user_metadata?.role === "admin";
+
+	// Check for error messages from URL params
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+	useEffect(() => {
+		const urlParams = new URLSearchParams(window.location.search);
+		const error = urlParams.get("error");
+
+		if (error === "insufficient_permissions") {
+			setErrorMessage("You don't have permission to access that page.");
+			// Clean up URL
+			window.history.replaceState({}, document.title, window.location.pathname);
+		}
+	}, []);
+
 	return (
 		<div className="min-h-screen bg-gray-50 p-6">
 			<div className="max-w-7xl mx-auto space-y-6">
+				{/* Error Message */}
+				{errorMessage && (
+					<Alert variant="destructive">
+						<AlertDescription>{errorMessage}</AlertDescription>
+					</Alert>
+				)}
+
 				{/* Header */}
 				<div className="flex items-center justify-between">
 					<div>
@@ -28,7 +57,6 @@ export default function DashboardPage() {
 							Premium Plan
 						</Badge>
 						<Avatar>
-							<AvatarImage src="/placeholder-avatar.jpg" alt="User" />
 							<AvatarFallback className="bg-gray-200 text-gray-800">
 								U
 							</AvatarFallback>
@@ -162,6 +190,42 @@ export default function DashboardPage() {
 								</Button>
 							</CardContent>
 						</Card>
+
+						{/* Admin Actions - Only show for admin users */}
+						{isAdmin && (
+							<Card className="border-blue-200 bg-blue-50">
+								<CardHeader>
+									<CardTitle className="text-blue-800 flex items-center gap-2">
+										<Settings className="h-5 w-5" />
+										Admin Actions
+									</CardTitle>
+									<CardDescription className="text-blue-600">
+										Manage content packs and system settings
+									</CardDescription>
+								</CardHeader>
+								<CardContent className="space-y-3">
+									<Button
+										asChild
+										className="w-full bg-blue-600 hover:bg-blue-700"
+									>
+										<Link href="/admin/content-packs">
+											<Upload className="h-4 w-4 mr-2" />
+											Manage Content Packs
+										</Link>
+									</Button>
+									<Button
+										variant="outline"
+										asChild
+										className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+									>
+										<Link href="/admin">
+											<Settings className="h-4 w-4 mr-2" />
+											Admin Dashboard
+										</Link>
+									</Button>
+								</CardContent>
+							</Card>
+						)}
 
 						<Card>
 							<CardHeader>

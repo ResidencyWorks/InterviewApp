@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 // Mock Supabase client
 const mockSupabaseClient = {
 	auth: {
-		getSession: vi.fn(),
+		getUser: vi.fn(),
 		signInWithOtp: vi.fn(),
 	},
 };
@@ -120,19 +120,16 @@ describe("Auth API Routes Integration", () => {
 		});
 	});
 
-	describe("GET /api/auth (Session Check)", () => {
-		it("should return user session when authenticated", async () => {
-			const mockSession = {
-				access_token: "mock-token",
-				user: {
-					email: "test@example.com",
-					id: "123",
-					user_metadata: { full_name: "Test User" },
-				},
+	describe("GET /api/auth (User Check)", () => {
+		it("should return user when authenticated", async () => {
+			const mockUser = {
+				email: "test@example.com",
+				id: "123",
+				user_metadata: { full_name: "Test User" },
 			};
 
-			mockSupabaseClient.auth.getSession.mockResolvedValue({
-				data: { session: mockSession },
+			mockSupabaseClient.auth.getUser.mockResolvedValue({
+				data: { user: mockUser },
 				error: null,
 			});
 
@@ -140,12 +137,12 @@ describe("Auth API Routes Integration", () => {
 			const data = await response.json();
 
 			expect(response.status).toBe(200);
-			expect(data.session).toEqual(mockSession);
+			expect(data.user).toEqual(mockUser);
 		});
 
 		it("should return null when not authenticated", async () => {
-			mockSupabaseClient.auth.getSession.mockResolvedValue({
-				data: { session: null },
+			mockSupabaseClient.auth.getUser.mockResolvedValue({
+				data: { user: null },
 				error: null,
 			});
 
@@ -153,12 +150,12 @@ describe("Auth API Routes Integration", () => {
 			const data = await response.json();
 
 			expect(response.status).toBe(200);
-			expect(data.session).toBeNull();
+			expect(data.user).toBeNull();
 		});
 
 		it("should handle authentication errors", async () => {
-			mockSupabaseClient.auth.getSession.mockResolvedValue({
-				data: { session: null },
+			mockSupabaseClient.auth.getUser.mockResolvedValue({
+				data: { user: null },
 				error: { message: "Authentication failed" },
 			});
 

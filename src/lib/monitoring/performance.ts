@@ -63,7 +63,10 @@ export const PERFORMANCE_TARGETS: Record<string, PerformanceTarget> = {
  */
 export class PerformanceMonitor {
 	private metrics: PerformanceMetrics[] = [];
-	private activeOperations: Map<string, number> = new Map();
+	private activeOperations: Map<
+		string,
+		{ startTime: number; metadata?: Record<string, any> }
+	> = new Map();
 
 	/**
 	 * Start timing an operation
@@ -75,7 +78,7 @@ export class PerformanceMonitor {
 		const operationId = `${_operation}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 		const startTime = performance.now();
 
-		this.activeOperations.set(operationId, startTime);
+		this.activeOperations.set(operationId, { startTime, metadata: _metadata });
 
 		return operationId;
 	}
@@ -92,25 +95,31 @@ export class PerformanceMonitor {
 		success = true,
 		metadata?: Record<string, any>,
 	): PerformanceMetrics {
-		const startTime = this.activeOperations.get(operationId);
-		if (!startTime) {
+		const operationData = this.activeOperations.get(operationId);
+		if (!operationData) {
 			throw new Error(
 				`Operation ${operationId} not found in active operations`,
 			);
 		}
 
 		const endTime = performance.now();
-		const duration = endTime - startTime;
+		const duration = endTime - operationData.startTime;
 
 		// Extract operation name from ID
 		const operation = operationId.split("_")[0];
 
+		// Merge initial and end metadata
+		const mergedMetadata = {
+			...operationData.metadata,
+			...metadata,
+		};
+
 		const metrics: PerformanceMetrics = {
 			duration,
 			endTime,
-			metadata,
+			metadata: mergedMetadata,
 			operation,
-			startTime,
+			startTime: operationData.startTime,
 			success,
 		};
 

@@ -5,6 +5,8 @@ Auto-generated from all feature plans. Last updated: 2025-01-27
 ## Active Technologies
 - TypeScript 5.0+ with strict mode enabled + PostHog, Sentry, Next.js 14, React, Node.js (005-monitoring-analytics)
 - PostHog for analytics data, Sentry for error logs, environment variables for configuration (005-monitoring-analytics)
+- TypeScript 5.x with strict mode + Next.js 14, Zod, Supabase, PostHog, shadcn/ui, Tailwind CSS (002-content-pack-loader)
+- Supabase PostgreSQL with file system fallback (002-content-pack-loader)
 
 - (001-m0-core-loop) Next.js 14, TypeScript, Supabase, OpenAI, PostHog, Sentry
 - (002-content-pack-loader) JSON validation, Zod schemas, hot-swap, PostHog analytics, admin UI
@@ -42,11 +44,11 @@ tests/
 - Test-first development approach
 
 ## Recent Changes
+- 002-content-pack-loader: Added TypeScript 5.x with strict mode + Next.js 14, Zod, Supabase, PostHog, shadcn/ui, Tailwind CSS
 - 005-monitoring-analytics: Added TypeScript 5.0+ with strict mode enabled + PostHog, Sentry, Next.js 14, React, Node.js
 
 - 005-monitoring-analytics: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
-- 001-m0-core-loop: Added Next.js full-stack structure
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

@@ -35,9 +35,9 @@ describe("useAuth", () => {
 			writable: true,
 		});
 
-		// Mock initial session
-		mockSupabaseClient.auth.getSession.mockResolvedValue({
-			data: { session: null },
+		// Mock initial user
+		mockSupabaseClient.auth.getUser.mockResolvedValue({
+			data: { user: null },
 			error: null,
 		});
 	});
