@@ -1,12 +1,18 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
+	const { user } = useAuth();
+	const isAdmin = user?.user_metadata?.role === "admin";
+
 	return (
 		<div className="min-h-screen bg-gray-50">
 			{/* Navigation Header */}
@@ -55,6 +61,14 @@ export default function DashboardLayout({
 							>
 								Settings
 							</Link>
+							{isAdmin && (
+								<Link
+									href="/admin"
+									className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+								>
+									Admin
+								</Link>
+							)}
 						</nav>
 
 						{/* User Menu */}

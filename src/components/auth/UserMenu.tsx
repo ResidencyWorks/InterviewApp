@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, Shield, User } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ interface UserMenuProps {
 export function UserMenu({ className }: UserMenuProps) {
 	const { user, signOut } = useAuth();
 	const [loading, setLoading] = useState(false);
+	const isAdmin = user?.user_metadata?.role === "admin";
 
 	if (!user) {
 		return null;
@@ -98,14 +100,35 @@ export function UserMenu({ className }: UserMenuProps) {
 					</div>
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem>
-					<User className="mr-2 h-4 w-4" />
-					<span>Profile</span>
+				<DropdownMenuItem asChild>
+					<Link href="/profile">
+						<User className="mr-2 h-4 w-4" />
+						<span>Profile</span>
+					</Link>
 				</DropdownMenuItem>
-				<DropdownMenuItem>
-					<Settings className="mr-2 h-4 w-4" />
-					<span>Settings</span>
+				<DropdownMenuItem asChild>
+					<Link href="/settings">
+						<Settings className="mr-2 h-4 w-4" />
+						<span>Settings</span>
+					</Link>
 				</DropdownMenuItem>
+				{isAdmin && (
+					<>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem asChild>
+							<Link href="/admin">
+								<Shield className="mr-2 h-4 w-4" />
+								<span>Admin Dashboard</span>
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuItem asChild>
+							<Link href="/admin/content-packs">
+								<Settings className="mr-2 h-4 w-4" />
+								<span>Content Packs</span>
+							</Link>
+						</DropdownMenuItem>
+					</>
+				)}
 				<DropdownMenuSeparator />
 				<DropdownMenuItem onClick={handleSignOut} disabled={loading}>
 					<LogOut className="mr-2 h-4 w-4" />
