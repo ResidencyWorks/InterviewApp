@@ -20,7 +20,7 @@ export default function DashboardLayout({
 								className="flex items-center space-x-2 text-xl font-bold text-gray-900"
 							>
 								<Image
-									src="/icons/app-icons/icon.png"
+									src="/images/logos/logo.png"
 									alt="InterviewPrep"
 									width={48}
 									height={48}

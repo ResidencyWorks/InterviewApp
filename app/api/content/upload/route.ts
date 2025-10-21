@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
 			async () => {
 				// Read and parse content pack
 				const content = await file.text();
-				let contentPack: any;
+				let contentPack: unknown;
 
 				try {
-					contentPack = JSON.parse(content);
+					contentPack = JSON.parse(content) as unknown;
 				} catch {
 					throw new Error("Invalid JSON file");
 				}
@@ -48,9 +48,10 @@ export async function POST(request: NextRequest) {
 					throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
 				}
 
+				const packMeta = contentPack as { name?: string; version?: string };
 				return {
 					metadata: validation.metadata,
-					name: contentPack.name || "Unnamed",
+					name: packMeta.name || "Unnamed",
 					performance: {
 						duration: validation.performance.duration,
 						target: validation.performance.target,
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
 					},
 					timestamp: new Date().toISOString(),
 					valid: validation.valid,
-					version: contentPack.version || "1.0.0",
+					version: packMeta.version || "1.0.0",
 					warnings: validation.warnings,
 				};
 			},

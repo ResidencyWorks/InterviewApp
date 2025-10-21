@@ -272,7 +272,7 @@ export class OpenAIEvaluationService {
 		let match = scoreRegex.exec(response);
 		while (match !== null) {
 			const category = match[1].toLowerCase();
-			const score = Number.parseInt(match[2]);
+			const score = Number.parseInt(match[2], 10);
 			if (category in categories && score >= 0 && score <= 100) {
 				categories[category as keyof EvaluationCategories] = score;
 			}

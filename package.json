@@ -88,7 +88,7 @@
 		"clean": "rm -rf .next dist build coverage test-results",
 		"clean:all": "rm -rf node_modules .next dist build coverage test-results && pnpm install",
 		"dev": "next dev --turbopack",
-		"fix:all": "biome check --write . && tsc --noEmit",
+		"fix:all": "biome check . --write --max-diagnostics 50 --log-level error && tsc --noEmit",
 		"format": "biome format .",
 		"format:fix": "biome format --write .",
 		"install-deps": "bash .devcontainer/scripts/install-deps.sh",

@@ -266,6 +266,7 @@ export class UserEntitlementCache {
  * Specialized cache service for managing content pack data with versioning support
  */
 export class ContentPackCache {
+	private readonly INDEX_KEY = "content:index";
 	/**
 	 * Get content pack from cache
 	 * @param packId - Content pack ID to retrieve
@@ -284,7 +285,11 @@ export class ContentPackCache {
 	 */
 	async set(packId: string, contentPack: any): Promise<boolean> {
 		const key = cacheKeys.contentPack(packId);
-		return await redisCache.set(key, contentPack, cacheTTL.contentPack);
+		const ok = await redisCache.set(key, contentPack, cacheTTL.contentPack);
+		if (ok) {
+			await this.addToIndex(packId);
+		}
+		return ok;
 	}
 
 	/**
@@ -319,6 +324,40 @@ export class ContentPackCache {
 		// Invalidate all content pack related keys
 		const keys = [cacheKeys.activeContentPack()];
 		return await redisCache.deleteMany(keys);
+	}
+
+	/**
+	 * Add a content pack ID to the index for listing/versioning
+	 * @param packId - Content pack ID to add
+	 */
+	private async addToIndex(packId: string): Promise<void> {
+		try {
+			const existing = (await redisCache.get<string[]>(this.INDEX_KEY)) || [];
+			if (!existing.includes(packId)) {
+				const updated = [packId, ...existing];
+				await redisCache.set(this.INDEX_KEY, updated);
+			}
+		} catch (error) {
+			console.error("Failed to update content index:", error);
+		}
+	}
+
+	/**
+	 * Get all content pack IDs from the index (most-recent first)
+	 */
+	async getIndexedIds(): Promise<string[]> {
+		const existing = (await redisCache.get<string[]>(this.INDEX_KEY)) || [];
+		return existing;
+	}
+
+	/**
+	 * List all content packs using the index
+	 */
+	async listIndexedPacks(): Promise<any[]> {
+		const ids = await this.getIndexedIds();
+		if (ids.length === 0) return [];
+		const packs = await Promise.all(ids.map((id) => this.get(id)));
+		return packs.filter(Boolean);
 	}
 }
 

@@ -156,9 +156,8 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 	 */
 	async list(): Promise<ContentPack[]> {
 		try {
-			// This is a simplified implementation
-			// In a real app, you'd query the database
-			return [];
+			const packs = await contentPackCache.listIndexedPacks();
+			return packs as ContentPack[];
 		} catch (error) {
 			console.error("Error listing content packs:", error);
 			return [];

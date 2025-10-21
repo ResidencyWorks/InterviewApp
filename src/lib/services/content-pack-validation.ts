@@ -87,6 +87,11 @@ export class ContentPackValidationService {
 					warnings.push(...qualityResult.warnings);
 				}
 
+				// 2b. Security validation
+				const securityResult = await this.validateSecurity(contentPack);
+				errors.push(...securityResult.errors);
+				warnings.push(...securityResult.warnings);
+
 				// 3. Size validation
 				const sizeResult = this.validateSize(contentPack, opts.maxSize);
 				if (!sizeResult.valid) {
@@ -128,6 +133,79 @@ export class ContentPackValidationService {
 				targetMet: metrics.duration <= 1000,
 			},
 		};
+	}
+
+	/**
+	 * Validate content pack for security concerns (XSS, excessive sizes, suspicious patterns)
+	 * @param contentPack - Content pack data
+	 */
+	private async validateSecurity(contentPack: any): Promise<{
+		errors: string[];
+		warnings: string[];
+	}> {
+		const errors: string[] = [];
+		const warnings: string[] = [];
+
+		const hasHtml = (value: unknown): boolean => {
+			if (typeof value !== "string") return false;
+			// Basic HTML tag detection
+			return /<\s*\/?[a-z][^>]*>/i.test(value);
+		};
+
+		const containsScriptLike = (value: string): boolean =>
+			/<\s*script|javascript:/i.test(value);
+
+		try {
+			const packStr = JSON.stringify(contentPack);
+			if (containsScriptLike(packStr)) {
+				errors.push("Content contains script-like patterns");
+			}
+		} catch {}
+
+		const data = contentPack?.content;
+		if (!data) return { errors, warnings };
+
+		// Size limits to avoid resource abuse
+		const MAX_CATEGORIES = 200;
+		const MAX_QUESTIONS = 2000;
+		if (
+			Array.isArray(data.categories) &&
+			data.categories.length > MAX_CATEGORIES
+		) {
+			warnings.push(`Too many categories: ${data.categories.length}`);
+		}
+		if (
+			Array.isArray(data.questions) &&
+			data.questions.length > MAX_QUESTIONS
+		) {
+			warnings.push(`Too many questions: ${data.questions.length}`);
+		}
+
+		// Field-level sanitization checks
+		const checkStrings = (label: string, value: unknown) => {
+			if (typeof value !== "string") return;
+			if (hasHtml(value)) {
+				errors.push(`${label} must not contain HTML`);
+			}
+			if (value.length > 5000) {
+				warnings.push(`${label} is very long (${value.length} chars)`);
+			}
+		};
+
+		checkStrings("Pack name", contentPack?.name);
+		checkStrings("Pack description", data?.description);
+		for (const cat of data?.categories ?? []) {
+			checkStrings(`Category ${cat?.id} name`, cat?.name);
+			checkStrings(`Category ${cat?.id} description`, cat?.description);
+		}
+		for (const q of data?.questions ?? []) {
+			checkStrings(`Question ${q?.id} text`, q?.text);
+			for (const tip of q?.tips ?? []) {
+				checkStrings(`Question ${q?.id} tip`, tip);
+			}
+		}
+
+		return { errors, warnings };
 	}
 
 	/**
