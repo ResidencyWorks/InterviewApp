@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { uuidv4 } from "zod";
+import { useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,8 +23,13 @@ export default function LoginPage() {
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
+	const [emailId, setEmailId] = useState("email-input");
 	const { signIn } = useAuth();
-	const emailId = `email-${uuidv4()}-${Date.now()}`;
+
+	// Generate unique ID only on client side to prevent hydration mismatch
+	useEffect(() => {
+		setEmailId(`email-${Math.random().toString(36).substr(2, 9)}`);
+	}, []);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

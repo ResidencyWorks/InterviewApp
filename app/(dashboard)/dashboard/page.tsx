@@ -2,6 +2,7 @@
 
 import { Settings, Upload } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -19,9 +20,30 @@ export default function DashboardPage() {
 	const { user } = useAuth();
 	const isAdmin = user?.user_metadata?.role === "admin";
 
+	// Check for error messages from URL params
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+	useEffect(() => {
+		const urlParams = new URLSearchParams(window.location.search);
+		const error = urlParams.get("error");
+
+		if (error === "insufficient_permissions") {
+			setErrorMessage("You don't have permission to access that page.");
+			// Clean up URL
+			window.history.replaceState({}, document.title, window.location.pathname);
+		}
+	}, []);
+
 	return (
 		<div className="min-h-screen bg-gray-50 p-6">
 			<div className="max-w-7xl mx-auto space-y-6">
+				{/* Error Message */}
+				{errorMessage && (
+					<Alert variant="destructive">
+						<AlertDescription>{errorMessage}</AlertDescription>
+					</Alert>
+				)}
+
 				{/* Header */}
 				<div className="flex items-center justify-between">
 					<div>

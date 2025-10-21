@@ -23,11 +23,21 @@ interface UserMenuProps {
  * User menu component with profile and logout options
  */
 export function UserMenu({ className }: UserMenuProps) {
-	const { user, signOut } = useAuth();
+	const { user, signOut, loading: authLoading } = useAuth();
 	const [loading, setLoading] = useState(false);
 	const isAdmin = user?.user_metadata?.role === "admin";
 
+	// Debug: Log UserMenu state
+	console.log("UserMenu - User:", user);
+	console.log("UserMenu - Auth Loading:", authLoading);
+	console.log("UserMenu - Is Admin:", isAdmin);
+
+	if (authLoading) {
+		return <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />;
+	}
+
 	if (!user) {
+		console.log("UserMenu - No user, returning null");
 		return null;
 	}
 

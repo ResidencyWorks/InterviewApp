@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { SystemStatus } from "@/components/admin/SystemStatus";
+import { FallbackWarning } from "@/components/content-pack/FallbackWarning";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,9 @@ export default function AdminDashboard() {
 	});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [isUsingFallback, setIsUsingFallback] = useState(false);
+	const [fallbackWarningDismissed, setFallbackWarningDismissed] =
+		useState(false);
 
 	// Fetch dashboard data
 	const fetchDashboardData = useCallback(async () => {
@@ -78,11 +83,13 @@ export default function AdminDashboard() {
 			const now = new Date();
 			const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
+			const activePacks = packs.filter(
+				(p: ContentPack) => p.status === ContentPackStatus.ACTIVATED,
+			);
+
 			setStats({
 				totalContentPacks: packs.length,
-				activeContentPacks: packs.filter(
-					(p: ContentPack) => p.status === ContentPackStatus.ACTIVATED,
-				).length,
+				activeContentPacks: activePacks.length,
 				pendingValidations: packs.filter(
 					(p: ContentPack) =>
 						p.status === ContentPackStatus.UPLOADED ||
@@ -92,6 +99,9 @@ export default function AdminDashboard() {
 					(p: ContentPack) => new Date(p.createdAt) > oneDayAgo,
 				).length,
 			});
+
+			// Check if we're using fallback content
+			setIsUsingFallback(activePacks.length === 0);
 
 			setError(null);
 		} catch (err) {
@@ -104,6 +114,15 @@ export default function AdminDashboard() {
 	}, []);
 
 	useEffect(() => {
+		fetchDashboardData();
+	}, [fetchDashboardData]);
+
+	const handleDismissFallbackWarning = useCallback(() => {
+		setFallbackWarningDismissed(true);
+	}, []);
+
+	const handleRefreshFallback = useCallback(() => {
+		setFallbackWarningDismissed(false);
 		fetchDashboardData();
 	}, [fetchDashboardData]);
 
@@ -224,19 +243,13 @@ export default function AdminDashboard() {
 				</Card>
 			</div>
 
-			{/* System Status Alert */}
-			{stats.activeContentPacks === 0 && (
-				<Alert>
-					<AlertTriangle className="h-4 w-4" />
-					<AlertDescription>
-						No active content pack found. The system is running with fallback
-						content.
-						<Link href="/admin/content-packs" className="ml-2 underline">
-							Upload and activate a content pack
-						</Link>
-					</AlertDescription>
-				</Alert>
-			)}
+			{/* Fallback Warning */}
+			<FallbackWarning
+				isUsingFallback={isUsingFallback}
+				isDismissed={fallbackWarningDismissed}
+				onDismiss={handleDismissFallbackWarning}
+				onRefresh={handleRefreshFallback}
+			/>
 
 			{/* Active Content Pack */}
 			{activeContentPack && (
@@ -323,6 +336,13 @@ export default function AdminDashboard() {
 					</CardContent>
 				</Card>
 			</div>
+
+			{/* System Status */}
+			<SystemStatus
+				onRefresh={fetchDashboardData}
+				loading={loading}
+				detailed={true}
+			/>
 
 			{/* Recent Activity */}
 			{pendingPacks.length > 0 && (
