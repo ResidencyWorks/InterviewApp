@@ -14,7 +14,7 @@ export interface ApiError {
 	message: string;
 	code: string;
 	status: number;
-	details?: any;
+	details?: Record<string, unknown>;
 }
 
 export interface PaginatedResponse<T> {
@@ -34,7 +34,7 @@ export interface AuthRequest {
 
 export interface AuthResponse {
 	message: string;
-	session?: any;
+	session?: Record<string, unknown>;
 }
 
 export interface ApiEvaluationRequest {

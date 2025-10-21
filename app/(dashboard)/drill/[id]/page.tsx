@@ -161,12 +161,13 @@ export default function DrillInterfacePage() {
 						variant="outline"
 						size="sm"
 						onClick={() => router.push("/drill")}
+						className="text-black hover:text-black"
 					>
 						<ArrowLeft className="w-4 h-4 mr-2" />
 						Back to Drills
 					</Button>
 					<div className="flex-1">
-						<h1 className="text-2xl font-bold">{question.title}</h1>
+						<h1 className="text-2xl font-bold text-black">{question.title}</h1>
 						<div className="flex items-center gap-4 mt-2">
 							<Badge className={getDifficultyColor(question.difficulty)}>
 								{question.difficulty}

@@ -18,7 +18,7 @@ global.MediaRecorder = vi.fn().mockImplementation(() => ({
 	stop: vi.fn(),
 	ondataavailable: null,
 	onstop: null,
-})) as any;
+})) as unknown as typeof MediaRecorder;
 
 // Add the static method
 (global.MediaRecorder as any).isTypeSupported = vi.fn().mockReturnValue(true);

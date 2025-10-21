@@ -1,3 +1,4 @@
 openai
 opentelemetry
 posthog
+upstash

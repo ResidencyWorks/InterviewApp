@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import type { UserEntitlementLevel } from "@/types";
+import type { ContentPackData, UserEntitlementLevel } from "@/types";
 
 /**
  * Redis client configuration and utilities
@@ -147,7 +147,7 @@ export class RedisCacheService {
 	 * @returns Promise resolving to true if successful
 	 */
 	async mset(
-		keyValuePairs: Record<string, any>,
+		keyValuePairs: Record<string, unknown>,
 		ttlSeconds?: number,
 	): Promise<boolean> {
 		try {
@@ -272,7 +272,7 @@ export class ContentPackCache {
 	 * @param packId - Content pack ID to retrieve
 	 * @returns Promise resolving to content pack data or null if not found
 	 */
-	async get(packId: string): Promise<any | null> {
+	async get(packId: string): Promise<ContentPackData | null> {
 		const key = cacheKeys.contentPack(packId);
 		return await redisCache.get(key);
 	}
@@ -283,7 +283,7 @@ export class ContentPackCache {
 	 * @param contentPack - Content pack data to cache
 	 * @returns Promise resolving to true if successful
 	 */
-	async set(packId: string, contentPack: any): Promise<boolean> {
+	async set(packId: string, contentPack: ContentPackData): Promise<boolean> {
 		const key = cacheKeys.contentPack(packId);
 		const ok = await redisCache.set(key, contentPack, cacheTTL.contentPack);
 		if (ok) {
@@ -296,7 +296,7 @@ export class ContentPackCache {
 	 * Get active content pack from cache
 	 * @returns Promise resolving to active content pack data or null if not found
 	 */
-	async getActive(): Promise<any | null> {
+	async getActive(): Promise<ContentPackData | null> {
 		const key = cacheKeys.activeContentPack();
 		return await redisCache.get(key);
 	}
@@ -306,7 +306,7 @@ export class ContentPackCache {
 	 * @param contentPack - Content pack data to set as active
 	 * @returns Promise resolving to true if successful
 	 */
-	async setActive(contentPack: any): Promise<boolean> {
+	async setActive(contentPack: ContentPackData): Promise<boolean> {
 		const key = cacheKeys.activeContentPack();
 		return await redisCache.set(key, contentPack, cacheTTL.activeContentPack);
 	}
@@ -353,11 +353,11 @@ export class ContentPackCache {
 	/**
 	 * List all content packs using the index
 	 */
-	async listIndexedPacks(): Promise<any[]> {
+	async listIndexedPacks(): Promise<ContentPackData[]> {
 		const ids = await this.getIndexedIds();
 		if (ids.length === 0) return [];
 		const packs = await Promise.all(ids.map((id) => this.get(id)));
-		return packs.filter(Boolean);
+		return packs.filter((pack): pack is ContentPackData => pack !== null);
 	}
 }
 

@@ -1,5 +1,10 @@
 import OpenAI from "openai";
-import type { EvaluationCategories, EvaluationResponse } from "@/types";
+import type {
+	ContentPackData,
+	EvaluationCategories,
+	EvaluationCriteria,
+	EvaluationResponse,
+} from "@/types";
 
 /**
  * OpenAI API configuration and utilities
@@ -31,8 +36,8 @@ export class OpenAIEvaluationService {
 	 */
 	async evaluateTextResponse(
 		response: string,
-		evaluationCriteria: any,
-		contentPack?: any,
+		evaluationCriteria: EvaluationCriteria,
+		contentPack?: ContentPackData,
 	): Promise<EvaluationResponse> {
 		try {
 			const startTime = Date.now();
@@ -124,8 +129,8 @@ export class OpenAIEvaluationService {
 	 */
 	async evaluateAudioResponse(
 		audioUrl: string,
-		evaluationCriteria: any,
-		contentPack?: any,
+		evaluationCriteria: EvaluationCriteria,
+		contentPack?: ContentPackData,
 	): Promise<EvaluationResponse> {
 		try {
 			const startTime = Date.now();
@@ -163,8 +168,8 @@ export class OpenAIEvaluationService {
 	 */
 	private createEvaluationPrompt(
 		response: string,
-		evaluationCriteria: any,
-		contentPack?: any,
+		evaluationCriteria: EvaluationCriteria,
+		contentPack?: ContentPackData,
 	): string {
 		const criteria = evaluationCriteria || {
 			clarity: {

@@ -241,13 +241,17 @@ export const performanceMonitor = new PerformanceMonitor();
  * @param target - Performance target in milliseconds
  */
 export function timed(_operation: string, _target?: number) {
-	return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+	return (
+		target: unknown,
+		propertyKey: string,
+		descriptor: PropertyDescriptor,
+	) => {
 		const originalMethod = descriptor.value;
 
-		descriptor.value = async function (...args: any[]) {
+		descriptor.value = async function (...args: unknown[]) {
 			const operationId = performanceMonitor.start(_operation);
 			let success = true;
-			let result: any;
+			let result: unknown;
 
 			try {
 				result = await originalMethod.apply(this, args);

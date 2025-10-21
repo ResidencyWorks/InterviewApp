@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { contentPackValidationService } from "@/lib/services/content-pack-validation";
+import type { ContentPackData } from "../../../src/types";
 
 function makeValidPack() {
 	return {
@@ -27,17 +28,19 @@ function makeValidPack() {
 				tags: ["tag"],
 				target_audience: ["junior"],
 				updated_at: new Date().toISOString(),
+				version: "1.0.0",
+				description: "Test metadata",
 			},
 			name: "Pack",
 			questions: [
 				{
 					category_id: "cat1",
-					difficulty: "easy",
+					difficulty: "easy" as const,
 					id: "q1",
 					text: "Tell me about yourself",
 					time_limit: 60,
 					tips: ["Be concise"],
-					type: "behavioral",
+					type: "behavioral" as const,
 				},
 			],
 			version: "1.0.0",
@@ -55,7 +58,9 @@ describe("content security validation", () => {
 	it("flags script-like content", async () => {
 		const pack = makeValidPack();
 		pack.content.description = "<script>alert('x')</script>";
-		const result = await contentPackValidationService.validateContentPack(pack);
+		const result = await contentPackValidationService.validateContentPack(
+			pack.content as ContentPackData,
+		);
 		expect(result.valid).toBe(false);
 	});
 
@@ -70,7 +75,9 @@ describe("content security validation", () => {
 			tips: ["t"],
 			type: "behavioral",
 		}));
-		const result = await contentPackValidationService.validateContentPack(pack);
+		const result = await contentPackValidationService.validateContentPack(
+			pack.content as ContentPackData,
+		);
 		expect(result.warnings.length).toBeGreaterThan(0);
 	});
 });

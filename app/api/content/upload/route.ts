@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { timeOperation } from "@/lib/monitoring/performance";
 import { contentPackValidationService } from "@/lib/services/content-pack-validation";
+import type { ContentPackData } from "@/types/content";
 
 /**
  * Content pack upload API route handler
@@ -42,7 +43,9 @@ export async function POST(request: NextRequest) {
 
 				// Validate content pack
 				const validation =
-					await contentPackValidationService.validateForHotSwap(contentPack);
+					await contentPackValidationService.validateForHotSwap(
+						contentPack as ContentPackData,
+					);
 
 				if (!validation.valid) {
 					throw new Error(`Validation failed: ${validation.errors.join(", ")}`);

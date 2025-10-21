@@ -139,11 +139,15 @@ describe("Performance Monitoring System", () => {
 					{ test: true },
 				);
 				expect.fail("Should have thrown an error");
-			} catch (error: any) {
-				expect(error.error.message).toBe("Async test error");
-				expect(error.metrics.operation).toBe("test.async.failure");
-				expect(error.metrics.success).toBe(false);
-				expect(error.metrics.duration).toBeGreaterThan(15);
+			} catch (error: unknown) {
+				const typedError = error as {
+					error: { message: string };
+					metrics: { operation: string; success: boolean; duration: number };
+				};
+				expect(typedError.error.message).toBe("Async test error");
+				expect(typedError.metrics.operation).toBe("test.async.failure");
+				expect(typedError.metrics.success).toBe(false);
+				expect(typedError.metrics.duration).toBeGreaterThan(15);
 			}
 		});
 	});

@@ -1,5 +1,6 @@
 import { Redis } from "@upstash/redis";
 import { timeOperation } from "@/lib/monitoring/performance";
+import type { ContentPackData } from "@/types";
 
 /**
  * Redis client configuration and utilities
@@ -28,7 +29,7 @@ export class RedisCache {
 	 * @param key - Cache key
 	 * @returns Promise resolving to cached value or null
 	 */
-	async get<T = any>(key: string): Promise<T | null> {
+	async get<T = unknown>(key: string): Promise<T | null> {
 		const { result, metrics } = await timeOperation(
 			"redis.lookup",
 			async () => {
@@ -62,7 +63,11 @@ export class RedisCache {
 	 * @param ttl - Time to live in seconds (optional)
 	 * @returns Promise resolving to success status
 	 */
-	async set<T = any>(key: string, value: T, ttl?: number): Promise<boolean> {
+	async set<T = unknown>(
+		key: string,
+		value: T,
+		ttl?: number,
+	): Promise<boolean> {
 		const { result } = await timeOperation(
 			"redis.set",
 			async () => {
@@ -130,7 +135,7 @@ export class RedisCache {
 	 * @param keys - Array of cache keys
 	 * @returns Promise resolving to array of values
 	 */
-	async mget<T = any>(keys: string[]): Promise<(T | null)[]> {
+	async mget<T = unknown>(keys: string[]): Promise<(T | null)[]> {
 		const { result } = await timeOperation(
 			"redis.mget",
 			async () => {
@@ -152,7 +157,10 @@ export class RedisCache {
 	 * @param ttl - Time to live in seconds (optional)
 	 * @returns Promise resolving to success status
 	 */
-	async mset<T = any>(data: Record<string, T>, ttl?: number): Promise<boolean> {
+	async mset<T = unknown>(
+		data: Record<string, T>,
+		ttl?: number,
+	): Promise<boolean> {
 		const { result } = await timeOperation(
 			"redis.mset",
 			async () => {
@@ -263,7 +271,7 @@ export class ContentPackCache extends RedisCache {
 	 * Get active content pack from cache
 	 * @returns Promise resolving to content pack or null
 	 */
-	async getActiveContentPack(): Promise<any | null> {
+	async getActiveContentPack(): Promise<ContentPackData | null> {
 		return await this.get(this.ACTIVE_PACK_KEY);
 	}
 
@@ -274,7 +282,7 @@ export class ContentPackCache extends RedisCache {
 	 * @returns Promise resolving to success status
 	 */
 	async setActiveContentPack(
-		contentPack: any,
+		contentPack: ContentPackData,
 		ttl: number = this.DEFAULT_TTL,
 	): Promise<boolean> {
 		return await this.set(this.ACTIVE_PACK_KEY, contentPack, ttl);
@@ -285,7 +293,7 @@ export class ContentPackCache extends RedisCache {
 	 * @param version - Content pack version
 	 * @returns Promise resolving to content pack or null
 	 */
-	async getContentPack(version: string): Promise<any | null> {
+	async getContentPack(version: string): Promise<ContentPackData | null> {
 		const key = `${this.CONTENT_PREFIX}${version}`;
 		return await this.get(key);
 	}
@@ -299,7 +307,7 @@ export class ContentPackCache extends RedisCache {
 	 */
 	async setContentPack(
 		version: string,
-		contentPack: any,
+		contentPack: ContentPackData,
 		ttl: number = this.DEFAULT_TTL,
 	): Promise<boolean> {
 		const key = `${this.CONTENT_PREFIX}${version}`;

@@ -8,6 +8,7 @@ import {
 	contentPackCache,
 	userEntitlementCache,
 } from "../../src/lib/redis/index";
+import type { ContentPackData } from "../../src/types";
 
 /**
  * Performance benchmark tests for success criteria validation
@@ -24,18 +25,18 @@ describe("Performance Benchmarks", () => {
 		content: {
 			categories: [
 				{
-					created_at: new Date().toISOString(),
-					description: "Questions about past behavior",
 					id: "cat-1",
 					name: "Behavioral Questions",
-					updated_at: new Date().toISOString(),
+					description: "Questions about past behavior",
+					weight: 0.5,
+					criteria: ["behavior", "experience"],
 				},
 				{
-					created_at: new Date().toISOString(),
-					description: "Technical knowledge questions",
 					id: "cat-2",
 					name: "Technical Questions",
-					updated_at: new Date().toISOString(),
+					description: "Technical knowledge questions",
+					weight: 0.5,
+					criteria: ["technical", "knowledge"],
 				},
 			],
 			questions: Array.from({ length: 50 }, (_, i) => ({
@@ -168,10 +169,44 @@ describe("Performance Benchmarks", () => {
 
 			for (let i = 0; i < iterations; i++) {
 				const start = performance.now();
-				const result =
-					await contentPackValidationService.validateContentPack(
-						testContentPack,
-					);
+				const result = await contentPackValidationService.validateContentPack({
+					...(testContentPack.content as unknown as ContentPackData),
+					version: "1.0.0",
+					name: "Test Content Pack",
+					description: "Test content pack for performance testing",
+					evaluation_criteria: {
+						clarity: {
+							description: "Clarity",
+							factors: ["clear"],
+							weight: 0.25,
+						},
+						content: {
+							description: "Content",
+							factors: ["relevant"],
+							weight: 0.25,
+						},
+						delivery: {
+							description: "Delivery",
+							factors: ["confident"],
+							weight: 0.25,
+						},
+						structure: {
+							description: "Structure",
+							factors: ["organized"],
+							weight: 0.25,
+						},
+					},
+					metadata: {
+						author: "test",
+						created_at: new Date().toISOString(),
+						language: "en",
+						tags: ["test"],
+						target_audience: ["junior"],
+						updated_at: new Date().toISOString(),
+						version: "1.0.0",
+						description: "Test metadata",
+					},
+				});
 				const duration = performance.now() - start;
 				durations.push(duration);
 
@@ -202,10 +237,44 @@ describe("Performance Benchmarks", () => {
 
 			for (let i = 0; i < iterations; i++) {
 				const start = performance.now();
-				const result =
-					await contentPackValidationService.validateForHotSwap(
-						testContentPack,
-					);
+				const result = await contentPackValidationService.validateForHotSwap({
+					...(testContentPack.content as unknown as ContentPackData),
+					version: "1.0.0",
+					name: "Test Content Pack",
+					description: "Test content pack for performance testing",
+					evaluation_criteria: {
+						clarity: {
+							description: "Clarity",
+							factors: ["clear"],
+							weight: 0.25,
+						},
+						content: {
+							description: "Content",
+							factors: ["relevant"],
+							weight: 0.25,
+						},
+						delivery: {
+							description: "Delivery",
+							factors: ["confident"],
+							weight: 0.25,
+						},
+						structure: {
+							description: "Structure",
+							factors: ["organized"],
+							weight: 0.25,
+						},
+					},
+					metadata: {
+						author: "test",
+						created_at: new Date().toISOString(),
+						language: "en",
+						tags: ["test"],
+						target_audience: ["junior"],
+						updated_at: new Date().toISOString(),
+						version: "1.0.0",
+						description: "Test metadata",
+					},
+				});
 				const duration = performance.now() - start;
 				durations.push(duration);
 
@@ -257,10 +326,40 @@ describe("Performance Benchmarks", () => {
 			};
 
 			const start = performance.now();
-			const result =
-				await contentPackValidationService.validateContentPack(
-					largeContentPack,
-				);
+			const result = await contentPackValidationService.validateContentPack({
+				...(largeContentPack.content as unknown as ContentPackData),
+				version: "1.0.0",
+				name: "Large Content Pack",
+				description: "Large content pack for performance testing",
+				evaluation_criteria: {
+					clarity: { description: "Clarity", factors: ["clear"], weight: 0.25 },
+					content: {
+						description: "Content",
+						factors: ["relevant"],
+						weight: 0.25,
+					},
+					delivery: {
+						description: "Delivery",
+						factors: ["confident"],
+						weight: 0.25,
+					},
+					structure: {
+						description: "Structure",
+						factors: ["organized"],
+						weight: 0.25,
+					},
+				},
+				metadata: {
+					version: "1.0.0",
+					description: "Test metadata",
+					author: "test",
+					created_at: new Date().toISOString(),
+					language: "en",
+					tags: ["test"],
+					target_audience: ["junior"],
+					updated_at: new Date().toISOString(),
+				},
+			});
 			const duration = performance.now() - start;
 
 			console.log(`Large content pack validation: ${duration.toFixed(2)}ms`);
@@ -322,7 +421,40 @@ describe("Performance Benchmarks", () => {
 
 			// Perform some operations
 			await userEntitlementCache.getEntitlement(testUserId);
-			await contentPackValidationService.validateContentPack(testContentPack);
+			await contentPackValidationService.validateContentPack({
+				...(testContentPack.content as unknown as ContentPackData),
+				version: "1.0.0",
+				name: "Test Content Pack",
+				description: "Test content pack for performance testing",
+				evaluation_criteria: {
+					clarity: { description: "Clarity", factors: ["clear"], weight: 0.25 },
+					content: {
+						description: "Content",
+						factors: ["relevant"],
+						weight: 0.25,
+					},
+					delivery: {
+						description: "Delivery",
+						factors: ["confident"],
+						weight: 0.25,
+					},
+					structure: {
+						description: "Structure",
+						factors: ["organized"],
+						weight: 0.25,
+					},
+				},
+				metadata: {
+					author: "test",
+					created_at: new Date().toISOString(),
+					language: "en",
+					tags: ["test"],
+					target_audience: ["junior"],
+					updated_at: new Date().toISOString(),
+					version: "1.0.0",
+					description: "Test metadata",
+				},
+			});
 
 			// Check that metrics were recorded
 			const metrics = performanceMonitor.getMetrics();

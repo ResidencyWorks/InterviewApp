@@ -215,5 +215,7 @@ export async function retryOperation<T>(
 		}
 	}
 
-	return createErrorResult(lastError || "Operation failed after retries");
+	return createErrorResult(
+		lastError || "Operation failed after retries",
+	) as DatabaseResult<T>;
 }

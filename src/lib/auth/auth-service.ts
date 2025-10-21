@@ -1,4 +1,4 @@
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAuthError, isValidEmail } from "./auth-helpers";
@@ -170,7 +170,7 @@ export class AuthService {
  * Authentication service for server-side operations
  */
 export class ServerAuthService {
-	private supabase: any = null;
+	private supabase: SupabaseClient | null = null;
 
 	async initialize() {
 		this.supabase = await createServerClient();
@@ -182,6 +182,9 @@ export class ServerAuthService {
 	 */
 	async getSession(): Promise<Session | null> {
 		try {
+			if (!this.supabase) {
+				throw new Error("Supabase client not initialized");
+			}
 			const {
 				data: { session },
 				error,
@@ -203,6 +206,9 @@ export class ServerAuthService {
 	 */
 	async getUser(): Promise<User | null> {
 		try {
+			if (!this.supabase) {
+				throw new Error("Supabase client not initialized");
+			}
 			const {
 				data: { user },
 				error,
@@ -225,6 +231,9 @@ export class ServerAuthService {
 	 */
 	async verifyToken(token: string): Promise<User | null> {
 		try {
+			if (!this.supabase) {
+				throw new Error("Supabase client not initialized");
+			}
 			const {
 				data: { user },
 				error,

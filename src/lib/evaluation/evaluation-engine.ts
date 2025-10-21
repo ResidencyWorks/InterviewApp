@@ -4,6 +4,7 @@ import { errorMonitoring } from "@/lib/error-monitoring";
 import { openaiEvaluation } from "@/lib/openai";
 import type {
 	EvaluationCategories,
+	EvaluationCriteria,
 	EvaluationRequest,
 	EvaluationResponse,
 } from "@/types/evaluation";
@@ -194,62 +195,6 @@ export class OpenAIEvaluationEngine implements EvaluationEngine {
 				weight: 0.25,
 			},
 		};
-	}
-
-	/**
-	 * Calculate weighted score
-	 * @param categories - Evaluation categories
-	 * @param criteria - Evaluation criteria
-	 * @returns Weighted score
-	 */
-	private calculateWeightedScore(
-		categories: EvaluationCategories,
-		criteria: any,
-	): number {
-		let totalScore = 0;
-		let totalWeight = 0;
-
-		for (const [category, score] of Object.entries(categories)) {
-			const categoryCriteria = criteria[category];
-			if (categoryCriteria) {
-				totalScore += score * categoryCriteria.weight;
-				totalWeight += categoryCriteria.weight;
-			}
-		}
-
-		return totalWeight > 0 ? totalScore / totalWeight : 0;
-	}
-
-	/**
-	 * Generate detailed feedback
-	 * @param categories - Evaluation categories
-	 * @param criteria - Evaluation criteria
-	 * @returns Detailed feedback string
-	 */
-	private generateDetailedFeedback(
-		categories: EvaluationCategories,
-		criteria: any,
-	): string {
-		const feedback: string[] = [];
-
-		for (const [category, score] of Object.entries(categories)) {
-			const categoryCriteria = criteria[category];
-			if (categoryCriteria) {
-				const level =
-					score >= 80
-						? "excellent"
-						: score >= 60
-							? "good"
-							: score >= 40
-								? "fair"
-								: "needs improvement";
-				feedback.push(
-					`${categoryCriteria.description}: ${level} (${score}/100)`,
-				);
-			}
-		}
-
-		return feedback.join("\n\n");
 	}
 }
 

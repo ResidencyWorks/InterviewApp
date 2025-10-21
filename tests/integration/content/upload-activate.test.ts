@@ -9,12 +9,18 @@ import * as uploadRoute from "@/app/api/content/upload/route";
 
 describe("content api routes", () => {
 	it("exports POST on upload", () => {
-		expect(typeof (uploadRoute as any).POST).toBe("function");
+		expect(typeof (uploadRoute as unknown as { POST: unknown }).POST).toBe(
+			"function",
+		);
 	});
 	it("exports GET on list", () => {
-		expect(typeof (listRoute as any).GET).toBe("function");
+		expect(typeof (listRoute as unknown as { GET: unknown }).GET).toBe(
+			"function",
+		);
 	});
 	it("exports POST on activate", () => {
-		expect(typeof (activateRoute as any).POST).toBe("function");
+		expect(typeof (activateRoute as unknown as { POST: unknown }).POST).toBe(
+			"function",
+		);
 	});
 });

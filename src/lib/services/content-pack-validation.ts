@@ -1,5 +1,6 @@
 import { timeOperation, timeSyncOperation } from "@/lib/monitoring/performance";
 import { contentPackSchema } from "@/lib/validations/content";
+import type { ContentPackData } from "@/types";
 
 /**
  * Content pack validation service with performance monitoring
@@ -62,7 +63,7 @@ export class ContentPackValidationService {
 	 * @returns Promise resolving to validation result
 	 */
 	async validateContentPack(
-		contentPack: any,
+		contentPack: ContentPackData,
 		options: ValidationOptions = {},
 	): Promise<ValidationResult> {
 		const opts = { ...this.DEFAULT_OPTIONS, ...options };
@@ -139,7 +140,7 @@ export class ContentPackValidationService {
 	 * Validate content pack for security concerns (XSS, excessive sizes, suspicious patterns)
 	 * @param contentPack - Content pack data
 	 */
-	private async validateSecurity(contentPack: any): Promise<{
+	private async validateSecurity(contentPack: ContentPackData): Promise<{
 		errors: string[];
 		warnings: string[];
 	}> {
@@ -162,7 +163,7 @@ export class ContentPackValidationService {
 			}
 		} catch {}
 
-		const data = contentPack?.content;
+		const data = contentPack;
 		if (!data) return { errors, warnings };
 
 		// Size limits to avoid resource abuse
@@ -213,7 +214,7 @@ export class ContentPackValidationService {
 	 * @param contentPack - Content pack data
 	 * @returns Promise resolving to validation result
 	 */
-	private async validateStructure(contentPack: any): Promise<{
+	private async validateStructure(contentPack: ContentPackData): Promise<{
 		errors: string[];
 		warnings: string[];
 	}> {
@@ -267,11 +268,11 @@ export class ContentPackValidationService {
 				}
 			},
 			{
-				categoryCount: contentPack?.content?.categories?.length || 0,
-				hasCategories: !!contentPack?.content?.categories,
-				hasQuestions: !!contentPack?.content?.questions,
+				categoryCount: contentPack?.categories?.length || 0,
+				hasCategories: !!contentPack?.categories,
+				hasQuestions: !!contentPack?.questions,
 				operation: "structure_validation",
-				questionCount: contentPack?.content?.questions?.length || 0,
+				questionCount: contentPack?.questions?.length || 0,
 			},
 		);
 
@@ -283,7 +284,7 @@ export class ContentPackValidationService {
 	 * @param contentPack - Content pack data
 	 * @returns Promise resolving to validation result
 	 */
-	private async validateQuality(contentPack: any): Promise<{
+	private async validateQuality(contentPack: ContentPackData): Promise<{
 		errors: string[];
 		warnings: string[];
 	}> {
@@ -293,12 +294,12 @@ export class ContentPackValidationService {
 				const errors: string[] = [];
 				const warnings: string[] = [];
 
-				if (!contentPack?.content) {
+				if (!contentPack) {
 					errors.push("Content pack missing content section");
 					return { errors, warnings };
 				}
 
-				const { categories, questions } = contentPack.content;
+				const { categories, questions } = contentPack;
 
 				// Validate categories
 				if (categories) {
@@ -367,9 +368,9 @@ export class ContentPackValidationService {
 				return { errors, warnings };
 			},
 			{
-				categoryCount: contentPack?.content?.categories?.length || 0,
+				categoryCount: contentPack?.categories?.length || 0,
 				operation: "quality_validation",
-				questionCount: contentPack?.content?.questions?.length || 0,
+				questionCount: contentPack?.questions?.length || 0,
 			},
 		);
 
@@ -383,7 +384,7 @@ export class ContentPackValidationService {
 	 * @returns Validation result
 	 */
 	private validateSize(
-		contentPack: any,
+		contentPack: ContentPackData,
 		maxSize: number,
 	): {
 		valid: boolean;
@@ -419,7 +420,7 @@ export class ContentPackValidationService {
 	 * @param contentPack - Content pack data
 	 * @returns Validation result
 	 */
-	private checkDuplicates(contentPack: any): {
+	private checkDuplicates(contentPack: ContentPackData): {
 		valid: boolean;
 		errors: string[];
 	} {
@@ -428,11 +429,11 @@ export class ContentPackValidationService {
 			() => {
 				const errors: string[] = [];
 
-				if (!contentPack?.content?.questions) {
+				if (!contentPack?.questions) {
 					return { errors, valid: true };
 				}
 
-				const questions = contentPack.content.questions;
+				const questions = contentPack.questions;
 				const seenTexts = new Set<string>();
 				const seenIds = new Set<string>();
 
@@ -460,7 +461,7 @@ export class ContentPackValidationService {
 			},
 			{
 				operation: "duplicate_check",
-				questionCount: contentPack?.content?.questions?.length || 0,
+				questionCount: contentPack?.questions?.length || 0,
 			},
 		);
 
@@ -472,7 +473,7 @@ export class ContentPackValidationService {
 	 * @param contentPack - Content pack data
 	 * @returns Metadata object
 	 */
-	private extractMetadata(contentPack: any): {
+	private extractMetadata(contentPack: ContentPackData): {
 		version: string;
 		name: string;
 		questionCount: number;
@@ -486,9 +487,9 @@ export class ContentPackValidationService {
 				const totalSize = new Blob([contentStr]).size;
 
 				return {
-					categoryCount: contentPack?.content?.categories?.length || 0,
+					categoryCount: contentPack?.categories?.length || 0,
 					name: contentPack?.name || "unnamed",
-					questionCount: contentPack?.content?.questions?.length || 0,
+					questionCount: contentPack?.questions?.length || 0,
 					totalSize,
 					version: contentPack?.version || "unknown",
 				};
@@ -508,7 +509,9 @@ export class ContentPackValidationService {
 	 * @param contentPack - Content pack data
 	 * @returns Promise resolving to validation result
 	 */
-	async validateForHotSwap(contentPack: any): Promise<ValidationResult> {
+	async validateForHotSwap(
+		contentPack: ContentPackData,
+	): Promise<ValidationResult> {
 		const { result, metrics } = await timeOperation(
 			"content.hotswap",
 			async () => {
@@ -583,17 +586,17 @@ export class ContentPackValidationService {
 	 * @param contentPack - Content pack data
 	 * @returns Array of breaking change descriptions
 	 */
-	private checkBreakingChanges(contentPack: any): string[] {
+	private checkBreakingChanges(contentPack: ContentPackData): string[] {
 		const breakingChanges: string[] = [];
 
 		// Check for removed required fields
-		if (!contentPack?.content) {
+		if (!contentPack) {
 			breakingChanges.push("Missing content section");
 		}
 
 		// Check for schema changes
-		if (contentPack?.content?.questions) {
-			for (const question of contentPack.content.questions) {
+		if (contentPack?.questions) {
+			for (const question of contentPack.questions) {
 				if (
 					!question.id ||
 					!question.text ||

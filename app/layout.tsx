@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { PostHogProvider } from "../src/components/PostHogProvider";
+import { WebVitals } from "../src/components/WebVitals";
 
 export const metadata: Metadata = {
 	description:
@@ -60,7 +62,10 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body>
-				<PostHogProvider>{children}</PostHogProvider>
+				<PostHogProvider>
+					<WebVitals />
+					<ErrorBoundary>{children}</ErrorBoundary>
+				</PostHogProvider>
 			</body>
 		</html>
 	);
