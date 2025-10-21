@@ -7,13 +7,37 @@ const nextConfig = {
 		ignoreDuringBuilds: true,
 	},
 
-	// Experimental features
-	experimental: {
-		// Enable server components logging
-		serverComponentsExternalPackages: ["@supabase/ssr"],
-	},
+	// External packages for server-side rendering
+	serverExternalPackages: [
+		"require-in-the-middle",
+		"import-in-the-middle",
+		"@supabase/ssr",
+		"@opentelemetry/instrumentation",
+		"@opentelemetry/api",
+		"@opentelemetry/sdk-node",
+		"@opentelemetry/resources",
+		"@opentelemetry/semantic-conventions",
+		"@opentelemetry/sdk-trace-node",
+		"@opentelemetry/exporter-trace-otlp-http",
+	],
 	images: {
 		domains: ["localhost"],
+	},
+	async headers() {
+		return [
+			{
+				source: "/:path*",
+				headers: [
+					{ key: "X-Content-Type-Options", value: "nosniff" },
+					{ key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+					{ key: "X-Frame-Options", value: "DENY" },
+					{
+						key: "Permissions-Policy",
+						value: "camera=(), microphone=(), geolocation=()",
+					},
+				],
+			},
+		];
 	},
 	async rewrites() {
 		return [

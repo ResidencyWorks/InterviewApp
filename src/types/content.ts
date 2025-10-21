@@ -164,7 +164,7 @@ export interface ContentPackTemplate {
  */
 export interface ContentPackImport {
 	source: "file" | "url" | "template";
-	data: any;
+	data: unknown;
 	options: {
 		validate: boolean;
 		preview: boolean;

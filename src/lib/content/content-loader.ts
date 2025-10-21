@@ -69,7 +69,7 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 			}
 
 			// Save to cache
-			await contentPackCache.set(contentPack.id, contentPack);
+			await contentPackCache.set(contentPack.id, contentPack.content);
 
 			// Set as active if not preview
 			if (!options.preview) {
@@ -127,7 +127,7 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 	async save(pack: ContentPack): Promise<void> {
 		try {
 			pack.updated_at = new Date().toISOString();
-			await contentPackCache.set(pack.id, pack);
+			await contentPackCache.set(pack.id, pack.content);
 
 			analytics.trackContentPackUploaded(pack.id, pack.version, true);
 		} catch (error) {
@@ -143,7 +143,8 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 	 */
 	async get(id: string): Promise<ContentPack | null> {
 		try {
-			return await contentPackCache.get(id);
+			const contentData = await contentPackCache.get(id);
+			return contentData ? ({ id, content: contentData } as ContentPack) : null;
 		} catch (error) {
 			console.error("Error getting content pack:", error);
 			return null;
@@ -156,9 +157,11 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 	 */
 	async list(): Promise<ContentPack[]> {
 		try {
-			// This is a simplified implementation
-			// In a real app, you'd query the database
-			return [];
+			const packs = await contentPackCache.listIndexedPacks();
+			return packs.map(
+				(pack, index) =>
+					({ id: `pack_${index}`, content: pack }) as ContentPack,
+			);
 		} catch (error) {
 			console.error("Error listing content packs:", error);
 			return [];
@@ -189,7 +192,7 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 	async backup(pack: ContentPack): Promise<void> {
 		try {
 			const backupId = `backup_${pack.id}_${Date.now()}`;
-			await contentPackCache.set(backupId, pack);
+			await contentPackCache.set(backupId, pack.content);
 		} catch (error) {
 			console.error("Error backing up content pack:", error);
 			throw error;
@@ -203,7 +206,10 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 	 */
 	async restore(backupId: string): Promise<ContentPack | null> {
 		try {
-			return await contentPackCache.get(backupId);
+			const contentData = await contentPackCache.get(backupId);
+			return contentData
+				? ({ id: backupId, content: contentData } as ContentPack)
+				: null;
 		} catch (error) {
 			console.error("Error restoring content pack:", error);
 			return null;
@@ -274,7 +280,7 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 			this.activePackId = id;
 
 			// Update cache
-			await contentPackCache.setActive(pack);
+			await contentPackCache.setActive(pack.content);
 		} catch (error) {
 			console.error("Error setting active content pack:", error);
 			throw error;

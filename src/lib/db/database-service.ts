@@ -44,7 +44,9 @@ export class DatabaseService implements DatabaseServiceInterface {
 	): Promise<DatabaseResult<T[]>> {
 		try {
 			if (!validateQueryOptions(options)) {
-				return createErrorResult("Invalid query options");
+				return createErrorResult("Invalid query options") as DatabaseResult<
+					T[]
+				>;
 			}
 
 			const sanitizedTable = sanitizeTableName(table);
@@ -69,14 +71,14 @@ export class DatabaseService implements DatabaseServiceInterface {
 			const { data, error } = await query;
 
 			if (error) {
-				return handleDatabaseError(error);
+				return handleDatabaseError(error) as DatabaseResult<T[]>;
 			}
 
 			return createSuccessResult(data as T[]);
 		} catch (error) {
 			return createErrorResult(
 				error instanceof Error ? error.message : "Query failed",
-			);
+			) as DatabaseResult<T[]>;
 		}
 	}
 
@@ -96,14 +98,14 @@ export class DatabaseService implements DatabaseServiceInterface {
 				.single();
 
 			if (error) {
-				return handleDatabaseError(error);
+				return handleDatabaseError(error) as DatabaseResult<T>;
 			}
 
 			return createSuccessResult(data);
 		} catch (error) {
 			return createErrorResult(
 				error instanceof Error ? error.message : "Find by ID failed",
-			);
+			) as DatabaseResult<T>;
 		}
 	}
 
@@ -116,15 +118,15 @@ export class DatabaseService implements DatabaseServiceInterface {
 	 */
 	async insert<T>(
 		table: string,
-		data: any,
+		data: Record<string, unknown>,
 		options?: InsertOptions,
 	): Promise<DatabaseResult<T>> {
 		try {
 			const sanitizedTable = sanitizeTableName(table);
-			let query: any = this.supabase.from(sanitizedTable).insert(data);
+			let query = this.supabase.from(sanitizedTable).insert(data);
 
 			if (options?.returning) {
-				query = query.select(options.returning);
+				query = query.select(options.returning) as any;
 			}
 
 			if (options?.ignoreDuplicates) {
@@ -135,14 +137,14 @@ export class DatabaseService implements DatabaseServiceInterface {
 			const { data: result, error } = await query;
 
 			if (error) {
-				return handleDatabaseError(error);
+				return handleDatabaseError(error) as DatabaseResult<T>;
 			}
 
-			return createSuccessResult(result?.[0] || result);
+			return createSuccessResult((result?.[0] || result) as T);
 		} catch (error) {
 			return createErrorResult(
 				error instanceof Error ? error.message : "Insert failed",
-			);
+			) as DatabaseResult<T>;
 		}
 	}
 
@@ -157,18 +159,15 @@ export class DatabaseService implements DatabaseServiceInterface {
 	async update<T>(
 		table: string,
 		id: string,
-		data: any,
+		data: Record<string, unknown>,
 		options?: UpdateOptions,
 	): Promise<DatabaseResult<T>> {
 		try {
 			const sanitizedTable = sanitizeTableName(table);
-			let query: any = this.supabase
-				.from(sanitizedTable)
-				.update(data)
-				.eq("id", id);
+			let query = this.supabase.from(sanitizedTable).update(data).eq("id", id);
 
 			if (options?.returning) {
-				query = query.select(options.returning);
+				query = query.select(options.returning) as any;
 			}
 
 			if (options?.count) {
@@ -179,14 +178,14 @@ export class DatabaseService implements DatabaseServiceInterface {
 			const { data: result, error } = await query;
 
 			if (error) {
-				return handleDatabaseError(error);
+				return handleDatabaseError(error) as DatabaseResult<T>;
 			}
 
-			return createSuccessResult(result?.[0] || result);
+			return createSuccessResult((result?.[0] || result) as T);
 		} catch (error) {
 			return createErrorResult(
 				error instanceof Error ? error.message : "Update failed",
-			);
+			) as DatabaseResult<T>;
 		}
 	}
 
@@ -204,10 +203,10 @@ export class DatabaseService implements DatabaseServiceInterface {
 	): Promise<DatabaseResult<boolean>> {
 		try {
 			const sanitizedTable = sanitizeTableName(table);
-			let query: any = this.supabase.from(sanitizedTable).delete().eq("id", id);
+			let query = this.supabase.from(sanitizedTable).delete().eq("id", id);
 
 			if (options?.returning) {
-				query = query.select(options.returning);
+				query = query.select(options.returning) as any;
 			}
 
 			if (options?.count) {
@@ -218,14 +217,14 @@ export class DatabaseService implements DatabaseServiceInterface {
 			const { error } = await query;
 
 			if (error) {
-				return handleDatabaseError(error);
+				return handleDatabaseError(error) as DatabaseResult<boolean>;
 			}
 
 			return createSuccessResult(true);
 		} catch (error) {
 			return createErrorResult(
 				error instanceof Error ? error.message : "Delete failed",
-			);
+			) as DatabaseResult<boolean>;
 		}
 	}
 
@@ -250,7 +249,9 @@ export class DatabaseService implements DatabaseServiceInterface {
 			// Get data
 			const dataResult = await this.query<T>(table, queryOptions);
 			if (!dataResult.success) {
-				return createErrorResult(dataResult.error || "Pagination failed");
+				return createErrorResult(
+					dataResult.error || "Pagination failed",
+				) as DatabaseResult<PaginatedResult<T>>;
 			}
 
 			// Get count
@@ -269,7 +270,7 @@ export class DatabaseService implements DatabaseServiceInterface {
 		} catch (error) {
 			return createErrorResult(
 				error instanceof Error ? error.message : "Pagination failed",
-			);
+			) as DatabaseResult<PaginatedResult<T>>;
 		}
 	}
 
@@ -279,7 +280,10 @@ export class DatabaseService implements DatabaseServiceInterface {
 	 * @param params - Query parameters
 	 * @returns Promise resolving to query result
 	 */
-	async rawQuery<T>(sql: string, params?: any[]): Promise<DatabaseResult<T[]>> {
+	async rawQuery<T>(
+		sql: string,
+		params?: unknown[],
+	): Promise<DatabaseResult<T[]>> {
 		try {
 			const { data, error } = await this.supabase.rpc("execute_sql", {
 				params: params || [],
@@ -287,14 +291,14 @@ export class DatabaseService implements DatabaseServiceInterface {
 			});
 
 			if (error) {
-				return handleDatabaseError(error);
+				return handleDatabaseError(error) as DatabaseResult<T[]>;
 			}
 
 			return createSuccessResult(data || []);
 		} catch (error) {
 			return createErrorResult(
 				error instanceof Error ? error.message : "Raw query failed",
-			);
+			) as DatabaseResult<T[]>;
 		}
 	}
 
@@ -357,23 +361,20 @@ export class ServerDatabaseService extends DatabaseService {
 	 */
 	async callProcedure<T>(
 		procedure: string,
-		params?: any,
+		params?: Record<string, unknown>,
 	): Promise<DatabaseResult<T>> {
 		try {
-			const { data, error } = await (this as any).supabase.rpc(
-				procedure,
-				params,
-			);
+			const { data, error } = await this.supabase.rpc(procedure, params);
 
 			if (error) {
-				return handleDatabaseError(error);
+				return handleDatabaseError(error) as DatabaseResult<T>;
 			}
 
 			return createSuccessResult(data);
 		} catch (error) {
 			return createErrorResult(
 				error instanceof Error ? error.message : "Procedure call failed",
-			);
+			) as DatabaseResult<T>;
 		}
 	}
 }
@@ -395,7 +396,7 @@ export async function getServerDatabaseService(): Promise<ServerDatabaseService>
 // For backward compatibility, but this should be avoided in build contexts
 export const serverDatabaseService = {
 	get callProcedure() {
-		return async <T>(procedure: string, params?: any) =>
+		return async <T>(procedure: string, params?: Record<string, unknown>) =>
 			(await getServerDatabaseService()).callProcedure<T>(procedure, params);
 	},
 	get delete() {
@@ -410,8 +411,11 @@ export const serverDatabaseService = {
 		return async () => (await getServerDatabaseService()).healthCheck();
 	},
 	get insert() {
-		return async <T>(table: string, data: any, options?: InsertOptions) =>
-			(await getServerDatabaseService()).insert<T>(table, data, options);
+		return async <T>(
+			table: string,
+			data: Record<string, unknown>,
+			options?: InsertOptions,
+		) => (await getServerDatabaseService()).insert<T>(table, data, options);
 	},
 	get paginate() {
 		return async <T>(
@@ -432,7 +436,7 @@ export const serverDatabaseService = {
 			(await getServerDatabaseService()).query<T>(table, options);
 	},
 	get rawQuery() {
-		return async <T>(sql: string, params?: any[]) =>
+		return async <T>(sql: string, params?: unknown[]) =>
 			(await getServerDatabaseService()).rawQuery<T>(sql, params);
 	},
 	get transaction() {
@@ -442,7 +446,7 @@ export const serverDatabaseService = {
 		return async (
 			table: string,
 			id: string,
-			data: any,
+			data: Record<string, unknown>,
 			options?: UpdateOptions,
 		) => (await getServerDatabaseService()).update(table, id, data, options);
 	},

@@ -73,7 +73,9 @@ export function UserMenu({ className }: UserMenuProps) {
 							src={user.user_metadata?.avatar_url}
 							alt={user.email}
 						/>
-						<AvatarFallback>{getInitials(user.email || "")}</AvatarFallback>
+						<AvatarFallback className="bg-gray-200 text-gray-800">
+							{getInitials(user.email || "")}
+						</AvatarFallback>
 					</Avatar>
 				</Button>
 			</DropdownMenuTrigger>

@@ -5,7 +5,7 @@ import type { NextRequest, NextResponse } from "next/server";
  */
 export type ApiRouteHandler = (
 	request: NextRequest,
-	context?: any,
+	context?: Record<string, unknown>,
 ) => Promise<NextResponse>;
 
 /**
@@ -22,13 +22,13 @@ export type ApiMiddleware = (
 export type ApiErrorHandler = (
 	error: Error,
 	request: NextRequest,
-	context?: any,
+	context?: Record<string, unknown>,
 ) => Promise<NextResponse>;
 
 /**
  * API validation function type
  */
-export type ApiValidator<T = any> = (data: unknown) => {
+export type ApiValidator<T = unknown> = (data: unknown) => {
 	success: boolean;
 	data?: T;
 	error?: string;

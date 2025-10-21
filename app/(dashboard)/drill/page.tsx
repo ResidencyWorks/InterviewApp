@@ -113,11 +113,13 @@ export default function DrillPage() {
 
 								<div className="flex space-x-2">
 									{drill.completed ? (
-										<Button variant="outline" className="flex-1">
-											Review
+										<Button variant="outline" className="flex-1" asChild>
+											<Link href={`/drill/${drill.id}`}>Review</Link>
 										</Button>
 									) : (
-										<Button className="flex-1">Start Drill</Button>
+										<Button className="flex-1" asChild>
+											<Link href={`/drill/${drill.id}`}>Start Drill</Link>
+										</Button>
 									)}
 									<Button variant="outline" size="sm">
 										Preview

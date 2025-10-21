@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { timeOperation } from "@/lib/monitoring/performance";
 import { contentPackValidationService } from "@/lib/services/content-pack-validation";
+import type { ContentPackData } from "@/types/content";
 
 /**
  * Content pack upload API route handler
@@ -32,25 +33,28 @@ export async function POST(request: NextRequest) {
 			async () => {
 				// Read and parse content pack
 				const content = await file.text();
-				let contentPack: any;
+				let contentPack: unknown;
 
 				try {
-					contentPack = JSON.parse(content);
+					contentPack = JSON.parse(content) as unknown;
 				} catch {
 					throw new Error("Invalid JSON file");
 				}
 
 				// Validate content pack
 				const validation =
-					await contentPackValidationService.validateForHotSwap(contentPack);
+					await contentPackValidationService.validateForHotSwap(
+						contentPack as ContentPackData,
+					);
 
 				if (!validation.valid) {
 					throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
 				}
 
+				const packMeta = contentPack as { name?: string; version?: string };
 				return {
 					metadata: validation.metadata,
-					name: contentPack.name || "Unnamed",
+					name: packMeta.name || "Unnamed",
 					performance: {
 						duration: validation.performance.duration,
 						target: validation.performance.target,
@@ -58,7 +62,7 @@ export async function POST(request: NextRequest) {
 					},
 					timestamp: new Date().toISOString(),
 					valid: validation.valid,
-					version: contentPack.version || "1.0.0",
+					version: packMeta.version || "1.0.0",
 					warnings: validation.warnings,
 				};
 			},

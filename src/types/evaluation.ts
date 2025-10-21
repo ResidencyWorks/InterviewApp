@@ -45,6 +45,7 @@ export interface EvaluationResult extends BaseEntity {
 	status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 	error_message?: string;
 	metadata?: Record<string, any>;
+	[key: string]: unknown;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import type { UserEntitlementLevel } from "@/types";
+import type { ContentPackData, UserEntitlementLevel } from "@/types";
 
 /**
  * Redis client configuration and utilities
@@ -147,7 +147,7 @@ export class RedisCacheService {
 	 * @returns Promise resolving to true if successful
 	 */
 	async mset(
-		keyValuePairs: Record<string, any>,
+		keyValuePairs: Record<string, unknown>,
 		ttlSeconds?: number,
 	): Promise<boolean> {
 		try {
@@ -266,12 +266,13 @@ export class UserEntitlementCache {
  * Specialized cache service for managing content pack data with versioning support
  */
 export class ContentPackCache {
+	private readonly INDEX_KEY = "content:index";
 	/**
 	 * Get content pack from cache
 	 * @param packId - Content pack ID to retrieve
 	 * @returns Promise resolving to content pack data or null if not found
 	 */
-	async get(packId: string): Promise<any | null> {
+	async get(packId: string): Promise<ContentPackData | null> {
 		const key = cacheKeys.contentPack(packId);
 		return await redisCache.get(key);
 	}
@@ -282,16 +283,20 @@ export class ContentPackCache {
 	 * @param contentPack - Content pack data to cache
 	 * @returns Promise resolving to true if successful
 	 */
-	async set(packId: string, contentPack: any): Promise<boolean> {
+	async set(packId: string, contentPack: ContentPackData): Promise<boolean> {
 		const key = cacheKeys.contentPack(packId);
-		return await redisCache.set(key, contentPack, cacheTTL.contentPack);
+		const ok = await redisCache.set(key, contentPack, cacheTTL.contentPack);
+		if (ok) {
+			await this.addToIndex(packId);
+		}
+		return ok;
 	}
 
 	/**
 	 * Get active content pack from cache
 	 * @returns Promise resolving to active content pack data or null if not found
 	 */
-	async getActive(): Promise<any | null> {
+	async getActive(): Promise<ContentPackData | null> {
 		const key = cacheKeys.activeContentPack();
 		return await redisCache.get(key);
 	}
@@ -301,7 +306,7 @@ export class ContentPackCache {
 	 * @param contentPack - Content pack data to set as active
 	 * @returns Promise resolving to true if successful
 	 */
-	async setActive(contentPack: any): Promise<boolean> {
+	async setActive(contentPack: ContentPackData): Promise<boolean> {
 		const key = cacheKeys.activeContentPack();
 		return await redisCache.set(key, contentPack, cacheTTL.activeContentPack);
 	}
@@ -319,6 +324,40 @@ export class ContentPackCache {
 		// Invalidate all content pack related keys
 		const keys = [cacheKeys.activeContentPack()];
 		return await redisCache.deleteMany(keys);
+	}
+
+	/**
+	 * Add a content pack ID to the index for listing/versioning
+	 * @param packId - Content pack ID to add
+	 */
+	private async addToIndex(packId: string): Promise<void> {
+		try {
+			const existing = (await redisCache.get<string[]>(this.INDEX_KEY)) || [];
+			if (!existing.includes(packId)) {
+				const updated = [packId, ...existing];
+				await redisCache.set(this.INDEX_KEY, updated);
+			}
+		} catch (error) {
+			console.error("Failed to update content index:", error);
+		}
+	}
+
+	/**
+	 * Get all content pack IDs from the index (most-recent first)
+	 */
+	async getIndexedIds(): Promise<string[]> {
+		const existing = (await redisCache.get<string[]>(this.INDEX_KEY)) || [];
+		return existing;
+	}
+
+	/**
+	 * List all content packs using the index
+	 */
+	async listIndexedPacks(): Promise<ContentPackData[]> {
+		const ids = await this.getIndexedIds();
+		if (ids.length === 0) return [];
+		const packs = await Promise.all(ids.map((id) => this.get(id)));
+		return packs.filter((pack): pack is ContentPackData => pack !== null);
 	}
 }
 

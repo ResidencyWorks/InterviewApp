@@ -1,7 +1,7 @@
 /**
  * Database operation result interface
  */
-export interface DatabaseResult<T = any> {
+export interface DatabaseResult<T = unknown> {
 	data: T | null;
 	error: string | null;
 	success: boolean;
@@ -12,7 +12,7 @@ export interface DatabaseResult<T = any> {
  */
 export interface QueryOptions {
 	select?: string;
-	filters?: Record<string, any>;
+	filters?: Record<string, unknown>;
 	orderBy?: string;
 	orderDirection?: "asc" | "desc";
 	limit?: number;
@@ -62,7 +62,7 @@ export interface PaginatedResult<T> {
 export interface DatabaseTransaction {
 	commit: () => Promise<void>;
 	rollback: () => Promise<void>;
-	query: <T>(sql: string, params?: any[]) => Promise<DatabaseResult<T>>;
+	query: <T>(sql: string, params?: unknown[]) => Promise<DatabaseResult<T>>;
 }
 
 /**
@@ -76,13 +76,13 @@ export interface DatabaseServiceInterface {
 	findById: <T>(table: string, id: string) => Promise<DatabaseResult<T>>;
 	insert: <T>(
 		table: string,
-		data: any,
+		data: Record<string, unknown>,
 		options?: InsertOptions,
 	) => Promise<DatabaseResult<T>>;
 	update: <T>(
 		table: string,
 		id: string,
-		data: any,
+		data: Record<string, unknown>,
 		options?: UpdateOptions,
 	) => Promise<DatabaseResult<T>>;
 	delete: (

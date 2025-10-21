@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { UserMenu } from "@/components/auth/UserMenu";
 
@@ -16,8 +17,14 @@ export default function DashboardLayout({
 						<div className="flex items-center">
 							<Link
 								href="/dashboard"
-								className="text-xl font-bold text-gray-900"
+								className="flex items-center space-x-2 text-xl font-bold text-gray-900"
 							>
+								<Image
+									src="/images/logos/logo.png"
+									alt="InterviewPrep"
+									width={48}
+									height={48}
+								/>
 								InterviewPrep
 							</Link>
 						</div>
@@ -65,7 +72,10 @@ export default function DashboardLayout({
 			<footer className="bg-white border-t border-gray-200 mt-12">
 				<div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 					<div className="text-center text-sm text-gray-500">
-						<p>&copy; 2024 InterviewPrep. All rights reserved.</p>
+						<p>
+							&copy; {new Date().getFullYear()} InterviewPrep. All rights
+							reserved.
+						</p>
 					</div>
 				</div>
 			</footer>
