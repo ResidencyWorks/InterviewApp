@@ -29,7 +29,9 @@ export default function DashboardPage() {
 						</Badge>
 						<Avatar>
 							<AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-							<AvatarFallback>U</AvatarFallback>
+							<AvatarFallback className="bg-gray-200 text-gray-800">
+								U
+							</AvatarFallback>
 						</Avatar>
 					</div>
 				</div>

@@ -5,7 +5,9 @@
 	},
 	"dependencies": {
 		"@opentelemetry/api": "^1.9.0",
+		"@opentelemetry/api-logs": "^0.206.0",
 		"@opentelemetry/instrumentation": "^0.206.0",
+		"@opentelemetry/sdk-logs": "^0.206.0",
 		"@radix-ui/react-alert-dialog": "^1.1.15",
 		"@radix-ui/react-avatar": "^1.1.10",
 		"@radix-ui/react-dialog": "^1.1.15",
@@ -20,8 +22,10 @@
 		"@supabase/supabase-js": "^2.76.0",
 		"@tailwindcss/postcss": "^4.1.15",
 		"@upstash/redis": "^1.35.6",
+		"@vercel/otel": "^2.1.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
+		"import-in-the-middle": "^2.0.0",
 		"lucide-react": "^0.546.0",
 		"next": "15.5.6",
 		"next-themes": "^0.4.6",
@@ -104,5 +108,10 @@
 		"verify-setup": "bash .devcontainer/scripts/verify-setup.sh"
 	},
 	"type": "module",
-	"version": "0.1.0"
+	"version": "0.1.0",
+	"pnpm": {
+		"overrides": {
+			"require-in-the-middle": "8.0.1"
+		}
+	}
 }

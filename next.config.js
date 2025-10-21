@@ -10,8 +10,15 @@ const nextConfig = {
 	// External packages for server-side rendering
 	serverExternalPackages: [
 		"require-in-the-middle",
+		"import-in-the-middle",
 		"@supabase/ssr",
 		"@opentelemetry/instrumentation",
+		"@opentelemetry/api",
+		"@opentelemetry/sdk-node",
+		"@opentelemetry/resources",
+		"@opentelemetry/semantic-conventions",
+		"@opentelemetry/sdk-trace-node",
+		"@opentelemetry/exporter-trace-otlp-http",
 	],
 	images: {
 		domains: ["localhost"],
