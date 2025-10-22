@@ -6,13 +6,13 @@ import OpenAI from "openai";
 import {
 	LLMServiceError,
 	ValidationError,
-} from "../../domain/errors/LLMErrors.js";
+} from "../../domain/errors/LLMErrors";
 import type {
 	ITextAdapter,
 	TextAdapterConfig,
 	TextAnalysisOptions,
 	TextAnalysisResult,
-} from "../../domain/interfaces/ITextAdapter.js";
+} from "../../domain/interfaces/ITextAdapter";
 
 /**
  * Performance optimization constants
@@ -71,8 +71,27 @@ export class OpenAITextAdapter implements ITextAdapter {
 			// Generate prompt
 			const prompt = this.generatePrompt(text, options);
 
+			// Log API call details
+			const model = this.config.model ?? "gpt-4";
+
+			console.log("🤖 Making OpenAI GPT API call:", {
+				model,
+				textLength: text.length,
+				questionId: options.questionId,
+				userId: options.userId,
+				temperature: options.temperature ?? 0.7,
+				maxTokens: options.maxTokens ?? 1000,
+			});
+
 			// Call OpenAI API
-			const response = await this.client.chat.completions.create({
+			console.log("🔑 OpenAI API Key check:", {
+				hasApiKey: Boolean(this.config.apiKey),
+				apiKeyLength: this.config.apiKey?.length || 0,
+				apiKeyPrefix: this.config.apiKey?.substring(0, 10) || "none",
+			});
+
+			// Prepare request parameters
+			const requestParams: any = {
 				model: this.config.model ?? "gpt-4",
 				messages: [
 					{
@@ -86,7 +105,19 @@ export class OpenAITextAdapter implements ITextAdapter {
 				],
 				temperature: options.temperature ?? 0.7,
 				max_tokens: options.maxTokens ?? 1000,
-				response_format: { type: "json_object" },
+			};
+
+			// Note: We don't use response_format parameter as it's not supported by all models
+			// Instead, we rely on the system prompt to ensure JSON output
+
+			const response = await this.client.chat.completions.create(requestParams);
+
+			// Log API response details
+			console.log("📝 OpenAI GPT API response received:", {
+				model: response.model,
+				usage: response.usage,
+				finishReason: response.choices[0]?.finish_reason,
+				responseLength: response.choices[0]?.message?.content?.length || 0,
 			});
 
 			const content = response.choices[0]?.message?.content;
@@ -99,6 +130,14 @@ export class OpenAITextAdapter implements ITextAdapter {
 
 			return analysis;
 		} catch (error) {
+			console.error("❌ OpenAI Text Adapter error:", {
+				error: error instanceof Error ? error.message : "Unknown error",
+				errorType: error?.constructor?.name,
+				textLength: text.length,
+				questionId: options.questionId,
+				userId: options.userId,
+			});
+
 			if (
 				error instanceof LLMServiceError ||
 				error instanceof ValidationError
@@ -168,7 +207,7 @@ export class OpenAITextAdapter implements ITextAdapter {
 	private getSystemPrompt(): string {
 		return `You are an expert interview coach and evaluator. Your task is to analyze interview responses and provide constructive feedback.
 
-Please analyze the provided text and return a JSON response with the following structure:
+CRITICAL: You must respond with ONLY valid JSON in the following exact format:
 {
   "score": <number between 0-100>,
   "feedback": "<detailed feedback message>",
@@ -183,7 +222,10 @@ Guidelines:
 - List 2-5 key strengths
 - List 2-5 specific areas for improvement
 - Be encouraging but honest
-- Focus on actionable advice`;
+- Focus on actionable advice
+- Respond with ONLY the JSON object, no additional text, explanations, or formatting
+- Ensure all strings are properly escaped for JSON
+- Use double quotes for all string values`;
 	}
 
 	/**

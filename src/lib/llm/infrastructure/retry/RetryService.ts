@@ -2,7 +2,7 @@
  * Retry service with exponential backoff and jitter
  */
 
-import type { RetryConfig } from "../../types/config.js";
+import type { RetryConfig } from "../../types/config";
 
 /**
  * Performance optimization constants
@@ -218,7 +218,7 @@ export class RetryService {
 
 		try {
 			return await this.execute(operation, fastRetryOptions);
-		} catch (error) {
+		} catch (_error) {
 			// If fast retry fails, fall back to normal retry
 			return await this.execute(operation, options);
 		}

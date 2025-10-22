@@ -2,9 +2,6 @@
  * Interface for text analysis adapters
  */
 
-import type { Feedback } from "../entities/Feedback.js";
-import type { Submission } from "../entities/Submission.js";
-
 /**
  * Text analysis result
  */

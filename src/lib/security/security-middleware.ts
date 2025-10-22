@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import type { NextRequest, NextResponse } from "next/server";
 import { getAppUrl } from "../env";
 
@@ -41,7 +40,7 @@ export class SecurityMiddleware {
 	 */
 	static detectSuspiciousActivity(request: NextRequest): boolean {
 		const userAgent = request.headers.get("user-agent") || "";
-		const pathname = request.nextUrl.pathname;
+		const _pathname = request.nextUrl.pathname;
 
 		// Check for common attack patterns
 		const suspiciousPatterns = [

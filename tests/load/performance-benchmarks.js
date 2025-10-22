@@ -148,7 +148,7 @@ export function stressTest() {
 function testHealthCheck() {
 	const startTime = Date.now();
 	const response = http.get(`${BASE_URL}/api/health`);
-	const duration = Date.now() - startTime;
+	const _duration = Date.now() - startTime;
 
 	const success = check(response, {
 		"health check status is 200": (r) => r.status === 200,
@@ -157,7 +157,7 @@ function testHealthCheck() {
 			try {
 				JSON.parse(r.body);
 				return true;
-			} catch (e) {
+			} catch (_e) {
 				return false;
 			}
 		},
@@ -170,7 +170,7 @@ function testHealthCheck() {
 
 function testAuthenticationFlow() {
 	const user = getRandomUser();
-	const startTime = Date.now();
+	const _startTime = Date.now();
 
 	// Test login
 	const loginResponse = http.post(
@@ -210,7 +210,7 @@ function testAuthenticationFlow() {
 function testEvaluationAPI() {
 	const question = getRandomQuestion();
 	const response = getRandomResponse();
-	const startTime = Date.now();
+	const _startTime = Date.now();
 
 	const evalResponse = http.post(
 		`${BASE_URL}/api/evaluate`,
@@ -231,7 +231,7 @@ function testEvaluationAPI() {
 			try {
 				const body = JSON.parse(r.body);
 				return body.score !== undefined && body.score >= 0 && body.score <= 100;
-			} catch (e) {
+			} catch (_e) {
 				return false;
 			}
 		},
@@ -239,7 +239,7 @@ function testEvaluationAPI() {
 			try {
 				const body = JSON.parse(r.body);
 				return body.feedback && body.feedback.length > 0;
-			} catch (e) {
+			} catch (_e) {
 				return false;
 			}
 		},
@@ -252,7 +252,7 @@ function testEvaluationAPI() {
 }
 
 function testContentPackAPI() {
-	const startTime = Date.now();
+	const _startTime = Date.now();
 
 	// Test list content packs
 	const listResponse = http.get(`${BASE_URL}/api/content/packs`);
@@ -276,7 +276,7 @@ function testContentPackAPI() {
 			try {
 				const body = JSON.parse(r.body);
 				return body.questions && body.questions.length > 0;
-			} catch (e) {
+			} catch (_e) {
 				return false;
 			}
 		},
@@ -289,7 +289,7 @@ function testContentPackAPI() {
 
 function testUserProfile() {
 	const user = getRandomUser();
-	const startTime = Date.now();
+	const _startTime = Date.now();
 
 	const profileResponse = http.get(`${BASE_URL}/api/user/profile`, {
 		headers: { Authorization: `Bearer test-token-${user.email}` },
@@ -321,6 +321,6 @@ export function setup() {
 }
 
 // Teardown function
-export function teardown(data) {
+export function teardown(_data) {
 	console.log("Performance benchmark teardown completed");
 }

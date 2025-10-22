@@ -210,7 +210,7 @@ export function isVersionSupported(version: string): boolean {
  */
 export function validateUniqueIds<T extends { id: string }>(
 	items: T[],
-	itemType: string,
+	_itemType: string,
 ): boolean {
 	const ids = items.map((item) => item.id);
 	const uniqueIds = new Set(ids);

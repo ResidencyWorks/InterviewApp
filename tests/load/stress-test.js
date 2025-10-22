@@ -6,8 +6,8 @@ import { Counter, Rate, Trend } from "k6/metrics";
 const errorRate = new Rate("errors");
 const responseTime = new Trend("response_time");
 const throughput = new Counter("requests_total");
-const memoryUsage = new Trend("memory_usage");
-const cpuUsage = new Trend("cpu_usage");
+const _memoryUsage = new Trend("memory_usage");
+const _cpuUsage = new Trend("cpu_usage");
 
 // Stress test configuration
 export const options = {
@@ -183,7 +183,7 @@ function testEvaluationStress() {
 			try {
 				const body = JSON.parse(r.body);
 				return body.score !== undefined || body.error !== undefined;
-			} catch (e) {
+			} catch (_e) {
 				return false;
 			}
 		},
@@ -268,6 +268,6 @@ export function setup() {
 }
 
 // Teardown function
-export function teardown(data) {
+export function teardown(_data) {
 	console.log("Stress test teardown completed");
 }

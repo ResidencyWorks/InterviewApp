@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { analytics } from "@/lib/analytics";
 import { databaseService } from "@/lib/db";
 import { EvaluationService } from "@/lib/evaluation/evaluation-service";
-import { redisCache } from "@/lib/redis";
+import { cacheKeys, redisCache } from "@/lib/redis";
 import type { EvaluationRequest, EvaluationResult } from "@/types/evaluation";
 
 // Mock dependencies
@@ -50,6 +50,11 @@ describe("EvaluationService", () => {
 		vi.mocked(redisCache).get = mockRedisCache.get;
 		vi.mocked(redisCache).set = mockRedisCache.set;
 		vi.mocked(redisCache).delete = mockRedisCache.delete;
+
+		// Mock cacheKeys - use vi.spyOn to mock the function
+		vi.spyOn(cacheKeys, "evaluationResult").mockImplementation(
+			(id: string) => `evaluation:${id}`,
+		);
 
 		vi.mocked(analytics).trackEvaluationStarted =
 			mockAnalytics.trackEvaluationStarted;
@@ -232,7 +237,9 @@ describe("EvaluationService", () => {
 				},
 			];
 
-			mockDatabaseService.paginate.mockResolvedValue({ data: mockResults });
+			mockDatabaseService.paginate.mockResolvedValue({
+				data: { data: mockResults },
+			});
 
 			const results = await evaluationService.listResults(userId, 1, 20);
 
@@ -253,21 +260,42 @@ describe("EvaluationService", () => {
 	describe("getAnalytics", () => {
 		it("should return analytics data for a user", async () => {
 			const userId = "test-user";
-			const mockAnalyticsData = {
-				totalEvaluations: 10,
-				averageScore: 82.5,
-				completedEvaluations: 8,
-				failedEvaluations: 2,
-			};
+			const mockResults = [
+				{
+					id: "result-1",
+					user_id: userId,
+					response_type: "text",
+					categories: { clarity: 80, content: 85, delivery: 75, structure: 82 },
+					score: 81,
+					status: "COMPLETED",
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+				},
+				{
+					id: "result-2",
+					user_id: userId,
+					response_type: "audio",
+					categories: { clarity: 85, content: 90, delivery: 88, structure: 87 },
+					score: 88,
+					status: "COMPLETED",
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+				},
+			];
 
-			// Mock the analytics service
-			mockAnalytics.getUserAnalytics = vi
-				.fn()
-				.mockResolvedValue(mockAnalyticsData);
+			// Mock the database service to return results for listResults
+			mockDatabaseService.paginate.mockResolvedValue({
+				data: { data: mockResults },
+			});
 
 			const result = await evaluationService.getAnalytics(userId);
 
-			expect(result).toEqual(mockAnalyticsData);
+			// The result should have calculated analytics based on the mock results
+			expect(result).toHaveProperty("totalEvaluations");
+			expect(result).toHaveProperty("averageScore");
+			expect(result).toHaveProperty("categoryAverages");
+			expect(result.totalEvaluations).toBe(2);
+			expect(result.averageScore).toBe(84.5); // (81 + 88) / 2
 		});
 	});
 });

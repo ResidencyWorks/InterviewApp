@@ -71,7 +71,7 @@ export class ApplicationStartupContentPackLoader {
 				console.log(
 					"Active content pack found:",
 					activeContentPack.name,
-					"v" + activeContentPack.version,
+					`v${activeContentPack.version}`,
 				);
 				this.fallbackService.disableFallbackMode();
 			} else {

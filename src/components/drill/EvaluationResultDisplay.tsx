@@ -23,6 +23,14 @@ export function EvaluationResultDisplay({
 	result,
 	className,
 }: EvaluationResultDisplayProps) {
+	console.log("🔍 EvaluationResultDisplay received:", {
+		status: result.status,
+		score: result.score,
+		scoreType: typeof result.score,
+		hasFeedback: Boolean(result.feedback),
+		hasCategories: Boolean(result.categories),
+		fullResult: result,
+	});
 	const getStatusColor = (status: string) => {
 		switch (status) {
 			case "COMPLETED":
@@ -97,7 +105,19 @@ export function EvaluationResultDisplay({
 		);
 	}
 
-	if (result.status !== "COMPLETED" || !result.score) {
+	if (
+		result.status !== "COMPLETED" ||
+		result.score === undefined ||
+		result.score === null
+	) {
+		console.log("❌ EvaluationResultDisplay not rendering:", {
+			status: result.status,
+			score: result.score,
+			reason:
+				result.status !== "COMPLETED"
+					? "status not completed"
+					: "score is null/undefined",
+		});
 		return null;
 	}
 

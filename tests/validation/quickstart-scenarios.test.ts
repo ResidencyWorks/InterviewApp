@@ -19,8 +19,17 @@ describe("Quickstart Validation Scenarios", () => {
 	beforeEach(() => {
 		// Mock speech adapter
 		mockSpeechAdapter = {
-			transcribe: vi.fn().mockResolvedValue("Transcribed audio content"),
-			isAvailable: vi.fn().mockResolvedValue(true),
+			transcribe: vi.fn().mockResolvedValue({
+				text: "Transcribed audio content",
+				confidence: 0.95,
+				language: "en",
+				duration: 30,
+			}),
+			supportsFormat: vi.fn().mockReturnValue(true),
+			getMaxFileSize: vi.fn().mockReturnValue(25 * 1024 * 1024), // 25MB
+			getSupportedFormats: vi
+				.fn()
+				.mockReturnValue(["mp3", "wav", "m4a", "mp4"]),
 		};
 
 		// Mock text adapter
@@ -35,6 +44,7 @@ describe("Quickstart Validation Scenarios", () => {
 			}),
 			isAvailable: vi.fn().mockResolvedValue(true),
 			getModelName: vi.fn().mockReturnValue("gpt-4"),
+			getMaxTextLength: vi.fn().mockReturnValue(50000), // Allow much longer text
 		};
 
 		// Initialize service with mocked adapters

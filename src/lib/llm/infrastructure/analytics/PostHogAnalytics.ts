@@ -3,7 +3,7 @@
  */
 
 import { PostHog } from "posthog-node";
-import type { AnalyticsConfig } from "../../types/config.js";
+import type { AnalyticsConfig } from "../../types/config";
 
 /**
  * PostHog analytics service for LLM operations

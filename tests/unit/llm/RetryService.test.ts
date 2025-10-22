@@ -48,10 +48,10 @@ describe("RetryService", () => {
 		it("should fail after max attempts", async () => {
 			const mockOperation = vi
 				.fn()
-				.mockRejectedValue(new Error("Persistent error"));
+				.mockRejectedValue(new Error("Network timeout"));
 
 			await expect(retryService.execute(mockOperation)).rejects.toThrow(
-				"Persistent error",
+				"Network timeout",
 			);
 			expect(mockOperation).toHaveBeenCalledTimes(3);
 		});
@@ -86,15 +86,17 @@ describe("RetryService", () => {
 		it("should fall back to normal retry if fast retry fails", async () => {
 			const mockOperation = vi
 				.fn()
-				.mockRejectedValue(new Error("timeout"))
-				.mockRejectedValue(new Error("timeout"))
-				.mockRejectedValue(new Error("timeout"))
+				.mockRejectedValueOnce(new Error("timeout"))
+				.mockRejectedValueOnce(new Error("timeout"))
+				.mockRejectedValueOnce(new Error("timeout"))
+				.mockRejectedValueOnce(new Error("timeout"))
 				.mockResolvedValue("success");
 
 			const result = await retryService.executeWithFastRetry(mockOperation);
 
 			expect(result.result).toBe("success");
 			expect(result.attempts).toBeGreaterThan(2);
+			expect(mockOperation).toHaveBeenCalledTimes(5); // 2 fast retry + 3 normal retry
 		});
 	});
 
@@ -102,7 +104,7 @@ describe("RetryService", () => {
 		it("should optimize delays for connection pool scenarios", async () => {
 			const mockOperation = vi
 				.fn()
-				.mockRejectedValueOnce(new Error("Connection error"))
+				.mockRejectedValueOnce(new Error("Network error"))
 				.mockResolvedValue("success");
 
 			const result =

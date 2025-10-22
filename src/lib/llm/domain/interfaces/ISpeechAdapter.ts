@@ -2,8 +2,6 @@
  * Interface for speech-to-text adapters
  */
 
-import type { Submission } from "../entities/Submission.js";
-
 /**
  * Speech transcription result
  */

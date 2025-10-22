@@ -6,9 +6,8 @@
  * JSON file storage and proper error handling.
  */
 
-import { promises as fs } from "fs";
-import { dirname, join } from "path";
-import type { Tables } from "@/types/database";
+import { promises as fs } from "node:fs";
+import { join } from "node:path";
 import {
 	type ContentPack,
 	ContentPackStatus,
@@ -392,7 +391,7 @@ export class FilesystemContentPackRepository implements IContentPackRepository {
 		try {
 			const data = await fs.readFile(this.indexFile, "utf8");
 			return JSON.parse(data);
-		} catch (error) {
+		} catch (_error) {
 			return [];
 		}
 	}
