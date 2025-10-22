@@ -9,7 +9,6 @@ import type {
 	EvaluationResponse,
 	EvaluationResult,
 } from "@/types/evaluation";
-import { mockEngine, openaiEngine } from "./evaluation-engine";
 import type {
 	EvaluationMetrics,
 	EvaluationServiceInterface,
@@ -20,8 +19,6 @@ import type {
  * Main service for handling evaluation operations
  */
 export class EvaluationService implements EvaluationServiceInterface {
-	private engine = process.env.NODE_ENV === "test" ? mockEngine : openaiEngine;
-
 	/**
 	 * Evaluate a response
 	 * @param request - Evaluation request
@@ -75,49 +72,55 @@ export class EvaluationService implements EvaluationServiceInterface {
 				...request,
 				metadata: { ...(request.metadata || {}), user_id: currentUserId },
 			};
-			const evaluation: EvaluationResponse =
-				await this.engine.evaluate(evaluationRequest);
+
+			// M0: For now, evaluation service is not implemented for the new engine
+			// The simple evaluateTranscript function is used in the API route instead
+			throw new Error(
+				"EvaluationService.evaluate() is not yet implemented for M0. Use evaluateTranscript() in the API route instead.",
+			);
+			// const evaluation: EvaluationResponse =
+			// 	await this.engine.evaluate(evaluationRequest);
 
 			// Update result with evaluation data
-			const updatedResult: EvaluationResult = {
-				...evaluationResult,
-				categories: evaluation.categories,
-				duration_seconds: evaluation.duration,
-				feedback: evaluation.feedback,
-				score: evaluation.score,
-				status: "COMPLETED",
-				updated_at: new Date().toISOString(),
-				word_count: evaluation.word_count,
-				wpm: evaluation.wpm,
-			};
+			// const updatedResult: EvaluationResult = {
+			// 	...evaluationResult,
+			// 	categories: evaluation.categories,
+			// 	duration_seconds: evaluation.duration,
+			// 	feedback: evaluation.feedback,
+			// 	score: evaluation.score,
+			// 	status: "COMPLETED",
+			// 	updated_at: new Date().toISOString(),
+			// 	word_count: evaluation.word_count,
+			// 	wpm: evaluation.wpm,
+			// };
 
-			// Save updated result
-			await databaseService.update(
-				"evaluation_results",
-				resultId,
-				updatedResult,
-			);
+			// // Save updated result
+			// await databaseService.update(
+			// 	"evaluation_results",
+			// 	resultId,
+			// 	updatedResult,
+			// );
 
-			// Cache the completed result
-			const cacheKey = cacheKeys.evaluationResult(resultId);
-			await redisCache.set(cacheKey, updatedResult, cacheTTL.evaluationResult);
+			// // Cache the completed result
+			// const cacheKey = cacheKeys.evaluationResult(resultId);
+			// await redisCache.set(cacheKey, updatedResult, cacheTTL.evaluationResult);
 
-			// Track completion
-			analytics.trackEvaluationCompleted(
-				currentUserId,
-				{
-					categories: evaluation.categories as unknown as Record<
-						string,
-						number
-					>,
-					duration: evaluation.duration,
-					score: evaluation.score,
-					word_count: evaluation.word_count,
-				},
-				request.content_pack_id,
-			);
+			// // Track completion
+			// analytics.trackEvaluationCompleted(
+			// 	currentUserId,
+			// 	{
+			// 		categories: evaluation.categories as unknown as Record<
+			// 			string,
+			// 			number
+			// 		>,
+			// 		duration: evaluation.duration,
+			// 		score: evaluation.score,
+			// 		word_count: evaluation.word_count,
+			// 	},
+			// 	request.content_pack_id,
+			// );
 
-			return updatedResult;
+			// return updatedResult;
 		} catch (error) {
 			const duration = Date.now() - startTime;
 
@@ -401,21 +404,8 @@ export class EvaluationService implements EvaluationServiceInterface {
 		status: "healthy" | "unhealthy";
 		error?: string;
 	}> {
-		try {
-			// Test with a simple evaluation
-			const testRequest: EvaluationRequest = {
-				response: "This is a test response for health check.",
-				type: "text",
-			};
-
-			await this.engine.evaluate(testRequest);
-			return { status: "healthy" };
-		} catch (error) {
-			return {
-				error: error instanceof Error ? error.message : "Unknown error",
-				status: "unhealthy",
-			};
-		}
+		// M0: Basic health check without engine
+		return { status: "healthy" };
 	}
 }
 

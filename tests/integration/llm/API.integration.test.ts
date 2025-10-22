@@ -5,8 +5,8 @@
 
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { GET } from "../../../src/app/api/evaluate/[submissionId]/status/route";
-import { POST } from "../../../src/app/api/evaluate/route";
+import { GET } from "../../../app/api/evaluate/[submissionId]/status/route";
+import { POST } from "../../../app/api/evaluate/route";
 
 describe("LLM API Integration Tests", () => {
 	beforeAll(async () => {

@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { serverDatabaseService } from "@/lib/db/database-service";
+import { entitlementsService } from "@/lib/entitlements/EntitlementsService";
 import { userEntitlementCache } from "@/lib/redis";
+import { idempotencyStore } from "@/lib/webhooks/IdempotencyStore";
 import type { UserEntitlementLevel } from "@/types";
 
 /**
@@ -12,6 +14,15 @@ import type { UserEntitlementLevel } from "@/types";
  */
 export async function POST(request: NextRequest) {
 	try {
+		// Basic idempotency guard (header or derived)
+		const eventId =
+			request.headers.get("stripe-event-id") ??
+			request.headers.get("stripe-signature") ??
+			"unknown";
+		if (!idempotencyStore.tryCreate(eventId, 5 * 60 * 1000)) {
+			return NextResponse.json({ ok: true, idempotent: true });
+		}
+
 		const body = await request.text();
 		const signature = request.headers.get("stripe-signature");
 
@@ -45,7 +56,17 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
 		}
 
-		// Process the event
+		// Minimal M0 grant on checkout.session.completed
+		if (event.type === "checkout.session.completed") {
+			const session = event.data.object as Stripe.Checkout.Session;
+			const userId = (session.client_reference_id ??
+				session.metadata?.userId) as string | undefined;
+			if (userId) {
+				entitlementsService.grantPractice(userId);
+			}
+		}
+
+		// Process the event (extended handlers)
 		const result = await processStripeEvent(event);
 
 		return NextResponse.json({
