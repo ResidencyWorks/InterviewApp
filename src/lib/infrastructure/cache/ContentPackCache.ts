@@ -218,7 +218,7 @@ export class ContentPackCache {
 	 * Get cache statistics
 	 */
 	getStatistics(): CacheStatistics {
-		const now = Date.now();
+		const _now = Date.now();
 		let oldestEntry: Date | null = null;
 		let newestEntry: Date | null = null;
 

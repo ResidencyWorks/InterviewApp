@@ -5,7 +5,6 @@
 import {
 	CircuitBreakerError,
 	LLMServiceError,
-	RetryExhaustedError,
 } from "../../domain/errors/LLMErrors.js";
 import type { ISpeechAdapter } from "../../domain/interfaces/ISpeechAdapter.js";
 import type { ITextAdapter } from "../../domain/interfaces/ITextAdapter.js";
@@ -18,12 +17,36 @@ import {
 	type CircuitBreakerState,
 } from "../../infrastructure/retry/CircuitBreaker.js";
 import { RetryService } from "../../infrastructure/retry/RetryService.js";
-import type { LLMServiceConfig } from "../../types/config.js";
 import {
 	EvaluateSubmissionUseCase,
 	type EvaluationRequestInput,
 	type EvaluationResult,
 } from "../use-cases/EvaluateSubmissionUseCase.js";
+
+/**
+ * Constants for LLM Feedback Service
+ */
+const CONSTANTS = {
+	QUALITY_THRESHOLDS: {
+		EXCELLENT: 90,
+		GOOD: 75,
+		FAIR: 60,
+	} as const,
+	ERROR_MESSAGES: {
+		VALIDATION: "validation",
+		AUTHENTICATION: "authentication",
+		AUTHORIZATION: "authorization",
+		TIMEOUT: "timeout",
+		NETWORK: "network",
+		RATE_LIMIT: "rate limit",
+		TEMPORARY: "temporary",
+		SERVICE_UNAVAILABLE: "service unavailable",
+	} as const,
+	FALLBACK_MESSAGES: {
+		STRENGTH: "Your submission was received successfully",
+		IMPROVEMENT: "Please try again later for detailed feedback",
+	} as const,
+} as const;
 
 /**
  * LLM Feedback Service configuration
@@ -177,54 +200,7 @@ export class LLMFeedbackService {
 
 			return result;
 		} catch (error) {
-			// Handle different types of errors
-			if (error instanceof CircuitBreakerError) {
-				this.analytics.trackCircuitBreakerOpened({
-					service: "llm-feedback-service",
-					failureCount: this.circuitBreaker.getStats().failureCount,
-					threshold: this.config.circuitBreakerConfig.threshold,
-				});
-
-				this.monitoring.captureCircuitBreakerEvent({
-					action: "opened",
-					service: "llm-feedback-service",
-					failureCount: this.circuitBreaker.getStats().failureCount,
-					threshold: this.config.circuitBreakerConfig.threshold,
-				});
-			}
-
-			// Track audio processing failure if applicable
-			if (input.audioUrl) {
-				this.analytics.trackAudioProcessing({
-					submissionId,
-					userId: input.userId,
-					event: "transcription_failed",
-					audioUrl: input.audioUrl,
-					errorCode: this.getErrorCode(error),
-				});
-			}
-
-			// Track failure
-			this.analytics.trackLLMRequestFailed({
-				submissionId,
-				userId: input.userId,
-				questionId: input.questionId,
-				errorCode: this.getErrorCode(error),
-				errorMessage: error instanceof Error ? error.message : "Unknown error",
-				attempts: this.retryService.getConfig().maxAttempts,
-				model: this.config.textAdapter.getModelName(),
-				contentType: input.audioUrl ? "audio" : "text",
-			});
-
-			// Capture error in monitoring
-			this.monitoring.captureLLMError(error, {
-				submissionId,
-				userId: input.userId,
-				questionId: input.questionId,
-				operation: "evaluate_submission",
-				model: this.config.textAdapter.getModelName(),
-				processingTimeMs: Date.now() - startTime,
-			});
+			await this.handleEvaluationError(error, input, submissionId, startTime);
 
 			// Use fallback if enabled
 			if (this.config.fallbackConfig.enabled) {
@@ -233,6 +209,65 @@ export class LLMFeedbackService {
 
 			throw error;
 		}
+	}
+
+	/**
+	 * Handle evaluation errors with comprehensive tracking
+	 */
+	private async handleEvaluationError(
+		error: unknown,
+		input: EvaluationRequestInput,
+		submissionId: string,
+		startTime: number,
+	): Promise<void> {
+		// Handle different types of errors
+		if (error instanceof CircuitBreakerError) {
+			this.analytics.trackCircuitBreakerOpened({
+				service: "llm-feedback-service",
+				failureCount: this.circuitBreaker.getStats().failureCount,
+				threshold: this.config.circuitBreakerConfig.threshold,
+			});
+
+			this.monitoring.captureCircuitBreakerEvent({
+				action: "opened",
+				service: "llm-feedback-service",
+				failureCount: this.circuitBreaker.getStats().failureCount,
+				threshold: this.config.circuitBreakerConfig.threshold,
+			});
+		}
+
+		// Track audio processing failure if applicable
+		if (input.audioUrl) {
+			this.analytics.trackAudioProcessing({
+				submissionId,
+				userId: input.userId,
+				event: "transcription_failed",
+				audioUrl: input.audioUrl,
+				errorCode: this.getErrorCode(error),
+			});
+		}
+
+		// Track failure
+		this.analytics.trackLLMRequestFailed({
+			submissionId,
+			userId: input.userId,
+			questionId: input.questionId,
+			errorCode: this.getErrorCode(error),
+			errorMessage: error instanceof Error ? error.message : "Unknown error",
+			attempts: this.retryService.getConfig().maxAttempts,
+			model: this.config.textAdapter.getModelName(),
+			contentType: input.audioUrl ? "audio" : "text",
+		});
+
+		// Capture error in monitoring
+		this.monitoring.captureLLMError(error, {
+			submissionId,
+			userId: input.userId,
+			questionId: input.questionId,
+			operation: "evaluate_submission",
+			model: this.config.textAdapter.getModelName(),
+			processingTimeMs: Date.now() - startTime,
+		});
 	}
 
 	/**
@@ -256,8 +291,8 @@ export class LLMFeedbackService {
 			{
 				score: this.config.fallbackConfig.defaultScore,
 				feedback: this.config.fallbackConfig.defaultFeedback,
-				strengths: ["Your submission was received successfully"],
-				improvements: ["Please try again later for detailed feedback"],
+				strengths: [CONSTANTS.FALLBACK_MESSAGES.STRENGTH],
+				improvements: [CONSTANTS.FALLBACK_MESSAGES.IMPROVEMENT],
 				model: "fallback",
 				processingTimeMs: 0,
 			},
@@ -316,10 +351,11 @@ export class LLMFeedbackService {
 	private shouldRetry(error: unknown): boolean {
 		if (error instanceof LLMServiceError) {
 			// Don't retry validation errors or authentication errors
+			const message = error.message.toLowerCase();
 			return (
-				!error.message.includes("validation") &&
-				!error.message.includes("authentication") &&
-				!error.message.includes("authorization")
+				!message.includes(CONSTANTS.ERROR_MESSAGES.VALIDATION) &&
+				!message.includes(CONSTANTS.ERROR_MESSAGES.AUTHENTICATION) &&
+				!message.includes(CONSTANTS.ERROR_MESSAGES.AUTHORIZATION)
 			);
 		}
 
@@ -327,50 +363,15 @@ export class LLMFeedbackService {
 		if (error instanceof Error) {
 			const message = error.message.toLowerCase();
 			return (
-				message.includes("timeout") ||
-				message.includes("network") ||
-				message.includes("rate limit") ||
-				message.includes("temporary") ||
-				message.includes("service unavailable")
+				message.includes(CONSTANTS.ERROR_MESSAGES.TIMEOUT) ||
+				message.includes(CONSTANTS.ERROR_MESSAGES.NETWORK) ||
+				message.includes(CONSTANTS.ERROR_MESSAGES.RATE_LIMIT) ||
+				message.includes(CONSTANTS.ERROR_MESSAGES.TEMPORARY) ||
+				message.includes(CONSTANTS.ERROR_MESSAGES.SERVICE_UNAVAILABLE)
 			);
 		}
 
 		return false;
-	}
-
-	/**
-	 * Handle retry attempts
-	 */
-	private handleRetry(
-		attempt: number,
-		error: unknown,
-		submissionId: string,
-		userId: string,
-	): void {
-		this.analytics.trackRetryAttempt({
-			submissionId,
-			userId,
-			attempt,
-			errorCode: this.getErrorCode(error),
-			delayMs: this.calculateRetryDelay(attempt),
-		});
-
-		this.monitoring.addBreadcrumb(`Retry attempt ${attempt}`, "retry", {
-			submissionId,
-			userId,
-			attempt,
-			error: error instanceof Error ? error.message : "Unknown error",
-		});
-	}
-
-	/**
-	 * Calculate retry delay
-	 */
-	private calculateRetryDelay(attempt: number): number {
-		const baseDelay = this.config.retryConfig.baseDelay;
-		const maxDelay = this.config.retryConfig.maxDelay;
-		const delay = baseDelay * 2 ** (attempt - 1);
-		return Math.min(delay, maxDelay);
 	}
 
 	/**
@@ -392,9 +393,9 @@ export class LLMFeedbackService {
 	private getQualityLevel(
 		score: number,
 	): "excellent" | "good" | "fair" | "poor" {
-		if (score >= 90) return "excellent";
-		if (score >= 75) return "good";
-		if (score >= 60) return "fair";
+		if (score >= CONSTANTS.QUALITY_THRESHOLDS.EXCELLENT) return "excellent";
+		if (score >= CONSTANTS.QUALITY_THRESHOLDS.GOOD) return "good";
+		if (score >= CONSTANTS.QUALITY_THRESHOLDS.FAIR) return "fair";
 		return "poor";
 	}
 
@@ -404,9 +405,9 @@ export class LLMFeedbackService {
 	private createFeedbackService(): IFeedbackService {
 		// Import here to avoid circular dependencies
 		const {
-			createFeedbackService,
-		} = require("../../domain/services/FeedbackService.js");
-		return createFeedbackService();
+			FeedbackService,
+		} = require("../../domain/services/FeedbackService");
+		return new FeedbackService();
 	}
 
 	/**
@@ -415,9 +416,9 @@ export class LLMFeedbackService {
 	private createStatusTrackingService(): IStatusTrackingService {
 		// Import here to avoid circular dependencies
 		const {
-			createStatusTrackingService,
-		} = require("../../domain/services/StatusTrackingService.js");
-		return createStatusTrackingService();
+			StatusTrackingService,
+		} = require("../../domain/services/StatusTrackingService");
+		return new StatusTrackingService();
 	}
 
 	/**
@@ -430,7 +431,9 @@ export class LLMFeedbackService {
 		}
 
 		// Fallback for environments without crypto.randomUUID
-		return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+		const timestamp = Date.now().toString(36);
+		const random = Math.random().toString(36).substring(2, 11);
+		return `${timestamp}-${random}`;
 	}
 
 	/**
@@ -468,6 +471,20 @@ export class LLMFeedbackService {
 			analytics: this.analytics.isEnabled(),
 			monitoring: this.monitoring.isEnabled(),
 		};
+	}
+
+	/**
+	 * Get service configuration
+	 */
+	getConfig() {
+		return this.config;
+	}
+
+	/**
+	 * Get fallback configuration
+	 */
+	getFallbackConfig() {
+		return this.config.fallbackConfig;
 	}
 
 	/**

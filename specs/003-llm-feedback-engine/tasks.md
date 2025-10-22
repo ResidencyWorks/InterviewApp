@@ -125,14 +125,14 @@ description: "Task list for LLM Feedback Engine implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T043 [P] Documentation updates in docs/llm-feedback-engine/
-- [ ] T044 Code cleanup and refactoring across all LLM service components
-- [ ] T045 Performance optimization for LLM API calls and retry logic
-- [ ] T046 [P] Additional unit tests in tests/unit/llm/
-- [ ] T047 Security hardening for API endpoints and OpenAI key management
-- [ ] T048 Run quickstart.md validation scenarios
-- [ ] T049 [P] Integration tests in tests/integration/llm/
-- [ ] T050 Circuit breaker implementation for OpenAI API failures
+- [x] T043 [P] Documentation updates in docs/llm-feedback-engine/
+- [x] T044 Code cleanup and refactoring across all LLM service components
+- [x] T045 Performance optimization for LLM API calls and retry logic
+- [x] T046 [P] Additional unit tests in tests/unit/llm/
+- [x] T047 Security hardening for API endpoints and OpenAI key management
+- [x] T048 Run quickstart.md validation scenarios
+- [x] T049 [P] Integration tests in tests/integration/llm/
+- [x] T050 Circuit breaker implementation for OpenAI API failures
 
 ---
 

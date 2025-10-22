@@ -2,7 +2,7 @@
 
 import { CheckCircle, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,7 @@ import { authService } from "@/lib/auth/auth-service";
 
 export default function CompleteProfilePage() {
 	const { user } = useAuth();
-	const router = useRouter();
+	const _router = useRouter();
 
 	const [formData, setFormData] = useState({
 		full_name: "",

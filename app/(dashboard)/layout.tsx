@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -13,8 +12,8 @@ export default function DashboardLayout({
 	children: React.ReactNode;
 }) {
 	const { user, loading } = useAuth();
-	const router = useRouter();
-	const pathname = usePathname();
+	const _router = useRouter();
+	const _pathname = usePathname();
 	const isAdmin = user?.user_metadata?.role === "admin";
 
 	// Note: Authentication routing is now handled by middleware

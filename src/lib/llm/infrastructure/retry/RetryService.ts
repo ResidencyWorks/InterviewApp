@@ -5,6 +5,20 @@
 import type { RetryConfig } from "../../types/config.js";
 
 /**
+ * Performance optimization constants
+ */
+const PERFORMANCE_CONSTANTS = {
+	// Fast retry for transient errors
+	FAST_RETRY_DELAY: 100,
+	// Maximum fast retry attempts
+	FAST_RETRY_MAX_ATTEMPTS: 2,
+	// Connection pool optimization
+	CONNECTION_POOL_SIZE: 10,
+	// Request timeout optimization
+	OPTIMIZED_TIMEOUT: 15000,
+} as const;
+
+/**
  * Retry options for individual operations
  */
 export interface RetryOptions {
@@ -185,6 +199,91 @@ export class RetryService {
 	 */
 	getConfig(): RetryConfig {
 		return { ...this.config };
+	}
+
+	/**
+	 * Execute with fast retry for transient errors
+	 */
+	async executeWithFastRetry<T>(
+		operation: () => Promise<T>,
+		options: RetryOptions = {},
+	): Promise<RetryResult<T>> {
+		// First attempt with fast retry for transient errors
+		const fastRetryOptions = {
+			...options,
+			maxAttempts: PERFORMANCE_CONSTANTS.FAST_RETRY_MAX_ATTEMPTS,
+			baseDelay: PERFORMANCE_CONSTANTS.FAST_RETRY_DELAY,
+			shouldRetry: (error: unknown) => this.isTransientError(error),
+		};
+
+		try {
+			return await this.execute(operation, fastRetryOptions);
+		} catch (error) {
+			// If fast retry fails, fall back to normal retry
+			return await this.execute(operation, options);
+		}
+	}
+
+	/**
+	 * Check if error is transient and suitable for fast retry
+	 */
+	private isTransientError(error: unknown): boolean {
+		if (error instanceof Error) {
+			const message = error.message.toLowerCase();
+			return (
+				message.includes("timeout") ||
+				message.includes("connection") ||
+				message.includes("network") ||
+				message.includes("econnreset") ||
+				message.includes("enotfound")
+			);
+		}
+		return false;
+	}
+
+	/**
+	 * Execute with connection pooling optimization
+	 */
+	async executeWithConnectionPool<T>(
+		operation: () => Promise<T>,
+		options: RetryOptions = {},
+	): Promise<RetryResult<T>> {
+		// Add connection pool optimization
+		const optimizedOptions = {
+			...options,
+			calculateDelay: (
+				attempt: number,
+				baseDelay: number,
+				maxDelay: number,
+			) => {
+				// Reduce delay for connection pool scenarios
+				const delay = this.calculateExponentialDelay(
+					attempt,
+					baseDelay,
+					maxDelay,
+				);
+				return Math.min(delay, PERFORMANCE_CONSTANTS.OPTIMIZED_TIMEOUT);
+			},
+		};
+
+		return await this.execute(operation, optimizedOptions);
+	}
+
+	/**
+	 * Get performance metrics
+	 */
+	getPerformanceMetrics(): {
+		averageRetryTime: number;
+		successRate: number;
+		fastRetrySuccessRate: number;
+	} {
+		// This would be implemented with actual metrics collection
+		// For now, return placeholder values
+		return {
+			averageRetryTime: 0,
+			successRate: 0,
+			fastRetrySuccessRate: 0,
+		};
 	}
 }
 

@@ -4,7 +4,6 @@ import { errorMonitoring } from "@/lib/error-monitoring";
 import { openaiEvaluation } from "@/lib/openai";
 import type {
 	EvaluationCategories,
-	EvaluationCriteria,
 	EvaluationRequest,
 	EvaluationResponse,
 } from "@/types/evaluation";

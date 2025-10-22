@@ -30,7 +30,7 @@ import { dashboardService } from "@/lib/services/dashboardService";
 
 export default function DashboardPage() {
 	const { user } = useAuth() as { user: AuthUser | null };
-	const router = useRouter();
+	const _router = useRouter();
 	const isAdmin = user?.user_metadata?.role === "admin";
 	const dashboardData = useDashboardData(user);
 	const userPlanData = useUserPlan(user);

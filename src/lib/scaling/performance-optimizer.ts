@@ -495,7 +495,7 @@ export class PerformanceOptimizer {
 				redis: {
 					enabled: true,
 					cluster: false,
-					nodes: ["localhost:6379"],
+					nodes: [process.env.UPSTASH_REDIS_REST_URL || "localhost:6379"],
 					maxMemory: "256mb",
 					evictionPolicy: "allkeys-lru",
 				},

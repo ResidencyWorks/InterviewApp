@@ -18,6 +18,25 @@ import type { Submission } from "../entities/Submission.js";
 import { BusinessLogicError, ValidationError } from "../errors/LLMErrors.js";
 
 /**
+ * Constants for Feedback Service
+ */
+const CONSTANTS = {
+	VALIDATION: {
+		MIN_SCORE: 0,
+		MAX_SCORE: 100,
+		MIN_FEEDBACK_LENGTH: 10,
+		MIN_STRENGTHS_COUNT: 1,
+		MIN_IMPROVEMENTS_COUNT: 1,
+	} as const,
+	ERROR_MESSAGES: {
+		INVALID_SCORE: "Score must be between 0 and 100",
+		INVALID_FEEDBACK: "Feedback must be at least 10 characters",
+		INVALID_STRENGTHS: "At least one strength must be provided",
+		INVALID_IMPROVEMENTS: "At least one improvement must be provided",
+	} as const,
+} as const;
+
+/**
  * Feedback service interface
  */
 export interface IFeedbackService {
@@ -85,29 +104,7 @@ export class FeedbackService implements IFeedbackService {
 		},
 	): Feedback {
 		// Validate analysis result
-		if (analysisResult.score < 0 || analysisResult.score > 100) {
-			throw new ValidationError("Invalid score", {
-				score: ["Score must be between 0 and 100"],
-			});
-		}
-
-		if (analysisResult.feedback.length < 10) {
-			throw new ValidationError("Invalid feedback", {
-				feedback: ["Feedback must be at least 10 characters"],
-			});
-		}
-
-		if (analysisResult.strengths.length === 0) {
-			throw new ValidationError("Invalid strengths", {
-				strengths: ["At least one strength must be provided"],
-			});
-		}
-
-		if (analysisResult.improvements.length === 0) {
-			throw new ValidationError("Invalid improvements", {
-				improvements: ["At least one improvement must be provided"],
-			});
-		}
+		this.validateAnalysisResult(analysisResult);
 
 		// Generate unique feedback ID
 		const feedbackId = this.generateId();
@@ -192,6 +189,52 @@ export class FeedbackService implements IFeedbackService {
 	}
 
 	/**
+	 * Validate analysis result
+	 */
+	private validateAnalysisResult(analysisResult: {
+		score: number;
+		feedback: string;
+		strengths: string[];
+		improvements: string[];
+		model: string;
+		processingTimeMs: number;
+	}): void {
+		if (
+			analysisResult.score < CONSTANTS.VALIDATION.MIN_SCORE ||
+			analysisResult.score > CONSTANTS.VALIDATION.MAX_SCORE
+		) {
+			throw new ValidationError("Invalid score", {
+				score: [CONSTANTS.ERROR_MESSAGES.INVALID_SCORE],
+			});
+		}
+
+		if (
+			analysisResult.feedback.length < CONSTANTS.VALIDATION.MIN_FEEDBACK_LENGTH
+		) {
+			throw new ValidationError("Invalid feedback", {
+				feedback: [CONSTANTS.ERROR_MESSAGES.INVALID_FEEDBACK],
+			});
+		}
+
+		if (
+			analysisResult.strengths.length < CONSTANTS.VALIDATION.MIN_STRENGTHS_COUNT
+		) {
+			throw new ValidationError("Invalid strengths", {
+				strengths: [CONSTANTS.ERROR_MESSAGES.INVALID_STRENGTHS],
+			});
+		}
+
+		if (
+			analysisResult.improvements.length <
+			CONSTANTS.VALIDATION.MIN_IMPROVEMENTS_COUNT
+		) {
+			throw new ValidationError("Invalid improvements", {
+				improvements: [CONSTANTS.ERROR_MESSAGES.INVALID_IMPROVEMENTS],
+			});
+		}
+	}
+
+	/**
 	 * Generate unique ID
 	 */
 	private generateId(): string {
@@ -201,7 +244,9 @@ export class FeedbackService implements IFeedbackService {
 		}
 
 		// Fallback for environments without crypto.randomUUID
-		return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+		const timestamp = Date.now().toString(36);
+		const random = Math.random().toString(36).substring(2, 11);
+		return `${timestamp}-${random}`;
 	}
 }
 
