@@ -6,7 +6,7 @@ export interface RecoveryOptions {
 }
 
 export async function recoverTranscript(
-	error: unknown,
+	_error: unknown,
 	options: RecoveryOptions = { useFallbackOnError: true },
 ): Promise<TranscriptionResult | null> {
 	if (!options.useFallbackOnError) return null;

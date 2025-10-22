@@ -1,0 +1,116 @@
+{
+	"version": "1.0.0",
+	"name": "MatchReady Starter Pack",
+	"description": "Minimal content pack for end-to-end testing of loader and drill flow.",
+	"content": {
+		"evaluations": [
+			{
+				"id": "eval-technical-001",
+				"title": "JavaScript Fundamentals",
+				"description": "Assess understanding of variable declarations and scoping.",
+				"criteria": [
+					{
+						"id": "clarity",
+						"name": "Clarity",
+						"weight": 0.25,
+						"description": "Clear communication and structure of explanation."
+					},
+					{
+						"id": "content",
+						"name": "Content Accuracy",
+						"weight": 0.35,
+						"description": "Technical correctness and relevant details."
+					},
+					{
+						"id": "structure",
+						"name": "Structure",
+						"weight": 0.2,
+						"description": "Logical flow and organization of the answer."
+					},
+					{
+						"id": "delivery",
+						"name": "Delivery",
+						"weight": 0.2,
+						"description": "Confidence and concise delivery."
+					}
+				],
+				"questions": [
+					{
+						"id": "q-let-const-var",
+						"text": "Explain the difference between let, const, and var in JavaScript and when to use each.",
+						"type": "text"
+					}
+				]
+			},
+			{
+				"id": "eval-behavioral-001",
+				"title": "Behavioral: Conflict Resolution",
+				"description": "Probe for structured STAR responses to conflict situations.",
+				"criteria": [
+					{
+						"id": "clarity",
+						"name": "Clarity",
+						"weight": 0.25,
+						"description": "Clear articulation of Situation, Task, Action, Result."
+					},
+					{
+						"id": "content",
+						"name": "Content Depth",
+						"weight": 0.35,
+						"description": "Specific actions and measurable outcomes."
+					},
+					{
+						"id": "structure",
+						"name": "Structure",
+						"weight": 0.2,
+						"description": "STAR organization and coherence."
+					},
+					{
+						"id": "delivery",
+						"name": "Delivery",
+						"weight": 0.2,
+						"description": "Confidence and concision."
+					}
+				],
+				"questions": [
+					{
+						"id": "q-conflict-star",
+						"text": "Tell me about a time you had a conflict with a stakeholder and how you resolved it.",
+						"type": "text"
+					}
+				]
+			}
+		],
+		"categories": [
+			{
+				"id": "clarity",
+				"name": "Clarity",
+				"description": "How clearly ideas are communicated."
+			},
+			{
+				"id": "content",
+				"name": "Content",
+				"description": "Relevance and accuracy of the response."
+			},
+			{
+				"id": "structure",
+				"name": "Structure",
+				"description": "Organization and logical flow."
+			},
+			{
+				"id": "delivery",
+				"name": "Delivery",
+				"description": "Confidence and presentation style."
+			}
+		]
+	},
+	"metadata": {
+		"author": "InterviewApp",
+		"tags": ["starter", "demo", "matchready"],
+		"compatibility": {
+			"minVersion": "0.1.0",
+			"maxVersion": "*",
+			"features": ["content-pack-loader", "analytics-event:content_pack_loaded"]
+		}
+	}
+}

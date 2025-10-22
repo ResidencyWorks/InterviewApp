@@ -216,6 +216,51 @@ export default function DrillInterfacePage() {
 					status: "COMPLETED",
 					created_at: new Date().toISOString(),
 					updated_at: new Date().toISOString(),
+					// UI extras for M0 demo
+					category_flags: [
+						{
+							name: "Conciseness",
+							passFlag: clarity >= 70 ? "PASS" : "FLAG",
+							note: "Keep sentences short and emphasize key points early.",
+						},
+						{
+							name: "Examples",
+							passFlag: content >= 70 ? "PASS" : "FLAG",
+							note: "Ground claims with brief, concrete examples.",
+						},
+						{
+							name: "Signposting",
+							passFlag: structure >= 70 ? "PASS" : "FLAG",
+							note: "Outline your answer structure up front (First, Then, Finally).",
+						},
+						{
+							name: "Pace",
+							passFlag: wpm >= 120 && wpm <= 180 ? "PASS" : "FLAG",
+							note: "Aim for 130–160 WPM to maintain clarity.",
+						},
+						{
+							name: "Filler words",
+							passFlag: Math.random() > 0.3 ? "PASS" : "FLAG",
+							note: "Reduce 'um', 'like', and pauses; brief silence beats filler.",
+						},
+						{
+							name: "Relevance",
+							passFlag: content >= 75 ? "PASS" : "FLAG",
+							note: "Tie each point back to the question explicitly.",
+						},
+						{
+							name: "Confidence",
+							passFlag: delivery >= 75 ? "PASS" : "FLAG",
+							note: "Use active voice; avoid hedging language where not needed.",
+						},
+					],
+					what_changed: [
+						"Tightened intro and added clear thesis",
+						"Inserted concrete example supporting the main claim",
+						"Improved signposting for section transitions",
+					],
+					practice_rule:
+						"Use the 30-60-90 structure: thesis in 30s, depth in 60s, recap in 90s.",
 				};
 
 				console.log("🎯 Setting evaluation result:", {
@@ -226,6 +271,34 @@ export default function DrillInterfacePage() {
 					fullObject: evaluationResult,
 				});
 				setEvaluationResult(evaluationResult);
+
+				// Persist evaluation to backend (non-blocking)
+				try {
+					void fetch("/api/evaluations", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							id: evaluationResult.id,
+							user_id: evaluationResult.user_id,
+							content_pack_id: evaluationResult.content_pack_id,
+							response_text: evaluationResult.response_text,
+							response_audio_url: evaluationResult.response_audio_url,
+							response_type: evaluationResult.response_type,
+							duration_seconds: evaluationResult.duration_seconds,
+							word_count: evaluationResult.word_count,
+							wpm: evaluationResult.wpm,
+							categories: evaluationResult.categories,
+							feedback: evaluationResult.feedback,
+							score: evaluationResult.score,
+							status: evaluationResult.status,
+						}),
+					});
+				} catch (persistError) {
+					console.warn(
+						"Failed to persist evaluation (non-blocking)",
+						persistError,
+					);
+				}
 			} else {
 				throw new Error("Invalid response format from evaluation service");
 			}

@@ -15,6 +15,15 @@ export interface EvaluationCategories {
 }
 
 /**
+ * Pass/Flag category chip with note for UI popovers
+ */
+export interface EvaluationCategoryFlag {
+	name: string;
+	passFlag: "PASS" | "FLAG";
+	note: string;
+}
+
+/**
  * Evaluation response interface
  */
 export interface EvaluationResponse {
@@ -44,7 +53,13 @@ export interface EvaluationResult extends BaseEntity {
 	score?: number;
 	status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 	error_message?: string;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
+	/** Up to 7 chips with pass/flag and notes for popovers */
+	category_flags?: EvaluationCategoryFlag[];
+	/** Max 3 bullets describing refactor deltas */
+	what_changed?: string[];
+	/** One-line rule to practice next */
+	practice_rule?: string;
 	[key: string]: unknown;
 }
 
@@ -57,7 +72,7 @@ export interface EvaluationRequest {
 	audio_url?: string;
 	content_pack_id?: string;
 	question_id?: string;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 }
 
 /**
@@ -112,7 +127,7 @@ export interface EvaluationSession extends BaseEntity {
 	status: "in_progress" | "completed" | "abandoned";
 	current_question_index: number;
 	total_questions: number;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 }
 
 /**

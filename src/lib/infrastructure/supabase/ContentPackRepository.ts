@@ -96,6 +96,10 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 	 */
 	async findAll(options: FindContentPacksOptions = {}): Promise<ContentPack[]> {
 		try {
+			console.log(
+				"SupabaseContentPackRepository: findAll called with options:",
+				options,
+			);
 			let query = this.supabase.from("content_packs").select("*");
 
 			// Apply filters
@@ -107,10 +111,19 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 				query = query.eq("uploaded_by", options.uploadedBy);
 			}
 
-			// Apply sorting
-			const sortBy = options.sortBy || "created_at";
+			// Apply sorting (map domain fields to DB columns)
+			const sortField =
+				options.sortBy === "createdAt"
+					? "created_at"
+					: options.sortBy === "updatedAt"
+						? "updated_at"
+						: options.sortBy === "name"
+							? "name"
+							: options.sortBy === "version"
+								? "version"
+								: "created_at";
 			const sortOrder = options.sortOrder || "desc";
-			query = query.order(sortBy, { ascending: sortOrder === "asc" });
+			query = query.order(sortField, { ascending: sortOrder === "asc" });
 
 			// Apply pagination
 			if (options.limit) {
@@ -124,7 +137,19 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 				);
 			}
 
+			console.log("SupabaseContentPackRepository: Executing query...");
 			const { data, error } = await query;
+
+			console.log("SupabaseContentPackRepository: Query result:", {
+				data: data?.length || 0,
+				error: error?.message || null,
+				rawData:
+					data?.map((item) => ({
+						id: item.id,
+						name: item.name,
+						status: item.status,
+					})) || [],
+			});
 
 			if (error) {
 				throw new Error(`Failed to find content packs: ${error.message}`);

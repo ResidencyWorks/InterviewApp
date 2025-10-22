@@ -12,6 +12,18 @@ import { z } from "zod";
  * Base validation schemas for common patterns
  */
 const uuidSchema = z.string().uuid("Invalid UUID format");
+// Allow either UUIDs or readable slug IDs (alphanumeric, dash, underscore)
+const idSchema = z
+	.union([
+		uuidSchema,
+		z
+			.string()
+			.regex(
+				/^[A-Za-z0-9_-]+$/,
+				"ID must be a UUID or a slug (letters, numbers, -, _)",
+			),
+	])
+	.refine((v) => typeof v === "string" && v.length > 0, "ID cannot be empty");
 const semanticVersionSchema = z
 	.string()
 	.regex(
@@ -30,7 +42,7 @@ const questionTypeSchema = z.enum(["multiple-choice", "text", "rating"]);
  * Criteria schema for evaluation criteria
  */
 const criteriaSchema = z.object({
-	id: uuidSchema,
+	id: idSchema,
 	name: nonEmptyStringSchema.max(
 		100,
 		"Criteria name must be 100 characters or less",
@@ -50,7 +62,7 @@ const criteriaSchema = z.object({
  * Question schema for evaluation questions
  */
 const questionSchema = z.object({
-	id: uuidSchema,
+	id: idSchema,
 	text: nonEmptyStringSchema.max(
 		1000,
 		"Question text must be 1000 characters or less",
@@ -63,7 +75,7 @@ const questionSchema = z.object({
  * Evaluation schema for interview evaluations
  */
 const evaluationSchema = z.object({
-	id: uuidSchema,
+	id: idSchema,
 	title: nonEmptyStringSchema.max(
 		200,
 		"Evaluation title must be 200 characters or less",
@@ -90,7 +102,7 @@ const evaluationSchema = z.object({
  * Category schema for content categorization
  */
 const categorySchema = z.object({
-	id: uuidSchema,
+	id: idSchema,
 	name: nonEmptyStringSchema.max(
 		100,
 		"Category name must be 100 characters or less",
@@ -246,5 +258,5 @@ export async function validateContentPackAsync(
 		throw new Error(`Unsupported schema version: ${version}`);
 	}
 
-	return schema.parseAsync(data);
+	return schema.safeParseAsync(data);
 }
