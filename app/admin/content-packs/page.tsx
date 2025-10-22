@@ -167,10 +167,7 @@ export default function ContentPacksPage(_props: ContentPacksPageProps) {
 					)}
 
 					{/* Content Packs List */}
-					<ContentPackList
-						onContentPackUpdate={handleContentPackUpdate}
-						onRefresh={fetchContentPacks}
-					/>
+					<ContentPackList />
 				</TabsContent>
 
 				<TabsContent value="upload">

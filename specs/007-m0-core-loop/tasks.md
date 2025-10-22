@@ -42,10 +42,10 @@ This file lists dependency-ordered, executable tasks organized by user story.
 
 ## Phase 5: User Story 3 - Load and hot-swap content pack (P3)
 
-- [ ] T025 [US3] Add content pack validation schema at /workspaces/InterviewApp/src/lib/content-pack/schema.ts
-- [ ] T026 [US3] Implement activation and hot-swap at /workspaces/InterviewApp/src/lib/content-pack/ContentPackActivation.ts
-- [ ] T027 [US3] Add UI to upload/activate pack at /workspaces/InterviewApp/src/components/content-pack/ContentPackList.tsx
-- [ ] T028 [P] [US3] Emit content_pack_loaded analytics at /workspaces/InterviewApp/src/lib/analytics/transcript-analytics.ts
+- [X] T025 [US3] Add content pack validation schema at /workspaces/InterviewApp/src/lib/content-pack/schema.ts
+- [X] T026 [US3] Implement activation and hot-swap at /workspaces/InterviewApp/src/lib/content-pack/ContentPackActivation.ts
+- [X] T027 [US3] Add UI to upload/activate pack at /workspaces/InterviewApp/src/components/content-pack/ContentPackList.tsx
+- [X] T028 [P] [US3] Emit content_pack_loaded analytics at /workspaces/InterviewApp/src/lib/analytics/transcript-analytics.ts
 
 ## Final Phase: Polish & Cross-Cutting
 

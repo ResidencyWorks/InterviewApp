@@ -7,7 +7,6 @@ import { z } from "zod";
 import {
 	createErrorResponse,
 	createRateLimitResponse,
-	createUnauthorizedResponse,
 } from "@/lib/api/api-helpers";
 import { FakeASRService } from "@/lib/asr/FakeASRService";
 import { evaluateTranscript } from "@/lib/evaluation/evaluation-engine";
@@ -24,17 +23,6 @@ import { parseConfig } from "@/lib/llm/types/config";
 
 // Simple in-memory rate limiting store
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-/**
- * Simple authentication check
- */
-function checkAuthentication(request: NextRequest): NextResponse | null {
-	const authHeader = request.headers.get("authorization");
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
-		return createUnauthorizedResponse("Authentication required");
-	}
-	return null; // Authentication passed
-}
 
 /**
  * Simple rate limiting check
@@ -155,12 +143,6 @@ const EvaluateRequestSchema = z
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
 	try {
-		// Authentication check
-		const authError = checkAuthentication(request);
-		if (authError) {
-			return authError;
-		}
-
 		// Rate limiting check
 		const rateLimitError = checkRateLimit(request, 10, 60000); // 10 requests per minute
 		if (rateLimitError) {
