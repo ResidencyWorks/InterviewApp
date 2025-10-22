@@ -5,7 +5,7 @@
 
 CREATE TABLE public.system_status (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  status_type VARCHAR(50) NOT NULL,
+  status_type VARCHAR(50) NOT NULL UNIQUE,
   status_value VARCHAR(100) NOT NULL,
   details JSONB,
   last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

@@ -248,8 +248,8 @@ INSERT INTO public.user_progress (
   NOW() - INTERVAL '6 days',
   NOW() - INTERVAL '10 days',
   NOW() - INTERVAL '6 days'
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+) ON CONFLICT (user_id, content_pack_id) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency
 
 -- ==============================================
 -- ADDITIONAL EVALUATION ANALYTICS
@@ -330,5 +330,5 @@ INSERT INTO public.evaluation_analytics (
   '{"trend": "declining", "score_change": -1.25}',
   NOW() - INTERVAL '6 days',
   NOW() - INTERVAL '6 days'
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+) ON CONFLICT (user_id, date) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency

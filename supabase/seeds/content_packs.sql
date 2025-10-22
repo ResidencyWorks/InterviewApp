@@ -467,5 +467,5 @@ INSERT INTO public.content_packs (
   null,
   11520,
   'f6789012345678901234567890abcdef1234567890abcdef1234567890ab'
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+) ON CONFLICT (id) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency

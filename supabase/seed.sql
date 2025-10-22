@@ -496,7 +496,8 @@ INSERT INTO public.evaluation_categories (name, description, weight) VALUES
 ('Data Analysis', 'Ability to analyze and interpret data', 0.8),
 ('Leadership', 'Leadership qualities and team collaboration', 0.6),
 ('Adaptability', 'Ability to adapt to changing requirements', 0.7)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+ON CONFLICT (name) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency
 
 -- ==============================================
 -- SAMPLE USERS SEED DATA
@@ -507,121 +508,128 @@ INSERT INTO public.evaluation_categories (name, description, weight) VALUES
 -- These are provided for development/testing purposes
 
 -- First, create users in auth.users (required for foreign key constraint)
-INSERT INTO auth.users (
-  id,
-  instance_id,
-  aud,
-  role,
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  recovery_sent_at,
-  last_sign_in_at,
-  raw_app_meta_data,
-  raw_user_meta_data,
-  created_at,
-  updated_at,
-  confirmation_token,
-  email_change,
-  email_change_token_new,
-  recovery_token
-) VALUES
-(
-  '11111111-1111-1111-1111-111111111111',
-  '00000000-0000-0000-0000-000000000000',
-  'authenticated',
-  'authenticated',
-  'john.doe@example.com',
-  '$2a$10$placeholder.hash.for.development.only',
-  NOW(),
-  NULL,
-  NOW() - INTERVAL '5 days',
-  '{"provider": "email", "providers": ["email"]}',
-  '{"full_name": "John Doe"}',
-  NOW() - INTERVAL '30 days',
-  NOW() - INTERVAL '5 days',
-  '',
-  '',
-  '',
-  ''
-),
-(
-  '22222222-2222-2222-2222-222222222222',
-  '00000000-0000-0000-0000-000000000000',
-  'authenticated',
-  'authenticated',
-  'jane.smith@example.com',
-  '$2a$10$placeholder.hash.for.development.only',
-  NOW(),
-  NULL,
-  NOW() - INTERVAL '2 days',
-  '{"provider": "email", "providers": ["email"]}',
-  '{"full_name": "Jane Smith"}',
-  NOW() - INTERVAL '15 days',
-  NOW() - INTERVAL '2 days',
-  '',
-  '',
-  '',
-  ''
-),
-(
-  '33333333-3333-3333-3333-333333333333',
-  '00000000-0000-0000-0000-000000000000',
-  'authenticated',
-  'authenticated',
-  'mike.johnson@example.com',
-  '$2a$10$placeholder.hash.for.development.only',
-  NOW(),
-  NULL,
-  NOW() - INTERVAL '1 day',
-  '{"provider": "email", "providers": ["email"]}',
-  '{"full_name": "Mike Johnson"}',
-  NOW() - INTERVAL '7 days',
-  NOW() - INTERVAL '1 day',
-  '',
-  '',
-  '',
-  ''
-),
-(
-  '44444444-4444-4444-4444-444444444444',
-  '00000000-0000-0000-0000-000000000000',
-  'authenticated',
-  'authenticated',
-  'sarah.wilson@example.com',
-  '$2a$10$placeholder.hash.for.development.only',
-  NOW(),
-  NULL,
-  NOW() - INTERVAL '3 days',
-  '{"provider": "email", "providers": ["email"]}',
-  '{"full_name": "Sarah Wilson"}',
-  NOW() - INTERVAL '45 days',
-  NOW() - INTERVAL '3 days',
-  '',
-  '',
-  '',
-  ''
-),
-(
-  '55555555-5555-5555-5555-555555555555',
-  '00000000-0000-0000-0000-000000000000',
-  'authenticated',
-  'authenticated',
-  'alex.brown@example.com',
-  '$2a$10$placeholder.hash.for.development.only',
-  NOW(),
-  NULL,
-  NOW() - INTERVAL '1 day',
-  '{"provider": "email", "providers": ["email"]}',
-  '{"full_name": "Alex Brown"}',
-  NOW() - INTERVAL '10 days',
-  NOW() - INTERVAL '1 day',
-  '',
-  '',
-  '',
-  ''
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+-- Use DO block with exception handling for idempotency
+DO $$
+BEGIN
+  INSERT INTO auth.users (
+    id,
+    instance_id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    recovery_sent_at,
+    last_sign_in_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at,
+    confirmation_token,
+    email_change,
+    email_change_token_new,
+    recovery_token
+  ) VALUES
+  (
+    '11111111-1111-1111-1111-111111111111',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'john.doe@example.com',
+    '$2a$10$placeholder.hash.for.development.only',
+    NOW(),
+    NULL,
+    NOW() - INTERVAL '5 days',
+    '{"provider": "email", "providers": ["email"]}',
+    '{"full_name": "John Doe"}',
+    NOW() - INTERVAL '30 days',
+    NOW() - INTERVAL '5 days',
+    '',
+    '',
+    '',
+    ''
+  ),
+  (
+    '22222222-2222-2222-2222-222222222222',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'jane.smith@example.com',
+    '$2a$10$placeholder.hash.for.development.only',
+    NOW(),
+    NULL,
+    NOW() - INTERVAL '2 days',
+    '{"provider": "email", "providers": ["email"]}',
+    '{"full_name": "Jane Smith"}',
+    NOW() - INTERVAL '15 days',
+    NOW() - INTERVAL '2 days',
+    '',
+    '',
+    '',
+    ''
+  ),
+  (
+    '33333333-3333-3333-3333-333333333333',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'mike.johnson@example.com',
+    '$2a$10$placeholder.hash.for.development.only',
+    NOW(),
+    NULL,
+    NOW() - INTERVAL '1 day',
+    '{"provider": "email", "providers": ["email"]}',
+    '{"full_name": "Mike Johnson"}',
+    NOW() - INTERVAL '7 days',
+    NOW() - INTERVAL '1 day',
+    '',
+    '',
+    '',
+    ''
+  ),
+  (
+    '44444444-4444-4444-4444-444444444444',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'sarah.wilson@example.com',
+    '$2a$10$placeholder.hash.for.development.only',
+    NOW(),
+    NULL,
+    NOW() - INTERVAL '3 days',
+    '{"provider": "email", "providers": ["email"]}',
+    '{"full_name": "Sarah Wilson"}',
+    NOW() - INTERVAL '45 days',
+    NOW() - INTERVAL '3 days',
+    '',
+    '',
+    '',
+    ''
+  ),
+  (
+    '55555555-5555-5555-5555-555555555555',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'alex.brown@example.com',
+    '$2a$10$placeholder.hash.for.development.only',
+    NOW(),
+    NULL,
+    NOW() - INTERVAL '1 day',
+    '{"provider": "email", "providers": ["email"]}',
+    '{"full_name": "Alex Brown"}',
+    NOW() - INTERVAL '10 days',
+    NOW() - INTERVAL '1 day',
+    '',
+    '',
+    '',
+    ''
+  );
+EXCEPTION
+  WHEN unique_violation THEN
+    -- Users already exist, skip insert
+    RAISE NOTICE 'Sample auth users already exist, skipping insert';
+END $$;
 
 -- Now insert corresponding records in public.users
 INSERT INTO public.users (
@@ -677,8 +685,8 @@ INSERT INTO public.users (
   'TRIAL',
   NOW() - INTERVAL '10 days',
   NOW() - INTERVAL '1 day'
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+) ON CONFLICT (id) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency
 
 -- ==============================================
 -- USER ENTITLEMENTS SEED DATA
@@ -726,8 +734,8 @@ INSERT INTO public.user_entitlements (
   NOW() + INTERVAL '14 days',
   NOW() - INTERVAL '10 days',
   NOW() - INTERVAL '1 day'
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+) ON CONFLICT (user_id) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency
 
 -- ==============================================
 -- SAMPLE EVALUATION RESULTS SEED DATA
@@ -916,8 +924,8 @@ INSERT INTO public.user_progress (
   NOW() - INTERVAL '1 day',
   NOW() - INTERVAL '10 days',
   NOW() - INTERVAL '1 day'
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+) ON CONFLICT (user_id, content_pack_id) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency
 
 -- ==============================================
 -- EVALUATION ANALYTICS SEED DATA
@@ -989,8 +997,8 @@ INSERT INTO public.evaluation_analytics (
   '{"trend": "stable", "score_change": 0}',
   NOW() - INTERVAL '1 day',
   NOW() - INTERVAL '1 day'
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+) ON CONFLICT (user_id, date) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency
 
 -- ==============================================
 -- SYSTEM STATUS SEED DATA
@@ -1056,8 +1064,8 @@ INSERT INTO public.validation_results (
   312,
   NOW() - INTERVAL '3 days',
   NOW() - INTERVAL '3 days'
-)
--- Note: Removed ON CONFLICT clause to avoid constraint issues
+) ON CONFLICT (content_pack_id) DO NOTHING;
+-- Note: Re-added ON CONFLICT for idempotency
 
 -- ==============================================
 -- UPLOAD QUEUE SEED DATA
