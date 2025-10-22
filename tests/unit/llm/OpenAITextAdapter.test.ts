@@ -43,6 +43,9 @@ describe("OpenAITextAdapter", () => {
 					create: vi.fn(),
 				},
 			},
+			models: {
+				list: vi.fn(),
+			},
 		};
 
 		// Mock the OpenAI constructor
@@ -251,9 +254,7 @@ describe("OpenAITextAdapter", () => {
 
 		it("should return false when adapter is not available", async () => {
 			// Mock a failed API call
-			mockOpenAI.chat.completions.create.mockRejectedValue(
-				new Error("API not available"),
-			);
+			mockOpenAI.models.list.mockRejectedValue(new Error("API not available"));
 
 			const isAvailable = await adapter.isAvailable();
 			expect(isAvailable).toBe(false);

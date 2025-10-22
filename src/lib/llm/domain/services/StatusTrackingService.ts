@@ -5,7 +5,7 @@
 import type {
 	EvaluationStatus,
 	EvaluationStatusEntity,
-} from "../entities/EvaluationStatus.js";
+} from "../entities/EvaluationStatus";
 import {
 	calculateEstimatedTimeRemaining,
 	createEvaluationStatus,
@@ -13,9 +13,8 @@ import {
 	getStatusDisplayInfo,
 	isTerminalStatus,
 	updateEvaluationStatus,
-	validateEvaluationStatus,
-} from "../entities/EvaluationStatus.js";
-import { NotFoundError, ValidationError } from "../errors/LLMErrors.js";
+} from "../entities/EvaluationStatus";
+import { NotFoundError, ValidationError } from "../errors/LLMErrors";
 
 /**
  * Status tracking service interface
@@ -172,7 +171,7 @@ export class StatusTrackingService implements IStatusTrackingService {
 	/**
 	 * Get all statuses for a user
 	 */
-	getStatusesByUserId(userId: string): EvaluationStatusEntity[] {
+	getStatusesByUserId(_userId: string): EvaluationStatusEntity[] {
 		// In a real implementation, you'd query by userId
 		// For now, return all statuses (this is a limitation of the in-memory implementation)
 		return Array.from(this.statuses.values());

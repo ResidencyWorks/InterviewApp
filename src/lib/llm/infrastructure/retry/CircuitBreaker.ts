@@ -2,7 +2,7 @@
  * Circuit breaker implementation for handling service failures
  */
 
-import type { CircuitBreakerConfig } from "../../types/config.js";
+import type { CircuitBreakerConfig } from "../../types/config";
 
 /**
  * Circuit breaker events

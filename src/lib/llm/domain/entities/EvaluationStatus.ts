@@ -173,7 +173,7 @@ export function getStatusDisplayInfo(status: EvaluationStatus): {
  */
 export function calculateEstimatedTimeRemaining(
 	statusEntity: EvaluationStatusEntity,
-	baseProcessingTime: number = 5000, // 5 seconds base time
+	_baseProcessingTime: number = 5000, // 5 seconds base time
 ): number | null {
 	if (statusEntity.progress === 0 || isTerminalStatus(statusEntity.status)) {
 		return null;

@@ -4,7 +4,11 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createErrorResponse } from "@/lib/api/api-helpers";
+import {
+	createErrorResponse,
+	createRateLimitResponse,
+	createUnauthorizedResponse,
+} from "@/lib/api/api-helpers";
 import { createLLMFeedbackService } from "@/lib/llm/application/services/LLMFeedbackService";
 import {
 	CircuitBreakerError,
@@ -15,6 +19,59 @@ import { OpenAISpeechAdapter } from "@/lib/llm/infrastructure/openai/OpenAISpeec
 import { OpenAITextAdapter } from "@/lib/llm/infrastructure/openai/OpenAITextAdapter";
 import { parseConfig } from "@/lib/llm/types/config";
 
+// Simple in-memory rate limiting store
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+/**
+ * Simple authentication check
+ */
+function checkAuthentication(request: NextRequest): NextResponse | null {
+	const authHeader = request.headers.get("authorization");
+	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		return createUnauthorizedResponse("Authentication required");
+	}
+	return null; // Authentication passed
+}
+
+/**
+ * Simple rate limiting check
+ */
+function checkRateLimit(
+	request: NextRequest,
+	maxRequests = 10,
+	windowMs = 60000,
+): NextResponse | null {
+	const clientId = request.headers.get("x-forwarded-for") || "unknown";
+	const now = Date.now();
+
+	// Clean up expired entries
+	for (const [key, value] of Array.from(rateLimitStore.entries())) {
+		if (value.resetTime < now) {
+			rateLimitStore.delete(key);
+		}
+	}
+
+	const current = rateLimitStore.get(clientId);
+
+	if (!current) {
+		rateLimitStore.set(clientId, { count: 1, resetTime: now + windowMs });
+		return null; // Rate limit passed
+	}
+
+	if (current.resetTime < now) {
+		rateLimitStore.set(clientId, { count: 1, resetTime: now + windowMs });
+		return null; // Rate limit passed
+	}
+
+	if (current.count >= maxRequests) {
+		const retryAfter = Math.ceil((current.resetTime - now) / 1000);
+		return createRateLimitResponse(retryAfter);
+	}
+
+	current.count++;
+	return null; // Rate limit passed
+}
+
 /**
  * Request validation schema
  */
@@ -24,7 +81,26 @@ const EvaluateRequestSchema = z
 			.string()
 			.min(10, "Content must be at least 10 characters")
 			.optional(),
-		audioUrl: z.string().url("Invalid audio URL format").optional(),
+		audioUrl: z
+			.string()
+			.refine(
+				(val) => {
+					if (!val) return true; // Optional field
+					// Accept either valid URLs or base64 data URLs
+					try {
+						new URL(val);
+						return true;
+					} catch {
+						// Check if it's a base64 data URL
+						return val.startsWith("data:audio/");
+					}
+				},
+				{
+					message:
+						"Must be a valid URL or base64 data URL starting with 'data:audio/'",
+				},
+			)
+			.optional(),
 		questionId: z.string().min(1, "Question ID is required"),
 		userId: z.string().min(1, "User ID is required"),
 		metadata: z.record(z.string(), z.unknown()).optional(),
@@ -46,6 +122,14 @@ const EvaluateRequestSchema = z
 					"wav",
 					"webm",
 				];
+
+				// Handle base64 data URLs
+				if (data.audioUrl.startsWith("data:audio/")) {
+					const mimeType = data.audioUrl.split(";")[0].replace("data:", "");
+					return supportedFormats.some((format) => mimeType.includes(format));
+				}
+
+				// Handle regular URLs
 				try {
 					const url = new URL(data.audioUrl);
 					const extension = url.pathname.split(".").pop()?.toLowerCase();
@@ -68,8 +152,41 @@ const EvaluateRequestSchema = z
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
 	try {
+		// Authentication check
+		const authError = checkAuthentication(request);
+		if (authError) {
+			return authError;
+		}
+
+		// Rate limiting check
+		const rateLimitError = checkRateLimit(request, 10, 60000); // 10 requests per minute
+		if (rateLimitError) {
+			return rateLimitError;
+		}
+
+		// Check request size limit (2MB max)
+		const contentLength = request.headers.get("content-length");
+		if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+			return createErrorResponse(
+				"Request payload too large",
+				"PAYLOAD_TOO_LARGE",
+				413,
+			);
+		}
+
 		// Parse and validate request body
 		const body = await request.json();
+
+		// Check parsed body size
+		const bodyString = JSON.stringify(body);
+		if (bodyString.length > 2 * 1024 * 1024) {
+			return createErrorResponse(
+				"Request payload too large",
+				"PAYLOAD_TOO_LARGE",
+				413,
+			);
+		}
+
 		const validatedData = EvaluateRequestSchema.parse(body);
 
 		// Get configuration

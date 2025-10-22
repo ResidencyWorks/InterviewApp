@@ -2,20 +2,19 @@
  * Use case for evaluating interview submissions
  */
 
-import type { EvaluationRequest } from "../../domain/entities/EvaluationRequest.js";
-import type { EvaluationStatusEntity } from "../../domain/entities/EvaluationStatus.js";
-import type { Feedback } from "../../domain/entities/Feedback.js";
-import type { Submission } from "../../domain/entities/Submission.js";
-import { getContentForProcessing } from "../../domain/entities/Submission.js";
+import type { EvaluationRequest } from "../../domain/entities/EvaluationRequest";
+import type { EvaluationStatusEntity } from "../../domain/entities/EvaluationStatus";
+import type { Feedback } from "../../domain/entities/Feedback";
+import type { Submission } from "../../domain/entities/Submission";
+import { getContentForProcessing } from "../../domain/entities/Submission";
 import {
 	LLMServiceError,
-	RetryExhaustedError,
 	ValidationError,
-} from "../../domain/errors/LLMErrors.js";
-import type { ISpeechAdapter } from "../../domain/interfaces/ISpeechAdapter.js";
-import type { ITextAdapter } from "../../domain/interfaces/ITextAdapter.js";
-import type { IFeedbackService } from "../../domain/services/FeedbackService.js";
-import type { IStatusTrackingService } from "../../domain/services/StatusTrackingService.js";
+} from "../../domain/errors/LLMErrors";
+import type { ISpeechAdapter } from "../../domain/interfaces/ISpeechAdapter";
+import type { ITextAdapter } from "../../domain/interfaces/ITextAdapter";
+import type { IFeedbackService } from "../../domain/services/FeedbackService";
+import type { IStatusTrackingService } from "../../domain/services/StatusTrackingService";
 
 /**
  * Evaluation result
@@ -120,6 +119,15 @@ export class EvaluateSubmissionUseCase {
 				processingTimeMs,
 			};
 		} catch (error) {
+			console.error("❌ EvaluateSubmissionUseCase error:", {
+				error: error instanceof Error ? error.message : "Unknown error",
+				errorType: error?.constructor?.name,
+				questionId: input.questionId,
+				userId: input.userId,
+				hasContent: Boolean(input.content),
+				hasAudio: Boolean(input.audioUrl),
+			});
+
 			// Handle errors and update status
 			throw this.handleEvaluationError(error, input, startTime);
 		}
@@ -151,6 +159,11 @@ export class EvaluateSubmissionUseCase {
 
 		// If it's audio, transcribe it first
 		if (contentInfo.type === "audio") {
+			console.log("🎵 Processing audio content:", {
+				audioUrl: `${contentInfo.content.substring(0, 50)}...`,
+				contentType: contentInfo.type,
+			});
+
 			// Update progress for audio processing
 			this.statusTrackingService.updateStatus(statusId, {
 				progress: 20,
@@ -181,6 +194,14 @@ export class EvaluateSubmissionUseCase {
 			textContent = transcription.text;
 			transcriptionTimeMs = Date.now() - transcriptionStartTime;
 
+			console.log("📝 Audio transcription completed:", {
+				transcriptionTimeMs,
+				textLength: textContent.length,
+				textPreview:
+					textContent.substring(0, 100) +
+					(textContent.length > 100 ? "..." : ""),
+			});
+
 			// Validate transcription result
 			if (!textContent || textContent.trim().length === 0) {
 				throw new ValidationError("Audio transcription failed", {
@@ -202,6 +223,13 @@ export class EvaluateSubmissionUseCase {
 		}
 
 		// Analyze the text content
+		console.log("🧠 Starting text analysis:", {
+			textLength: textContent.length,
+			questionId: submission.questionId,
+			userId: submission.userId,
+			hasMetadata: Boolean(submission.metadata),
+		});
+
 		const analysisStartTime = Date.now();
 		const analysisResult = await this.textAdapter.analyze(textContent, {
 			questionId: submission.questionId,
@@ -211,97 +239,21 @@ export class EvaluateSubmissionUseCase {
 				: undefined,
 		});
 		analysisTimeMs = Date.now() - analysisStartTime;
+
+		console.log("🎯 Text analysis completed:", {
+			analysisTimeMs,
+			score: analysisResult.score,
+			feedbackLength: analysisResult.feedback.length,
+			strengthsCount: analysisResult.strengths.length,
+			improvementsCount: analysisResult.improvements.length,
+			model: this.textAdapter.getModelName(),
+		});
 
 		// Update progress after analysis
 		this.statusTrackingService.updateStatus(statusId, {
 			progress: 80,
 			message: "Generating feedback...",
 		});
-
-		const processingTimeMs = Date.now() - processingStartTime;
-
-		return {
-			score: analysisResult.score,
-			feedback: analysisResult.feedback,
-			strengths: analysisResult.strengths,
-			improvements: analysisResult.improvements,
-			model: this.textAdapter.getModelName(),
-			processingTimeMs,
-			transcriptionTimeMs,
-			analysisTimeMs,
-		};
-	}
-
-	/**
-	 * Process submission through speech and text adapters (legacy method)
-	 */
-	private async processSubmission(submission: Submission): Promise<{
-		score: number;
-		feedback: string;
-		strengths: string[];
-		improvements: string[];
-		model: string;
-		processingTimeMs: number;
-		transcriptionTimeMs?: number;
-		analysisTimeMs?: number;
-	}> {
-		const processingStartTime = Date.now();
-
-		// Get content for processing
-		const contentInfo = getContentForProcessing(submission);
-		let textContent = submission.content;
-		let transcriptionTimeMs: number | undefined;
-		let analysisTimeMs: number | undefined;
-
-		// If it's audio, transcribe it first
-		if (contentInfo.type === "audio") {
-			const transcriptionStartTime = Date.now();
-
-			// Validate audio format
-			const audioFormat = this.getAudioFormat(contentInfo.content);
-			if (!this.speechAdapter.supportsFormat(audioFormat)) {
-				throw new ValidationError("Unsupported audio format", {
-					audioUrl: [
-						`Audio format '${audioFormat}' is not supported. Supported formats: ${this.speechAdapter.getSupportedFormats().join(", ")}`,
-					],
-				});
-			}
-
-			// Check file size limit
-			const maxFileSize = this.speechAdapter.getMaxFileSize();
-			// Note: In a real implementation, you'd fetch the file to check its size
-			// For now, we'll assume the URL is valid and proceed
-
-			const transcription = await this.speechAdapter.transcribe(
-				contentInfo.content,
-				{
-					language: "en", // Default to English, could be made configurable
-					responseFormat: "json",
-					temperature: 0.0, // More deterministic transcription
-				},
-			);
-
-			textContent = transcription.text;
-			transcriptionTimeMs = Date.now() - transcriptionStartTime;
-
-			// Validate transcription result
-			if (!textContent || textContent.trim().length === 0) {
-				throw new ValidationError("Audio transcription failed", {
-					audioUrl: ["No text was transcribed from the audio file"],
-				});
-			}
-		}
-
-		// Analyze the text content
-		const analysisStartTime = Date.now();
-		const analysisResult = await this.textAdapter.analyze(textContent, {
-			questionId: submission.questionId,
-			userId: submission.userId,
-			context: submission.metadata
-				? JSON.stringify(submission.metadata)
-				: undefined,
-		});
-		analysisTimeMs = Date.now() - analysisStartTime;
 
 		const processingTimeMs = Date.now() - processingStartTime;
 

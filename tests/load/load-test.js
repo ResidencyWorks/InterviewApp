@@ -109,7 +109,7 @@ function testHealthEndpoint(data) {
 			try {
 				const body = JSON.parse(r.body);
 				return body.status && body.timestamp;
-			} catch (e) {
+			} catch (_e) {
 				return false;
 			}
 		},
@@ -180,7 +180,7 @@ function testEvaluationAPI(data) {
 			try {
 				const body = JSON.parse(r.body);
 				return body.score !== undefined;
-			} catch (e) {
+			} catch (_e) {
 				return false;
 			}
 		},
@@ -234,7 +234,7 @@ function testUserProfile(data) {
 	responseTime.add(profileResponse.timings.duration);
 }
 
-export function teardown(data) {
+export function teardown(_data) {
 	// Teardown function runs once after all VUs
 	console.log("Load test teardown completed");
 }

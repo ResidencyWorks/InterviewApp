@@ -193,10 +193,6 @@ export class RateLimitError extends LLMError {
 export class AuthenticationError extends LLMError {
 	readonly code = "AUTHENTICATION_ERROR";
 	readonly statusCode = 401;
-
-	constructor(message: string, context?: Record<string, unknown>) {
-		super(message, context);
-	}
 }
 
 /**
@@ -234,10 +230,6 @@ export class NotFoundError extends LLMError {
 export class BusinessLogicError extends LLMError {
 	readonly code = "BUSINESS_LOGIC_ERROR";
 	readonly statusCode = 422;
-
-	constructor(message: string, context?: Record<string, unknown>) {
-		super(message, context);
-	}
 }
 
 /**

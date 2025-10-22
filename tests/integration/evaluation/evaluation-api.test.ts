@@ -1,14 +1,6 @@
 import type { NextRequest } from "next/server";
 import { createMocks } from "node-mocks-http";
-import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/evaluate/route";
 
 // Mock the evaluation service

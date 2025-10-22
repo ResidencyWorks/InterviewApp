@@ -201,8 +201,8 @@ export class DashboardService {
 			const averageScore =
 				recentEvaluations.reduce((sum, e) => sum + (e.score || 0), 0) /
 				recentEvaluations.length;
-			const lowScores = recentEvaluations.filter((e) => (e.score || 0) < 70);
-			const highScores = recentEvaluations.filter((e) => (e.score || 0) >= 85);
+			const _lowScores = recentEvaluations.filter((e) => (e.score || 0) < 70);
+			const _highScores = recentEvaluations.filter((e) => (e.score || 0) >= 85);
 
 			// Generate personalized tips
 			if (averageScore < 70) {

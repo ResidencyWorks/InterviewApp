@@ -16,8 +16,8 @@ describe("FeedbackService", () => {
 
 	describe("createFeedback", () => {
 		const mockSubmission: Submission = {
-			id: "sub-123",
-			userId: "user-123",
+			id: "550e8400-e29b-41d4-a716-446655440000",
+			userId: "550e8400-e29b-41d4-a716-446655440001",
 			content: "Test interview response",
 			questionId: "q-123",
 			submittedAt: new Date(),
@@ -113,8 +113,8 @@ describe("FeedbackService", () => {
 
 	describe("createEvaluationRequest", () => {
 		const mockSubmission: Submission = {
-			id: "sub-123",
-			userId: "user-123",
+			id: "550e8400-e29b-41d4-a716-446655440000",
+			userId: "550e8400-e29b-41d4-a716-446655440001",
 			content: "Test interview response",
 			questionId: "q-123",
 			submittedAt: new Date(),
@@ -132,8 +132,8 @@ describe("FeedbackService", () => {
 
 	describe("updateEvaluationStatus", () => {
 		const mockSubmission: Submission = {
-			id: "sub-123",
-			userId: "user-123",
+			id: "550e8400-e29b-41d4-a716-446655440000",
+			userId: "550e8400-e29b-41d4-a716-446655440001",
 			content: "Test interview response",
 			questionId: "q-123",
 			submittedAt: new Date(),
@@ -165,8 +165,8 @@ describe("FeedbackService", () => {
 
 	describe("canRetryEvaluation", () => {
 		const mockSubmission: Submission = {
-			id: "sub-123",
-			userId: "user-123",
+			id: "550e8400-e29b-41d4-a716-446655440000",
+			userId: "550e8400-e29b-41d4-a716-446655440001",
 			content: "Test interview response",
 			questionId: "q-123",
 			submittedAt: new Date(),
@@ -192,8 +192,8 @@ describe("FeedbackService", () => {
 	describe("getFeedbackMetrics", () => {
 		it("should return feedback quality metrics", () => {
 			const mockFeedback = {
-				id: "fb-123",
-				submissionId: "sub-123",
+				id: "550e8400-e29b-41d4-a716-446655440002",
+				submissionId: "550e8400-e29b-41d4-a716-446655440000",
 				score: 85,
 				feedback: "Good response with clear examples",
 				strengths: ["Clear communication", "Good examples"],
@@ -217,15 +217,15 @@ describe("FeedbackService", () => {
 	describe("validateFeedback", () => {
 		it("should validate feedback successfully", () => {
 			const mockFeedback = {
-				id: "fb-123",
-				submissionId: "sub-123",
+				id: "550e8400-e29b-41d4-a716-446655440002",
+				submissionId: "550e8400-e29b-41d4-a716-446655440000",
 				score: 85,
 				feedback: "Good response with clear examples",
 				strengths: ["Clear communication"],
 				improvements: ["More specific metrics"],
 				model: "gpt-4",
 				processingTimeMs: 1500,
-				createdAt: new Date(),
+				generatedAt: new Date(),
 			};
 
 			const validatedFeedback = feedbackService.validateFeedback(mockFeedback);

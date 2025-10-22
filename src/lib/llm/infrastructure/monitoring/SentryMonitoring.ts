@@ -3,8 +3,8 @@
  */
 
 import * as Sentry from "@sentry/nextjs";
-import { extractErrorInfo } from "../../domain/errors/LLMErrors.js";
-import type { AnalyticsConfig } from "../../types/config.js";
+import { extractErrorInfo } from "../../domain/errors/LLMErrors";
+import type { AnalyticsConfig } from "../../types/config";
 
 /**
  * Sentry monitoring service for LLM operations

@@ -89,22 +89,22 @@ export function createDefaultConfig(): LLMServiceConfig {
 			apiKey: process.env.OPENAI_API_KEY || "",
 			whisperModel: process.env.OPENAI_WHISPER_MODEL || "whisper-1",
 			textModel: process.env.OPENAI_TEXT_MODEL || "gpt-4",
-			maxRetries: parseInt(process.env.MAX_RETRY_ATTEMPTS || "3"),
-			timeout: parseInt(process.env.OPENAI_TIMEOUT || "30000"),
+			maxRetries: parseInt(process.env.MAX_RETRY_ATTEMPTS || "3", 10),
+			timeout: parseInt(process.env.OPENAI_TIMEOUT || "30000", 10),
 		},
 		retry: {
-			maxAttempts: parseInt(process.env.MAX_RETRY_ATTEMPTS || "3"),
-			baseDelay: parseInt(process.env.RETRY_BASE_DELAY || "1000"),
-			maxDelay: parseInt(process.env.RETRY_MAX_DELAY || "10000"),
+			maxAttempts: parseInt(process.env.MAX_RETRY_ATTEMPTS || "3", 10),
+			baseDelay: parseInt(process.env.RETRY_BASE_DELAY || "1000", 10),
+			maxDelay: parseInt(process.env.RETRY_MAX_DELAY || "10000", 10),
 			jitter: process.env.RETRY_JITTER !== "false",
 		},
 		circuitBreaker: {
-			threshold: parseInt(process.env.CIRCUIT_BREAKER_THRESHOLD || "5"),
-			timeout: parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT || "30000"),
+			threshold: parseInt(process.env.CIRCUIT_BREAKER_THRESHOLD || "5", 10),
+			timeout: parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT || "30000", 10),
 		},
 		fallback: {
 			enabled: process.env.FALLBACK_ENABLED !== "false",
-			defaultScore: parseInt(process.env.FALLBACK_DEFAULT_SCORE || "50"),
+			defaultScore: parseInt(process.env.FALLBACK_DEFAULT_SCORE || "50", 10),
 			defaultFeedback:
 				process.env.FALLBACK_DEFAULT_FEEDBACK ||
 				"Unable to process your submission at this time. Please try again later.",

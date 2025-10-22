@@ -237,7 +237,7 @@ describe("LLM Feedback Service Integration Tests", () => {
 			const endTime = Date.now();
 
 			// Check that all requests completed (successfully or with fallback)
-			results.forEach((result, index) => {
+			results.forEach((result, _index) => {
 				if (result.status === "fulfilled") {
 					expect(result.value.feedback.score).toBeGreaterThanOrEqual(0);
 				} else {

@@ -5,23 +5,25 @@
 import {
 	CircuitBreakerError,
 	LLMServiceError,
-} from "../../domain/errors/LLMErrors.js";
-import type { ISpeechAdapter } from "../../domain/interfaces/ISpeechAdapter.js";
-import type { ITextAdapter } from "../../domain/interfaces/ITextAdapter.js";
-import type { IFeedbackService } from "../../domain/services/FeedbackService.js";
-import type { IStatusTrackingService } from "../../domain/services/StatusTrackingService.js";
-import { PostHogAnalytics } from "../../infrastructure/analytics/PostHogAnalytics.js";
-import { SentryMonitoring } from "../../infrastructure/monitoring/SentryMonitoring.js";
+} from "../../domain/errors/LLMErrors";
+import type { ISpeechAdapter } from "../../domain/interfaces/ISpeechAdapter";
+import type { ITextAdapter } from "../../domain/interfaces/ITextAdapter";
+import type { IFeedbackService } from "../../domain/services/FeedbackService";
+import { FeedbackService } from "../../domain/services/FeedbackService";
+import type { IStatusTrackingService } from "../../domain/services/StatusTrackingService";
+import { StatusTrackingService } from "../../domain/services/StatusTrackingService";
+import { PostHogAnalytics } from "../../infrastructure/analytics/PostHogAnalytics";
+import { SentryMonitoring } from "../../infrastructure/monitoring/SentryMonitoring";
 import {
 	CircuitBreaker,
 	type CircuitBreakerState,
-} from "../../infrastructure/retry/CircuitBreaker.js";
-import { RetryService } from "../../infrastructure/retry/RetryService.js";
+} from "../../infrastructure/retry/CircuitBreaker";
+import { RetryService } from "../../infrastructure/retry/RetryService";
 import {
 	EvaluateSubmissionUseCase,
 	type EvaluationRequestInput,
 	type EvaluationResult,
-} from "../use-cases/EvaluateSubmissionUseCase.js";
+} from "../use-cases/EvaluateSubmissionUseCase";
 
 /**
  * Constants for LLM Feedback Service
@@ -200,10 +202,24 @@ export class LLMFeedbackService {
 
 			return result;
 		} catch (error) {
+			console.error("❌ Evaluation failed, handling error:", {
+				error: error instanceof Error ? error.message : "Unknown error",
+				errorType: error?.constructor?.name,
+				submissionId,
+				userId: input.userId,
+				questionId: input.questionId,
+			});
+
 			await this.handleEvaluationError(error, input, submissionId, startTime);
 
 			// Use fallback if enabled
 			if (this.config.fallbackConfig.enabled) {
+				console.log("🔄 Using fallback response due to error:", {
+					fallbackScore: this.config.fallbackConfig.defaultScore,
+					fallbackEnabled: this.config.fallbackConfig.enabled,
+					originalError:
+						error instanceof Error ? error.message : "Unknown error",
+				});
 				return this.createFallbackResult(input, submissionId, error);
 			}
 
@@ -294,7 +310,7 @@ export class LLMFeedbackService {
 				strengths: [CONSTANTS.FALLBACK_MESSAGES.STRENGTH],
 				improvements: [CONSTANTS.FALLBACK_MESSAGES.IMPROVEMENT],
 				model: "fallback",
-				processingTimeMs: 0,
+				processingTimeMs: 1, // Set to 1ms to satisfy validation (must be positive)
 			},
 		);
 
@@ -403,10 +419,6 @@ export class LLMFeedbackService {
 	 * Create feedback service
 	 */
 	private createFeedbackService(): IFeedbackService {
-		// Import here to avoid circular dependencies
-		const {
-			FeedbackService,
-		} = require("../../domain/services/FeedbackService");
 		return new FeedbackService();
 	}
 
@@ -414,10 +426,6 @@ export class LLMFeedbackService {
 	 * Create status tracking service
 	 */
 	private createStatusTrackingService(): IStatusTrackingService {
-		// Import here to avoid circular dependencies
-		const {
-			StatusTrackingService,
-		} = require("../../domain/services/StatusTrackingService");
 		return new StatusTrackingService();
 	}
 

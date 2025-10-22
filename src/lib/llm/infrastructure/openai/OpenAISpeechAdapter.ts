@@ -6,13 +6,13 @@ import OpenAI from "openai";
 import {
 	LLMServiceError,
 	ValidationError,
-} from "../../domain/errors/LLMErrors.js";
+} from "../../domain/errors/LLMErrors";
 import type {
 	ISpeechAdapter,
 	SpeechAdapterConfig,
 	TranscriptionOptions,
 	TranscriptionResult,
-} from "../../domain/interfaces/ISpeechAdapter.js";
+} from "../../domain/interfaces/ISpeechAdapter";
 
 /**
  * OpenAI Speech Adapter implementation
@@ -32,35 +32,59 @@ export class OpenAISpeechAdapter implements ISpeechAdapter {
 	}
 
 	/**
-	 * Transcribe audio from a URL
+	 * Transcribe audio from a URL or base64 data
 	 */
 	async transcribe(
 		audioUrl: string,
 		options: TranscriptionOptions = {},
 	): Promise<TranscriptionResult> {
 		try {
-			// Validate audio URL
-			if (!this.isValidUrl(audioUrl)) {
-				throw new ValidationError("Invalid audio URL format", {
-					audioUrl: ["Must be a valid URL"],
+			let audioFile: File;
+
+			// Handle base64 data URLs
+			if (audioUrl.startsWith("data:")) {
+				const [header, base64Data] = audioUrl.split(",");
+				const mimeType = header.match(/data:([^;]+)/)?.[1] || "audio/wav";
+
+				// Convert base64 to buffer
+				const audioBuffer = Buffer.from(base64Data, "base64");
+				audioFile = new File([audioBuffer], "audio.wav", {
+					type: mimeType,
+				});
+			} else {
+				// Handle regular URLs
+				if (!this.isValidUrl(audioUrl)) {
+					throw new ValidationError("Invalid audio URL format", {
+						audioUrl: ["Must be a valid URL or data URL"],
+					});
+				}
+
+				// Fetch audio file
+				const audioResponse = await fetch(audioUrl);
+				if (!audioResponse.ok) {
+					throw new LLMServiceError(
+						`Failed to fetch audio file: ${audioResponse.statusText}`,
+						{
+							status: audioResponse.status,
+							statusText: audioResponse.statusText,
+						},
+					);
+				}
+
+				const audioBuffer = await audioResponse.arrayBuffer();
+				audioFile = new File([audioBuffer], "audio.wav", {
+					type: "audio/wav",
 				});
 			}
 
-			// Fetch audio file
-			const audioResponse = await fetch(audioUrl);
-			if (!audioResponse.ok) {
-				throw new LLMServiceError(
-					`Failed to fetch audio file: ${audioResponse.statusText}`,
-					{
-						status: audioResponse.status,
-						statusText: audioResponse.statusText,
-					},
-				);
-			}
-
-			const audioBuffer = await audioResponse.arrayBuffer();
-			const audioFile = new File([audioBuffer], "audio.wav", {
-				type: "audio/wav",
+			// Log API call details
+			console.log("🎤 Making OpenAI Whisper API call:", {
+				model: this.config.model ?? "whisper-1",
+				fileSize: audioFile.size,
+				fileType: audioFile.type,
+				language: options.language,
+				responseFormat: options.responseFormat ?? "json",
+				temperature: options.temperature ?? 0.0,
 			});
 
 			// Transcribe using OpenAI Whisper
@@ -71,6 +95,17 @@ export class OpenAISpeechAdapter implements ISpeechAdapter {
 				response_format: options.responseFormat ?? "json",
 				temperature: options.temperature ?? 0.0,
 				prompt: options.prompt,
+			});
+
+			// Log API response details
+			const transcribedText =
+				typeof transcription === "string" ? transcription : transcription.text;
+			console.log("🎯 OpenAI Whisper API response received:", {
+				textLength: transcribedText.length,
+				textPreview:
+					transcribedText.substring(0, 100) +
+					(transcribedText.length > 100 ? "..." : ""),
+				language: options.language,
 			});
 
 			// Parse the transcription result

@@ -2,7 +2,7 @@
  * Security utilities for LLM service
  */
 
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 /**
  * Security constants

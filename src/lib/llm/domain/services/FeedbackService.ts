@@ -2,20 +2,20 @@
  * Feedback service for managing feedback operations
  */
 
-import type { EvaluationRequest } from "../entities/EvaluationRequest.js";
+import type { EvaluationRequest } from "../entities/EvaluationRequest";
 import {
 	canRetry,
 	createEvaluationRequest,
 	updateEvaluationStatus,
-} from "../entities/EvaluationRequest.js";
-import type { Feedback } from "../entities/Feedback.js";
+} from "../entities/EvaluationRequest";
+import type { Feedback } from "../entities/Feedback";
 import {
 	createFeedback,
 	getQualityLevel,
 	validateFeedback,
-} from "../entities/Feedback.js";
-import type { Submission } from "../entities/Submission.js";
-import { BusinessLogicError, ValidationError } from "../errors/LLMErrors.js";
+} from "../entities/Feedback";
+import type { Submission } from "../entities/Submission";
+import { ValidationError } from "../errors/LLMErrors";
 
 /**
  * Constants for Feedback Service

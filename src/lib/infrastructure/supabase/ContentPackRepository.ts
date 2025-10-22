@@ -12,11 +12,10 @@ import {
 	type ContentPack,
 	ContentPackStatus,
 } from "../../domain/entities/ContentPack";
-import {
-	type CountContentPacksOptions,
-	type FindContentPacksOptions,
-	type IContentPackRepository,
-	RepositoryResult,
+import type {
+	CountContentPacksOptions,
+	FindContentPacksOptions,
+	IContentPackRepository,
 } from "../../domain/repositories/IContentPackRepository";
 
 // Use the generated database types instead of custom interface

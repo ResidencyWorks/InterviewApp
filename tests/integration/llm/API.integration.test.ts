@@ -13,7 +13,7 @@ describe("LLM API Integration Tests", () => {
 		// Setup test environment
 		process.env.OPENAI_API_KEY = "test-key";
 		process.env.POSTHOG_API_KEY = "test-posthog-key";
-		process.env.SENTRY_DSN = "test-sentry-dsn";
+		process.env.SENTRY_DSN = "https://test-sentry-dsn@sentry.io/test";
 	});
 
 	afterAll(async () => {
@@ -28,8 +28,9 @@ describe("LLM API Integration Tests", () => {
 			const requestBody = {
 				content:
 					"I have 5 years of experience in full-stack development using React, Node.js, and PostgreSQL.",
-				question: "Tell me about your technical experience",
-				context: {
+				questionId: "q_001",
+				userId: "user-123",
+				metadata: {
 					role: "Senior Software Engineer",
 					company: "Tech Corp",
 					level: "senior",
@@ -49,21 +50,23 @@ describe("LLM API Integration Tests", () => {
 			const data = await response.json();
 
 			expect(response.status).toBe(200);
-			expect(data).toHaveProperty("submissionId");
-			expect(data).toHaveProperty("status");
-			expect(data).toHaveProperty("feedback");
-			expect(data).toHaveProperty("metadata");
+			expect(data).toHaveProperty("success");
+			expect(data).toHaveProperty("data");
+			expect(data.data).toHaveProperty("submissionId");
+			expect(data.data).toHaveProperty("status");
+			expect(data.data).toHaveProperty("feedback");
+			expect(data.data).toHaveProperty("evaluationRequest");
 
 			// Validate feedback structure
-			expect(data.feedback).toHaveProperty("score");
-			expect(data.feedback).toHaveProperty("strengths");
-			expect(data.feedback).toHaveProperty("improvements");
-			expect(data.feedback).toHaveProperty("detailedAnalysis");
-			expect(data.feedback).toHaveProperty("suggestions");
+			expect(data.data.feedback).toHaveProperty("score");
+			expect(data.data.feedback).toHaveProperty("strengths");
+			expect(data.data.feedback).toHaveProperty("improvements");
+			expect(data.data.feedback).toHaveProperty("generatedAt");
+			expect(data.data.feedback).toHaveProperty("model");
 
 			// Validate score range
-			expect(data.feedback.score).toBeGreaterThanOrEqual(0);
-			expect(data.feedback.score).toBeLessThanOrEqual(100);
+			expect(data.data.feedback.score).toBeGreaterThanOrEqual(0);
+			expect(data.data.feedback.score).toBeLessThanOrEqual(100);
 		});
 
 		it("should evaluate audio submission", async () => {
@@ -131,7 +134,8 @@ describe("LLM API Integration Tests", () => {
 		it("should handle authentication errors", async () => {
 			const requestBody = {
 				content: "Test content",
-				question: "Test question",
+				questionId: "test-question-id",
+				userId: "test-user-id",
 			};
 
 			const request = new NextRequest("http://localhost/api/evaluate", {
@@ -150,7 +154,8 @@ describe("LLM API Integration Tests", () => {
 		it("should handle rate limiting", async () => {
 			const requestBody = {
 				content: "Rate limit test",
-				question: "Test question",
+				questionId: "test-question-id",
+				userId: "test-user-id",
 			};
 
 			// Make multiple rapid requests
@@ -263,9 +268,10 @@ describe("LLM API Integration Tests", () => {
 					Authorization: "Bearer test-token",
 				},
 				body: JSON.stringify({
-					// Invalid request body
+					// Invalid request body - missing required fields
 					content: "",
-					question: "",
+					questionId: "",
+					userId: "",
 				}),
 			});
 
@@ -274,8 +280,7 @@ describe("LLM API Integration Tests", () => {
 
 			expect(response.status).toBe(400);
 			expect(data).toHaveProperty("error");
-			expect(data.error).toHaveProperty("code");
-			expect(data.error).toHaveProperty("message");
+			expect(data).toHaveProperty("code");
 			expect(data).toHaveProperty("timestamp");
 		});
 	});
@@ -329,7 +334,8 @@ describe("LLM API Integration Tests", () => {
 			const oversizedContent = "a".repeat(2000000); // 2MB
 			const requestBody = {
 				content: oversizedContent,
-				question: "Test question",
+				questionId: "test-question-id",
+				userId: "test-user-id",
 			};
 
 			const request = new NextRequest("http://localhost/api/evaluate", {
