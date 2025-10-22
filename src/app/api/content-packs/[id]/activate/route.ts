@@ -24,7 +24,7 @@ import { createClient } from "@/lib/supabase/server";
  * Activate a content pack (hot-swap)
  */
 export async function POST(
-	request: NextRequest,
+	_request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
 	try {
@@ -180,7 +180,7 @@ export async function POST(
  * Get activation status of a content pack
  */
 export async function GET(
-	request: NextRequest,
+	_request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
 	try {

@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { analytics } from "@/lib/analytics";
 import { databaseService } from "@/lib/db";
-import type { DatabaseServiceInterface } from "@/lib/db/database-types";
 import { EvaluationService } from "@/lib/evaluation/evaluation-service";
 import { redisCache } from "@/lib/redis";
 import type { EvaluationRequest, EvaluationResult } from "@/types/evaluation";

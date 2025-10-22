@@ -123,7 +123,7 @@ export class AdminAuthService implements IAdminAuthService {
 	 * Check if a user has admin privileges by user ID
 	 * This would typically query the database for user information
 	 */
-	async isAdminById(userId: string): Promise<boolean> {
+	async isAdminById(_userId: string): Promise<boolean> {
 		try {
 			// In a real implementation, this would query the database
 			// For now, we'll return false as we don't have database access here

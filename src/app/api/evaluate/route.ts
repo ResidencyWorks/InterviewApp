@@ -1,0 +1,260 @@
+/**
+ * API endpoint for evaluating interview submissions
+ */
+
+import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { createErrorResponse } from "@/lib/api/api-helpers";
+import { createLLMFeedbackService } from "@/lib/llm/application/services/LLMFeedbackService";
+import {
+	CircuitBreakerError,
+	LLMServiceError,
+	ValidationError,
+} from "@/lib/llm/domain/errors/LLMErrors";
+import { OpenAISpeechAdapter } from "@/lib/llm/infrastructure/openai/OpenAISpeechAdapter";
+import { OpenAITextAdapter } from "@/lib/llm/infrastructure/openai/OpenAITextAdapter";
+import { parseConfig } from "@/lib/llm/types/config";
+
+/**
+ * Request validation schema
+ */
+const EvaluateRequestSchema = z
+	.object({
+		content: z
+			.string()
+			.min(10, "Content must be at least 10 characters")
+			.optional(),
+		audioUrl: z.string().url("Invalid audio URL format").optional(),
+		questionId: z.string().min(1, "Question ID is required"),
+		userId: z.string().min(1, "User ID is required"),
+		metadata: z.record(z.string(), z.unknown()).optional(),
+	})
+	.refine((data) => data.content || data.audioUrl, {
+		message: "Either content or audioUrl must be provided",
+		path: ["content", "audioUrl"],
+	})
+	.refine(
+		(data) => {
+			// If audioUrl is provided, validate it's a supported format
+			if (data.audioUrl) {
+				const supportedFormats = [
+					"mp3",
+					"mp4",
+					"mpeg",
+					"mpga",
+					"m4a",
+					"wav",
+					"webm",
+				];
+				try {
+					const url = new URL(data.audioUrl);
+					const extension = url.pathname.split(".").pop()?.toLowerCase();
+					return extension && supportedFormats.includes(extension);
+				} catch {
+					return false;
+				}
+			}
+			return true;
+		},
+		{
+			message:
+				"Audio format not supported. Supported formats: mp3, mp4, mpeg, mpga, m4a, wav, webm",
+			path: ["audioUrl"],
+		},
+	);
+
+/**
+ * POST /api/evaluate - Evaluate a submission
+ */
+export async function POST(request: NextRequest): Promise<NextResponse> {
+	try {
+		// Parse and validate request body
+		const body = await request.json();
+		const validatedData = EvaluateRequestSchema.parse(body);
+
+		// Get configuration
+		const config = parseConfig();
+
+		// Initialize adapters
+		const speechAdapter = new OpenAISpeechAdapter({
+			apiKey: config.openai.apiKey,
+			model: config.openai.whisperModel,
+			timeout: config.openai.timeout,
+			maxRetries: config.openai.maxRetries,
+		});
+
+		const textAdapter = new OpenAITextAdapter({
+			apiKey: config.openai.apiKey,
+			model: config.openai.textModel,
+			timeout: config.openai.timeout,
+			maxRetries: config.openai.maxRetries,
+		});
+
+		// Initialize LLM feedback service
+		const feedbackService = createLLMFeedbackService({
+			speechAdapter,
+			textAdapter,
+			retryConfig: config.retry,
+			circuitBreakerConfig: config.circuitBreaker,
+			fallbackConfig: config.fallback,
+			analyticsConfig: config.analytics,
+			debug: config.debug,
+		});
+
+		// Evaluate the submission
+		const result = await feedbackService.evaluateSubmission({
+			content: validatedData.content || "",
+			audioUrl: validatedData.audioUrl,
+			questionId: validatedData.questionId,
+			userId: validatedData.userId,
+			metadata: validatedData.metadata,
+		});
+
+		// Return successful response
+		return NextResponse.json({
+			success: true,
+			data: {
+				submissionId: result.submission.id,
+				feedback: {
+					id: result.feedback.id,
+					score: result.feedback.score,
+					feedback: result.feedback.feedback,
+					strengths: result.feedback.strengths,
+					improvements: result.feedback.improvements,
+					generatedAt: result.feedback.generatedAt,
+					model: result.feedback.model,
+					processingTimeMs: result.feedback.processingTimeMs,
+				},
+				evaluationRequest: {
+					id: result.evaluationRequest.id,
+					status: result.evaluationRequest.status,
+					requestedAt: result.evaluationRequest.requestedAt,
+					retryCount: result.evaluationRequest.retryCount,
+				},
+				status: {
+					id: result.status.id,
+					status: result.status.status,
+					progress: result.status.progress,
+					message: result.status.message,
+					startedAt: result.status.startedAt,
+					updatedAt: result.status.updatedAt,
+					completedAt: result.status.completedAt,
+				},
+				processingTimeMs: result.processingTimeMs,
+			},
+		});
+	} catch (error) {
+		// Handle validation errors
+		if (error instanceof z.ZodError) {
+			const validationErrors: Record<string, string[]> = {};
+			error.issues.forEach((err) => {
+				const path = err.path.join(".");
+				if (!validationErrors[path]) {
+					validationErrors[path] = [];
+				}
+				validationErrors[path].push(err.message);
+			});
+
+			return createErrorResponse(
+				"Validation failed",
+				"VALIDATION_ERROR",
+				400,
+				validationErrors,
+			);
+		}
+
+		// Handle domain errors
+		if (error instanceof ValidationError) {
+			return createErrorResponse(
+				error.message,
+				error.code,
+				error.statusCode,
+				error.details,
+			);
+		}
+
+		if (error instanceof LLMServiceError) {
+			return createErrorResponse(error.message, error.code, error.statusCode, {
+				apiError: error.apiError,
+			});
+		}
+
+		if (error instanceof CircuitBreakerError) {
+			return createErrorResponse(error.message, error.code, error.statusCode, {
+				retryAfter: error.retryAfter,
+			});
+		}
+
+		// Handle unexpected errors
+		console.error("Unexpected error in evaluate endpoint:", error);
+		return createErrorResponse(
+			"Internal server error",
+			"INTERNAL_SERVER_ERROR",
+			500,
+		);
+	}
+}
+
+/**
+ * GET /api/evaluate - Get service health status
+ */
+export async function GET(): Promise<NextResponse> {
+	try {
+		// Get configuration
+		const config = parseConfig();
+
+		// Initialize adapters
+		const speechAdapter = new OpenAISpeechAdapter({
+			apiKey: config.openai.apiKey,
+			model: config.openai.whisperModel,
+			timeout: config.openai.timeout,
+			maxRetries: config.openai.maxRetries,
+		});
+
+		const textAdapter = new OpenAITextAdapter({
+			apiKey: config.openai.apiKey,
+			model: config.openai.textModel,
+			timeout: config.openai.timeout,
+			maxRetries: config.openai.maxRetries,
+		});
+
+		// Initialize LLM feedback service
+		const feedbackService = createLLMFeedbackService({
+			speechAdapter,
+			textAdapter,
+			retryConfig: config.retry,
+			circuitBreakerConfig: config.circuitBreaker,
+			fallbackConfig: config.fallback,
+			analyticsConfig: config.analytics,
+			debug: config.debug,
+		});
+
+		// Get health status
+		const healthStatus = await feedbackService.getHealthStatus();
+
+		return NextResponse.json({
+			success: true,
+			data: {
+				service: "llm-feedback-engine",
+				version: "1.0.0",
+				status: healthStatus.status,
+				components: {
+					circuitBreaker: {
+						state: healthStatus.circuitBreaker,
+					},
+					adapters: healthStatus.adapters,
+					analytics: healthStatus.analytics,
+					monitoring: healthStatus.monitoring,
+				},
+				timestamp: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		console.error("Error getting health status:", error);
+		return createErrorResponse(
+			"Failed to get health status",
+			"HEALTH_CHECK_ERROR",
+			500,
+		);
+	}
+}
