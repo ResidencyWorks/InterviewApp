@@ -8,5 +8,8 @@
 export { useAsync } from "./useAsync";
 export { useAuth } from "./useAuth";
 export { useClickOutside } from "./useClickOutside";
+export { useDashboardData } from "./useDashboardData";
 export { useDebounce } from "./useDebounce";
 export { useLocalStorage } from "./useLocalStorage";
+export { useProfileCompletion } from "./useProfileCompletion";
+export { useUserPlan } from "./useUserPlan";

@@ -10,7 +10,7 @@
 import { AlertCircle, CheckCircle, FileText, Upload } from "lucide-react";
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { type FileRejection, useDropzone } from "react-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import type { ValidationResult } from "@/lib/domain/entities/ValidationResult";
 import { UploadProgress } from "./UploadProgress";
 import { ValidationResults } from "./ValidationResults";
 
@@ -31,21 +32,7 @@ interface UploadStatus {
 	contentPackId?: string;
 }
 
-interface ValidationResult {
-	isValid: boolean;
-	errors: Array<{
-		path: string;
-		message: string;
-		code: string;
-		severity: "error" | "warning";
-	}>;
-	warnings: Array<{
-		path: string;
-		message: string;
-		code: string;
-		suggestion?: string;
-	}>;
-}
+// ValidationResult is now imported from domain entities
 
 interface ContentPackUploadProps {
 	onUploadComplete?: (contentPackId: string) => void;
@@ -102,12 +89,8 @@ export function ContentPackUpload({
 				});
 
 				// If validation failed, show validation results
-				if (result.data.status === "invalid") {
-					setValidationResult({
-						isValid: false,
-						errors: result.validation?.errors || [],
-						warnings: result.validation?.warnings || [],
-					});
+				if (result.data.status === "invalid" && result.validation) {
+					setValidationResult(result.validation);
 				}
 
 				onUploadComplete?.(result.data.id);
@@ -145,7 +128,7 @@ export function ContentPackUpload({
 		onDragEnter: () => setDragActive(true),
 		onDragLeave: () => setDragActive(false),
 		onDropAccepted: () => setDragActive(false),
-		onDropRejected: (fileRejections: any[]) => {
+		onDropRejected: (fileRejections: FileRejection[]) => {
 			setDragActive(false);
 			const rejection = fileRejections[0];
 			const error = rejection.errors[0];

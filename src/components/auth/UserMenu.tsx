@@ -27,11 +27,6 @@ export function UserMenu({ className }: UserMenuProps) {
 	const [loading, setLoading] = useState(false);
 	const isAdmin = user?.user_metadata?.role === "admin";
 
-	// Debug: Log UserMenu state
-	console.log("UserMenu - User:", user);
-	console.log("UserMenu - Auth Loading:", authLoading);
-	console.log("UserMenu - Is Admin:", isAdmin);
-
 	if (authLoading) {
 		return <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />;
 	}

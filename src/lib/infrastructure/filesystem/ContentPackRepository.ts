@@ -8,6 +8,7 @@
 
 import { promises as fs } from "fs";
 import { dirname, join } from "path";
+import type { Tables } from "@/types/database";
 import {
 	type ContentPack,
 	ContentPackStatus,
@@ -18,21 +19,23 @@ import type {
 	IContentPackRepository,
 } from "../../domain/repositories/IContentPackRepository";
 
+// Use a filesystem-specific interface that extends the database type
+// but uses camelCase for JSON storage compatibility
 interface FilesystemContentPack {
 	id: string;
 	version: string;
 	name: string;
 	description?: string;
-	schemaVersion: string;
+	schemaVersion: string; // camelCase for filesystem
 	content: any;
 	metadata?: any;
 	status: string;
-	createdAt: string;
-	updatedAt: string;
-	activatedAt?: string;
-	activatedBy?: string;
-	uploadedBy: string;
-	fileSize: number;
+	createdAt: string; // camelCase for filesystem
+	updatedAt: string; // camelCase for filesystem
+	activatedAt?: string; // camelCase for filesystem
+	activatedBy?: string; // camelCase for filesystem
+	uploadedBy: string; // camelCase for filesystem
+	fileSize: number; // camelCase for filesystem
 	checksum: string;
 }
 

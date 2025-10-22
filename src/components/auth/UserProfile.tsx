@@ -1,5 +1,6 @@
 "use client";
 
+import type { AuthUser } from "@supabase/supabase-js";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ interface UserProfileProps {
  * Allows users to view and update their profile information
  */
 export function UserProfile({ className }: UserProfileProps) {
-	const { user } = useAuth();
+	const { user } = useAuth() as { user: AuthUser | null };
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");

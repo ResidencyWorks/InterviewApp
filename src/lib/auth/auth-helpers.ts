@@ -1,4 +1,4 @@
-import type { Session, User } from "@supabase/supabase-js";
+import type { AuthUser, Session } from "@supabase/supabase-js";
 import type { AuthError, UserProfile } from "./auth-types";
 
 /**
@@ -6,7 +6,7 @@ import type { AuthError, UserProfile } from "./auth-types";
  * @param user - Supabase user object
  * @returns True if user is authenticated
  */
-export function isAuthenticated(user: User | null): boolean {
+export function isAuthenticated(user: AuthUser | null): boolean {
 	return user !== null && user.aud === "authenticated";
 }
 
@@ -17,7 +17,7 @@ export function isAuthenticated(user: User | null): boolean {
  * @returns True if user has required level or higher
  */
 export function hasEntitlement(
-	user: User | null,
+	user: AuthUser | null,
 	requiredLevel: "FREE" | "TRIAL" | "PRO",
 ): boolean {
 	if (!isAuthenticated(user)) return false;
@@ -46,7 +46,7 @@ export function isSessionValid(session: Session | null): boolean {
  * @param user - Supabase user object
  * @returns User profile or null
  */
-export function extractUserProfile(user: User | null): UserProfile | null {
+export function extractUserProfile(user: AuthUser | null): UserProfile | null {
 	if (!isAuthenticated(user)) return null;
 
 	return {
@@ -134,7 +134,7 @@ export function isPublicPath(pathname: string, publicPaths: string[]): boolean {
  * @param user - Supabase user object
  * @returns Display name or email
  */
-export function getUserDisplayName(user: User | null): string {
+export function getUserDisplayName(user: AuthUser | null): string {
 	if (!user) return "Anonymous";
 
 	const profile = extractUserProfile(user);
@@ -146,7 +146,7 @@ export function getUserDisplayName(user: User | null): string {
  * @param user - Supabase user object
  * @returns True if profile setup is needed
  */
-export function needsProfileSetup(user: User | null): boolean {
+export function needsProfileSetup(user: AuthUser | null): boolean {
 	if (!isAuthenticated(user)) return false;
 
 	const profile = extractUserProfile(user);

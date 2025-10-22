@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getServerAuthService } from "../auth/auth-service";
+import { getServerAuthService } from "../auth/server-auth-service";
 import {
 	createErrorResponse,
 	createRateLimitResponse,

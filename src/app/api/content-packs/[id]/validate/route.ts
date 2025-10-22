@@ -6,11 +6,13 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import type { ContentPack } from "@/lib/domain/entities/ContentPack";
 import { ContentPackStatus } from "@/lib/domain/entities/ContentPack";
 import { createContentPackValidator } from "@/lib/domain/services/ContentPackValidator";
 import { createFilesystemContentPackRepository } from "@/lib/infrastructure/filesystem/ContentPackRepository";
 import { createSupabaseContentPackRepository } from "@/lib/infrastructure/supabase/ContentPackRepository";
 import { createClient } from "@/lib/supabase/server";
+import type { Tables } from "@/types/database";
 
 /**
  * POST /api/content-packs/[id]/validate
@@ -39,11 +41,14 @@ export async function POST(
 		}
 
 		// Check if user has admin role (PRO entitlement level)
-		const { data: userData } = await supabase
+		const { data: userData } = (await supabase
 			.from("users")
 			.select("entitlement_level")
 			.eq("id", user.id)
-			.single();
+			.single()) as {
+			data: Pick<Tables<"users">, "entitlement_level"> | null;
+			error: Error | null;
+		};
 
 		if (userData?.entitlement_level !== "PRO") {
 			return NextResponse.json(
@@ -71,7 +76,7 @@ export async function POST(
 
 		// Find the content pack
 		const repository = createSupabaseContentPackRepository(supabase);
-		let contentPack: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+		let contentPack: ContentPack | null = null;
 
 		try {
 			contentPack = await repository.findById(contentPackId);

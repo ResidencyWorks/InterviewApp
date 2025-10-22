@@ -3,7 +3,7 @@
  * Extends Supabase auth types with custom user data
  */
 
-import type { User } from "@supabase/supabase-js";
+import type { AuthUser as SupabaseAuthUser, User } from "@supabase/supabase-js";
 import type { Enums } from "./database";
 
 export interface UserProfile {
@@ -17,10 +17,13 @@ export interface UserProfile {
 	updated_at: string;
 }
 
-export interface AuthUser extends Omit<User, "user_metadata"> {
+export interface AuthUser
+	extends Omit<SupabaseAuthUser & User, "user_metadata"> {
 	user_metadata?: {
 		full_name?: string;
 		avatar_url?: string;
+		role?: string;
+		entitlement_level?: Enums<"user_entitlement_level">;
 	};
 }
 

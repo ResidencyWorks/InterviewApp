@@ -10,6 +10,7 @@
 import {
 	Activity,
 	AlertTriangle,
+	ArrowLeft,
 	CheckCircle,
 	Clock,
 	FileText,
@@ -169,6 +170,14 @@ export default function AdminDashboard() {
 		<div className="container mx-auto py-6 space-y-6">
 			<div className="flex items-center justify-between">
 				<div>
+					<div className="flex items-center gap-4 mb-2">
+						<Link href="/dashboard">
+							<Button variant="outline" size="sm">
+								<ArrowLeft className="h-4 w-4 mr-2" />
+								Back to Dashboard
+							</Button>
+						</Link>
+					</div>
 					<h1 className="text-3xl font-bold">Admin Dashboard</h1>
 					<p className="text-gray-600">
 						Manage your interview system and content packs

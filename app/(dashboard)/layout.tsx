@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,20 +14,11 @@ export default function DashboardLayout({
 }) {
 	const { user, loading } = useAuth();
 	const router = useRouter();
+	const pathname = usePathname();
 	const isAdmin = user?.user_metadata?.role === "admin";
 
-	// Debug: Log authentication state
-	console.log("Dashboard Layout - User:", user);
-	console.log("Dashboard Layout - Loading:", loading);
-	console.log("Dashboard Layout - Is Admin:", isAdmin);
-
-	// Redirect to login if not authenticated (after loading is complete)
-	useEffect(() => {
-		if (!loading && !user) {
-			console.log("Dashboard Layout - No user found, redirecting to login");
-			router.push("/login");
-		}
-	}, [user, loading, router]);
+	// Note: Authentication routing is now handled by middleware
+	// No client-side redirects needed
 
 	// Show loading state while checking authentication
 	if (loading) {
@@ -41,7 +32,7 @@ export default function DashboardLayout({
 		);
 	}
 
-	// Don't render dashboard if no user (will redirect)
+	// Don't render dashboard if no user (middleware will handle redirects)
 	if (!user) {
 		return null;
 	}

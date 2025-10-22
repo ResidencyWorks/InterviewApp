@@ -1,4 +1,4 @@
-import type { User } from "@supabase/supabase-js";
+import type { AuthUser } from "@/types/auth";
 
 /**
  * Interface for admin authentication service
@@ -7,7 +7,7 @@ export interface IAdminAuthService {
 	/**
 	 * Check if a user has admin privileges
 	 */
-	isAdmin(user: User): boolean;
+	isAdmin(user: AuthUser): boolean;
 
 	/**
 	 * Check if a user has admin privileges by user ID
@@ -17,22 +17,22 @@ export interface IAdminAuthService {
 	/**
 	 * Get user role
 	 */
-	getUserRole(user: User): string;
+	getUserRole(user: AuthUser): string;
 
 	/**
 	 * Check if a user can access admin routes
 	 */
-	canAccessAdmin(user: User): boolean;
+	canAccessAdmin(user: AuthUser): boolean;
 
 	/**
 	 * Validate admin permissions for a specific action
 	 */
-	validateAdminPermission(user: User, action: string): boolean;
+	validateAdminPermission(user: AuthUser, action: string): boolean;
 
 	/**
 	 * Get admin user information
 	 */
-	getAdminInfo(user: User): AdminUserInfo | null;
+	getAdminInfo(user: AuthUser): AdminUserInfo | null;
 }
 
 /**
@@ -110,7 +110,7 @@ export class AdminAuthService implements IAdminAuthService {
 	/**
 	 * Check if a user has admin privileges
 	 */
-	isAdmin(user: User): boolean {
+	isAdmin(user: AuthUser): boolean {
 		if (!user) {
 			return false;
 		}
@@ -138,7 +138,7 @@ export class AdminAuthService implements IAdminAuthService {
 	/**
 	 * Get user role
 	 */
-	getUserRole(user: User): string {
+	getUserRole(user: AuthUser): string {
 		if (!user) {
 			return "user";
 		}
@@ -162,14 +162,14 @@ export class AdminAuthService implements IAdminAuthService {
 	/**
 	 * Check if a user can access admin routes
 	 */
-	canAccessAdmin(user: User): boolean {
+	canAccessAdmin(user: AuthUser): boolean {
 		return this.isAdmin(user);
 	}
 
 	/**
 	 * Validate admin permissions for a specific action
 	 */
-	validateAdminPermission(user: User, action: string): boolean {
+	validateAdminPermission(user: AuthUser, action: string): boolean {
 		if (!this.isAdmin(user)) {
 			return false;
 		}
@@ -207,7 +207,7 @@ export class AdminAuthService implements IAdminAuthService {
 	/**
 	 * Get admin user information
 	 */
-	getAdminInfo(user: User): AdminUserInfo | null {
+	getAdminInfo(user: AuthUser): AdminUserInfo | null {
 		if (!this.isAdmin(user)) {
 			return null;
 		}
@@ -274,7 +274,7 @@ export class AdminAuthService implements IAdminAuthService {
 	/**
 	 * Validate user session for admin access
 	 */
-	validateAdminSession(user: User): {
+	validateAdminSession(user: AuthUser): {
 		isValid: boolean;
 		reason?: string;
 		userInfo?: AdminUserInfo;
@@ -311,7 +311,7 @@ export class AdminAuthService implements IAdminAuthService {
 	 * Log admin action
 	 */
 	logAdminAction(
-		user: User,
+		user: AuthUser,
 		action: string,
 		details?: Record<string, unknown>,
 	): void {

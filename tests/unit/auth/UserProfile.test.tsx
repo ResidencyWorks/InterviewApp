@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserProfile } from "@/components/auth/UserProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { authService } from "@/lib/auth/auth-service";
+import { Constants } from "@/types/database";
 
 // Mock useAuth hook
 const mockUser = {
@@ -10,7 +11,7 @@ const mockUser = {
 	id: "123",
 	user_metadata: {
 		avatar_url: "https://example.com/avatar.jpg",
-		entitlement_level: "PREMIUM",
+		entitlement_level: Constants.public.Enums.user_entitlement_level[2],
 		full_name: "Test User",
 	},
 	app_metadata: {},
@@ -54,7 +55,7 @@ describe("UserProfile", () => {
 		expect(
 			screen.getByDisplayValue("https://example.com/avatar.jpg"),
 		).toBeInTheDocument();
-		expect(screen.getByText("PREMIUM")).toBeInTheDocument();
+		expect(screen.getByText("PRO")).toBeInTheDocument();
 	});
 
 	it("should show error when user is not logged in", () => {
@@ -182,7 +183,7 @@ describe("UserProfile", () => {
 		expect(mockOpen).toHaveBeenCalledWith("/upgrade", "_blank");
 	});
 
-	it.skip("should not show upgrade button for PREMIUM users", () => {
+	it.skip("should not show upgrade button for PRO users", () => {
 		render(<UserProfile />);
 
 		expect(screen.queryByText("Upgrade")).not.toBeInTheDocument();

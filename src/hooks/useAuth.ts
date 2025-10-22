@@ -1,6 +1,6 @@
-import type { User } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { AuthUser } from "@/types/auth";
 
 /**
  * Custom hook for managing authentication state and user session
@@ -12,55 +12,12 @@ import { createClient } from "@/lib/supabase/client";
  * ```
  */
 export function useAuth() {
-	const [user, setUser] = useState<User | null>(null);
+	const [user, setUser] = useState<AuthUser | null>(null);
 	const [loading, setLoading] = useState(true);
 	const supabase = createClient();
 
-	// Debug: Log Supabase configuration
-	console.log(
-		"useAuth - Supabase URL:",
-		process.env.NEXT_PUBLIC_SUPABASE_URL ? "present" : "missing",
-	);
-	console.log(
-		"useAuth - Supabase Anon Key:",
-		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "present" : "missing",
-	);
-
 	useEffect(() => {
 		let mounted = true;
-
-		// Get initial user
-		const getInitialUser = async () => {
-			try {
-				console.log("useAuth - Attempting to get user...");
-
-				const {
-					data: { user },
-					error,
-				} = await supabase.auth.getUser();
-
-				console.log("useAuth - getUser result:", {
-					user: user ? { id: user.id, email: user.email } : null,
-					error: error
-						? { message: error.message, status: error.status }
-						: null,
-				});
-
-				if (error) {
-					console.error("useAuth - Error getting user:", error);
-				}
-
-				if (mounted) {
-					setUser(user);
-					setLoading(false);
-				}
-			} catch (error) {
-				console.error("useAuth - Exception getting user:", error);
-				if (mounted) {
-					setLoading(false);
-				}
-			}
-		};
 
 		// Listen for auth changes first
 		const {
@@ -88,6 +45,21 @@ export function useAuth() {
 					console.log("useAuth - Signed out");
 					setUser(null);
 					setLoading(false);
+				} else if (event === "INITIAL_SESSION" && session) {
+					// Initial session found
+					console.log(
+						"useAuth - Initial session - user:",
+						session.user
+							? { id: session.user.id, email: session.user.email }
+							: null,
+					);
+					setUser(session.user);
+					setLoading(false);
+				} else if (event === "INITIAL_SESSION" && !session) {
+					// No initial session
+					console.log("useAuth - No initial session");
+					setUser(null);
+					setLoading(false);
 				} else {
 					// Other events, get user from auth
 					const {
@@ -103,16 +75,13 @@ export function useAuth() {
 			}
 		});
 
-		// Get initial user after setting up the listener
-		getInitialUser();
-
-		// Timeout to prevent infinite loading
+		// Timeout to prevent infinite loading (increased to 10 seconds)
 		const timeout = setTimeout(() => {
 			console.log("useAuth - Timeout reached, setting loading to false");
 			if (mounted) {
 				setLoading(false);
 			}
-		}, 5000); // 5 second timeout
+		}, 10000); // 10 second timeout
 
 		return () => {
 			mounted = false;
