@@ -39,14 +39,25 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
-		// Check if user has admin role (PRO entitlement level)
+		// Authorize by admin role or PRO entitlement
 		const { data: userData } = await supabase
 			.from("users")
 			.select("entitlement_level")
 			.eq("id", user.id)
 			.single();
 
-		if (userData?.entitlement_level !== "PRO") {
+		const userMetadata = user.user_metadata as
+			| Record<string, unknown>
+			| null
+			| undefined;
+		const role =
+			typeof userMetadata?.role === "string"
+				? (userMetadata.role as string)
+				: "user";
+		const isAdminRole = role === "admin" || role === "content_admin";
+		const hasProEntitlement = userData?.entitlement_level === "PRO";
+
+		if (!isAdminRole && !hasProEntitlement) {
 			return NextResponse.json(
 				{
 					error: "FORBIDDEN",
@@ -90,6 +101,14 @@ export async function GET(request: NextRequest) {
 		const repository = createSupabaseContentPackRepository(supabase);
 
 		try {
+			console.log("ContentPacks API: Querying with options:", {
+				status: status || undefined,
+				limit,
+				offset,
+				sortBy: sortBy as "createdAt" | "updatedAt" | "name" | "version",
+				sortOrder: sortOrder as "asc" | "desc",
+			});
+
 			const [contentPacks, totalCount] = await Promise.all([
 				repository.findAll({
 					status: status || undefined,
@@ -100,6 +119,16 @@ export async function GET(request: NextRequest) {
 				}),
 				repository.count({ status: status || undefined }),
 			]);
+
+			console.log("ContentPacks API: Query results:", {
+				contentPacksCount: contentPacks.length,
+				totalCount,
+				contentPacks: contentPacks.map((p) => ({
+					id: p.id,
+					name: p.name,
+					status: p.status,
+				})),
+			});
 
 			return NextResponse.json({
 				data: contentPacks,
@@ -167,14 +196,25 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Check if user has admin role (PRO entitlement level)
+		// Authorize by admin role or PRO entitlement
 		const { data: userData } = await supabase
 			.from("users")
 			.select("entitlement_level")
 			.eq("id", user.id)
 			.single();
 
-		if (userData?.entitlement_level !== "PRO") {
+		const userMetadata = user.user_metadata as
+			| Record<string, unknown>
+			| null
+			| undefined;
+		const role =
+			typeof userMetadata?.role === "string"
+				? (userMetadata.role as string)
+				: "user";
+		const isAdminRole = role === "admin" || role === "content_admin";
+		const hasProEntitlement = userData?.entitlement_level === "PRO";
+
+		if (!isAdminRole && !hasProEntitlement) {
 			return NextResponse.json(
 				{
 					error: "FORBIDDEN",

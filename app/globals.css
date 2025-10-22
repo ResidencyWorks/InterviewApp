@@ -56,6 +56,30 @@ body {
 		rgb(var(--background-start-rgb));
 }
 
+/* Mobile-first sensible defaults */
+html:not(.hydrated) * {
+	transition: none !important;
+}
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+img,
+video {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
 /* biome-ignore lint/suspicious/noUnknownAtRules: Tailwind CSS at-rules are allowed */
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);

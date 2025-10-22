@@ -65,6 +65,10 @@ export class OpenAIEvaluationEngine implements EvaluationEngine {
 	 */
 	async evaluate(request: EvaluationRequest): Promise<EvaluationResponse> {
 		const startTime = Date.now();
+		const userId =
+			typeof request.metadata?.user_id === "string"
+				? (request.metadata.user_id as string)
+				: "system";
 
 		try {
 			// Validate request
@@ -103,7 +107,7 @@ export class OpenAIEvaluationEngine implements EvaluationEngine {
 
 			// Track analytics
 			analytics.trackEvaluationCompleted(
-				"system", // TODO: Get from context
+				userId,
 				{
 					categories: evaluation.categories as unknown as Record<
 						string,
@@ -122,7 +126,7 @@ export class OpenAIEvaluationEngine implements EvaluationEngine {
 
 			// Track error analytics
 			analytics.trackEvaluationFailed(
-				"system", // TODO: Get from context
+				userId,
 				error instanceof Error ? error.message : "Unknown error",
 				request.content_pack_id,
 			);

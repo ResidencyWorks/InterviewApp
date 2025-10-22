@@ -1,0 +1,11 @@
+Here is a concise behavioral response using the STAR method.
+
+Situation: Our release was at risk because a stakeholder requested a last-minute scope change for a critical feature.
+
+Task: As the delivery lead, I needed to keep the release date while addressing the stakeholder’s concern without burning out the team.
+
+Action: I facilitated a 20-minute alignment session to clarify the underlying need. We identified a smaller acceptance slice that delivered the same outcome. I proposed a phased plan: implement a guardrail plus a feature flag now, and schedule the advanced reporting for the next sprint. I documented the decision, added clear success metrics, and ensured QA cases were updated.
+
+Result: We shipped on time. The stakeholder’s immediate risk was mitigated, and the follow-on enhancement landed the next sprint with zero incidents. Post-release NPS for the stakeholder group improved from 6.5 to 8.2.
+
+Reflection: In future, I’ll pull this alignment technique earlier to avoid last-minute churn.

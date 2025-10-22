@@ -257,6 +257,16 @@ export class PostHogAnalytics {
 	}
 
 	/**
+	 * Public wrapper to capture arbitrary events with properties
+	 */
+	public captureEvent(
+		eventName: string,
+		properties: Record<string, unknown>,
+	): void {
+		this.track(eventName, properties);
+	}
+
+	/**
 	 * Set user properties
 	 */
 	setUserProperties(userId: string, properties: Record<string, unknown>): void {

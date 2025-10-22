@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks";
 
 // Mock data - in a real app, this would come from an API
 const mockQuestions = {
@@ -49,6 +50,7 @@ const mockQuestions = {
 export default function DrillInterfacePage() {
 	const params = useParams();
 	const router = useRouter();
+	const { user } = useAuth();
 	const [isSubmitting, setIsSubmitting] = React.useState(false);
 	const [evaluationResult, setEvaluationResult] =
 		React.useState<EvaluationResult | null>(null);
@@ -88,12 +90,15 @@ export default function DrillInterfacePage() {
 
 		try {
 			let audioUrl: string | undefined;
+			let audioDurationSeconds = 0;
 
 			// Handle audio file upload if present
 			if (data.audioBlob && data.type === "audio") {
 				// For now, we'll use a placeholder URL since we need to implement file upload
 				// In a real implementation, you'd upload the file to a storage service first
 				audioUrl = `data:audio/wav;base64,${await blobToBase64(data.audioBlob)}`;
+				// Derive actual duration from the recorded audio metadata
+				audioDurationSeconds = await getAudioDurationSeconds(data.audioBlob);
 			}
 
 			// Prepare request body for the LLM feedback service
@@ -101,7 +106,7 @@ export default function DrillInterfacePage() {
 				content: data.type === "text" ? data.content : undefined,
 				audioUrl: audioUrl,
 				questionId: questionId,
-				userId: "current-user", // TODO: Get from auth context
+				userId: user?.id ?? "anonymous",
 				metadata: {
 					contentPackId: "default",
 					responseType: data.type,
@@ -153,10 +158,19 @@ export default function DrillInterfacePage() {
 			// Convert LLM feedback service response to EvaluationResult format
 			if (result.success && result.data) {
 				const feedback = result.data.feedback;
-				// Calculate word count and estimate duration for text responses
-				const wordCount = data.content.split(" ").length;
-				const estimatedDurationSeconds = Math.max(30, wordCount / 3); // Assume ~3 words per second speaking rate
-				const wpm = Math.round((wordCount / estimatedDurationSeconds) * 60);
+				// Calculate word count and duration metrics
+				const wordCount =
+					data.type === "text"
+						? data.content.trim().split(/\s+/).filter(Boolean).length
+						: 0;
+				const estimatedDurationSeconds =
+					data.type === "text"
+						? Math.max(30, wordCount / 3) // Assume ~3 words per second speaking rate
+						: Math.max(1, Math.round(audioDurationSeconds));
+				const wpm =
+					data.type === "text"
+						? Math.round((wordCount / estimatedDurationSeconds) * 60)
+						: 0;
 
 				// Generate more realistic category breakdown with some variation
 				const baseScore = feedback.score;
@@ -180,15 +194,17 @@ export default function DrillInterfacePage() {
 
 				const evaluationResult: EvaluationResult = {
 					id: result.data.submissionId,
-					user_id: "current-user", // TODO: Get from auth context
+					user_id: user?.id ?? "anonymous",
 					content_pack_id: "default",
 					response_text: data.type === "text" ? data.content : undefined,
 					response_audio_url: data.type === "audio" ? audioUrl : undefined,
 					response_type: data.type,
 					duration_seconds:
-						data.type === "audio" ? 0 : estimatedDurationSeconds, // TODO: Calculate from actual audio
+						data.type === "audio"
+							? estimatedDurationSeconds
+							: estimatedDurationSeconds,
 					word_count: wordCount,
-					wpm: data.type === "audio" ? 0 : wpm, // TODO: Calculate from actual audio duration
+					wpm: data.type === "audio" ? 0 : wpm,
 					categories: {
 						clarity: Math.round(clarity),
 						content: Math.round(content),
@@ -200,6 +216,51 @@ export default function DrillInterfacePage() {
 					status: "COMPLETED",
 					created_at: new Date().toISOString(),
 					updated_at: new Date().toISOString(),
+					// UI extras for M0 demo
+					category_flags: [
+						{
+							name: "Conciseness",
+							passFlag: clarity >= 70 ? "PASS" : "FLAG",
+							note: "Keep sentences short and emphasize key points early.",
+						},
+						{
+							name: "Examples",
+							passFlag: content >= 70 ? "PASS" : "FLAG",
+							note: "Ground claims with brief, concrete examples.",
+						},
+						{
+							name: "Signposting",
+							passFlag: structure >= 70 ? "PASS" : "FLAG",
+							note: "Outline your answer structure up front (First, Then, Finally).",
+						},
+						{
+							name: "Pace",
+							passFlag: wpm >= 120 && wpm <= 180 ? "PASS" : "FLAG",
+							note: "Aim for 130–160 WPM to maintain clarity.",
+						},
+						{
+							name: "Filler words",
+							passFlag: Math.random() > 0.3 ? "PASS" : "FLAG",
+							note: "Reduce 'um', 'like', and pauses; brief silence beats filler.",
+						},
+						{
+							name: "Relevance",
+							passFlag: content >= 75 ? "PASS" : "FLAG",
+							note: "Tie each point back to the question explicitly.",
+						},
+						{
+							name: "Confidence",
+							passFlag: delivery >= 75 ? "PASS" : "FLAG",
+							note: "Use active voice; avoid hedging language where not needed.",
+						},
+					],
+					what_changed: [
+						"Tightened intro and added clear thesis",
+						"Inserted concrete example supporting the main claim",
+						"Improved signposting for section transitions",
+					],
+					practice_rule:
+						"Use the 30-60-90 structure: thesis in 30s, depth in 60s, recap in 90s.",
 				};
 
 				console.log("🎯 Setting evaluation result:", {
@@ -210,6 +271,34 @@ export default function DrillInterfacePage() {
 					fullObject: evaluationResult,
 				});
 				setEvaluationResult(evaluationResult);
+
+				// Persist evaluation to backend (non-blocking)
+				try {
+					void fetch("/api/evaluations", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							id: evaluationResult.id,
+							user_id: evaluationResult.user_id,
+							content_pack_id: evaluationResult.content_pack_id,
+							response_text: evaluationResult.response_text,
+							response_audio_url: evaluationResult.response_audio_url,
+							response_type: evaluationResult.response_type,
+							duration_seconds: evaluationResult.duration_seconds,
+							word_count: evaluationResult.word_count,
+							wpm: evaluationResult.wpm,
+							categories: evaluationResult.categories,
+							feedback: evaluationResult.feedback,
+							score: evaluationResult.score,
+							status: evaluationResult.status,
+						}),
+					});
+				} catch (persistError) {
+					console.warn(
+						"Failed to persist evaluation (non-blocking)",
+						persistError,
+					);
+				}
 			} else {
 				throw new Error("Invalid response format from evaluation service");
 			}
@@ -230,6 +319,40 @@ export default function DrillInterfacePage() {
 			};
 			reader.onerror = reject;
 			reader.readAsDataURL(blob);
+		});
+	};
+
+	// Helper to get audio duration in seconds from a Blob
+	const getAudioDurationSeconds = (blob: Blob): Promise<number> => {
+		return new Promise((resolve, reject) => {
+			try {
+				const url = URL.createObjectURL(blob);
+				const audio = new Audio();
+				audio.preload = "metadata";
+				audio.src = url;
+				audio.onloadedmetadata = () => {
+					// Chrome bug may report Infinity initially; seek to update
+					if (Number.isFinite(audio.duration)) {
+						const seconds = Math.max(1, Math.round(audio.duration));
+						URL.revokeObjectURL(url);
+						resolve(seconds);
+						return;
+					}
+
+					audio.currentTime = 1e101;
+					audio.ontimeupdate = () => {
+						const seconds = Math.max(1, Math.round(audio.duration));
+						URL.revokeObjectURL(url);
+						resolve(seconds);
+					};
+				};
+				audio.onerror = () => {
+					URL.revokeObjectURL(url);
+					reject(new Error("Failed to load audio for duration"));
+				};
+			} catch (e) {
+				reject(e as Error);
+			}
 		});
 	};
 

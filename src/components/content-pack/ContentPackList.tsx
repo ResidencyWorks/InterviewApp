@@ -88,6 +88,9 @@ export function ContentPackList({
 		setError(null);
 
 		try {
+			console.log(
+				"ContentPackList: Fetching content packs from /api/content-packs",
+			);
 			const response = await fetch("/api/content-packs", {
 				method: "GET",
 				headers: {
@@ -95,11 +98,14 @@ export function ContentPackList({
 				},
 			});
 
+			console.log("ContentPackList: Response status:", response.status);
 			if (!response.ok) {
 				throw new Error("Failed to fetch content packs");
 			}
 
 			const result = await response.json();
+			console.log("ContentPackList: API response:", result);
+			console.log("ContentPackList: Setting content packs:", result.data || []);
 			setContentPacks(result.data || []);
 		} catch (err) {
 			const errorMessage =
@@ -114,6 +120,13 @@ export function ContentPackList({
 	 * Filter and sort content packs
 	 */
 	const filterAndSortContentPacks = useCallback(() => {
+		console.log("ContentPackList: filterAndSortContentPacks called with:", {
+			contentPacksCount: contentPacks.length,
+			searchTerm,
+			statusFilter,
+			sortField,
+			sortDirection,
+		});
 		let filtered = [...contentPacks];
 
 		// Apply search filter
@@ -172,6 +185,7 @@ export function ContentPackList({
 			return 0;
 		});
 
+		console.log("ContentPackList: Final filtered result:", filtered);
 		setFilteredContentPacks(filtered);
 	}, [contentPacks, searchTerm, statusFilter, sortField, sortDirection]);
 
@@ -244,8 +258,12 @@ export function ContentPackList({
 
 	// Filter and sort when dependencies change
 	useEffect(() => {
+		console.log(
+			"ContentPackList: Filtering and sorting, current contentPacks:",
+			contentPacks,
+		);
 		filterAndSortContentPacks();
-	}, [filterAndSortContentPacks]);
+	}, [filterAndSortContentPacks, contentPacks]);
 
 	// Handle refresh from parent
 	useEffect(() => {

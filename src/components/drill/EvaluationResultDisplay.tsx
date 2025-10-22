@@ -1,5 +1,6 @@
 "use client";
 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScorePopover } from "@/components/ui/score-popover";
@@ -105,18 +106,11 @@ export function EvaluationResultDisplay({
 		);
 	}
 
-	if (
-		result.status !== "COMPLETED" ||
-		result.score === undefined ||
-		result.score === null
-	) {
+	if (result.status !== "COMPLETED") {
 		console.log("❌ EvaluationResultDisplay not rendering:", {
 			status: result.status,
 			score: result.score,
-			reason:
-				result.status !== "COMPLETED"
-					? "status not completed"
-					: "score is null/undefined",
+			reason: "status not completed",
 		});
 		return null;
 	}
@@ -134,42 +128,83 @@ export function EvaluationResultDisplay({
 			<CardContent className="space-y-6">
 				{/* Overall Score */}
 				<div className="text-center">
-					<ScorePopover
-						score={result.score}
-						categories={result.categories}
-						feedback={result.feedback || undefined}
-					>
-						<div className="inline-block">
-							<div className="text-4xl font-bold text-primary mb-2">
-								{result.score}%
+					{typeof result.score === "number" ? (
+						<ScorePopover
+							score={result.score}
+							categories={result.categories}
+							feedback={result.feedback || undefined}
+						>
+							<div className="inline-block">
+								<div className="text-4xl font-bold text-primary mb-2">
+									{result.score}%
+								</div>
+								<div className="text-sm text-muted-foreground">
+									Click for detailed breakdown
+								</div>
 							</div>
+						</ScorePopover>
+					) : (
+						<div className="inline-block">
+							<div className="text-4xl font-bold text-primary mb-2">N/A</div>
 							<div className="text-sm text-muted-foreground">
-								Click for detailed breakdown
+								Score unavailable
 							</div>
 						</div>
-					</ScorePopover>
+					)}
 				</div>
 
-				{/* Category Breakdown */}
+				{/* Category Breakdown (7 chips with popovers) */}
 				<div className="space-y-4">
 					<h3 className="text-lg font-semibold">Category Breakdown</h3>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{Object.entries(result.categories).map(([category, score]) => (
-							<div key={category} className="space-y-2">
-								<div className="flex items-center justify-between">
-									<span className="font-medium">
-										{getCategoryLabel(category as keyof EvaluationCategories)}
-									</span>
-									<Badge variant="outline" className="font-semibold">
-										{score}%
-									</Badge>
+						{/* Render 4 numeric categories */}
+						{result.categories &&
+							Object.entries(result.categories).map(([category, score]) => (
+								<div key={category} className="space-y-2">
+									<div className="flex items-center justify-between">
+										<span className="font-medium">
+											{getCategoryLabel(category as keyof EvaluationCategories)}
+										</span>
+										<Badge variant="outline" className="font-semibold">
+											{score}%
+										</Badge>
+									</div>
+									<p className="text-sm text-muted-foreground">
+										{getCategoryDescription(
+											category as keyof EvaluationCategories,
+										)}
+									</p>
 								</div>
-								<p className="text-sm text-muted-foreground">
-									{getCategoryDescription(
-										category as keyof EvaluationCategories,
-									)}
-								</p>
-							</div>
+							))}
+
+						{/* Render additional pass/flag chips up to 7 total */}
+						{result.category_flags?.slice(0, 7).map((flag) => (
+							<Popover key={`${flag.name}-${flag.passFlag}`}>
+								<PopoverTrigger asChild>
+									<button
+										type="button"
+										className={cn(
+											"flex items-center justify-between w-full border rounded-md px-3 py-2 text-left",
+											flag.passFlag === "PASS"
+												? "border-green-200 bg-green-50"
+												: "border-yellow-200 bg-yellow-50",
+										)}
+										aria-label={`${flag.name} ${
+											flag.passFlag === "PASS" ? "✅" : "⚠️"
+										}`}
+									>
+										<span className="font-medium">{flag.name}</span>
+										<span className="text-sm">
+											{flag.passFlag === "PASS" ? "✅" : "⚠️"}
+										</span>
+									</button>
+								</PopoverTrigger>
+								<PopoverContent align="start" className="max-w-sm">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+										{flag.note}
+									</p>
+								</PopoverContent>
+							</Popover>
 						))}
 					</div>
 				</div>
@@ -183,6 +218,25 @@ export function EvaluationResultDisplay({
 								{result.feedback}
 							</p>
 						</div>
+					</div>
+				)}
+
+				{/* What changed + Rule to practice next */}
+				{(result.what_changed?.length || result.practice_rule) && (
+					<div className="space-y-3">
+						<h3 className="text-lg font-semibold">Improvements</h3>
+						{result.what_changed && result.what_changed.length > 0 && (
+							<ul className="list-disc list-inside space-y-1 text-sm">
+								{result.what_changed.slice(0, 3).map((item) => (
+									<li key={item}>{item}</li>
+								))}
+							</ul>
+						)}
+						{result.practice_rule && (
+							<p className="text-sm text-muted-foreground">
+								Rule to practice next: {result.practice_rule}
+							</p>
+						)}
 					</div>
 				)}
 

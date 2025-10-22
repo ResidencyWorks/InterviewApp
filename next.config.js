@@ -8,6 +8,19 @@ const nextConfig = {
 	images: {
 		remotePatterns: [{ hostname: "localhost" }],
 	},
+	compiler: {
+		// Reduce client bundle noise in production
+		removeConsole:
+			process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
+	},
+	experimental: {
+		// Tree-shake large icon libs to per-icon imports for smaller bundles
+		modularizeImports: {
+			"lucide-react": {
+				transform: "lucide-react/icons/{{member}}",
+			},
+		},
+	},
 	async headers() {
 		return [
 			{

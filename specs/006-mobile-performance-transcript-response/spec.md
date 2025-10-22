@@ -1,9 +1,15 @@
-# Feature Specification: Mobile Performance & Transcript Response Optimization
+# Feature Specification: ResidencyWorks M0 Trial - MatchReady Interview Drills
 
 **Feature Branch**: `006-mobile-performance-transcript-response`
-**Created**: 2024-12-19
+**Created**: 2025-01-27
 **Status**: Draft
-**Input**: User description: "Mobile load is fast; no layout shift. The app uses: Tailwind CSS with responsive design (grid-cols-1 md:grid-cols-2 lg:grid-cols-4), Proper mobile navigation (hidden md:flex), Next.js App Router with optimized loading. Need to verify actual mobile performance metrics. Transcript returns in <10s; no console errors/401s. Architecture supports this: Circuit breaker and retry logic implemented, Performance monitoring with 250ms target. Need to test actual Whisper API response times."
+**Input**: ResidencyWorks M0 trial specification for 3-day delivery
+
+## Overview
+
+Deliver a working skeleton of the core interview drill loop with fake ASR (Automatic Speech Recognition) to prove architecture, latency, data flow, and UX before full build. The system must support: record/type → submit → (fake STT) → score (rules) → LLM-style refactor (stub) → return JSON → render chips + notes → save to store → analytics fired.
+
+**M0 Trial Scope**: Mobile performance optimization, reliable transcript generation with fake ASR, and performance monitoring for the interview drill system.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -39,7 +45,24 @@ Interview participants can generate transcripts of their interview sessions reli
 
 ---
 
-### User Story 3 - Performance Monitoring & Optimization (Priority: P2)
+### User Story 3 - Fake ASR Transcript Generation (Priority: P1)
+
+Interview participants can generate transcripts using a fake ASR service that simulates real speech-to-text functionality for M0 trial testing.
+
+**Why this priority**: Fake ASR is essential for M0 trial to prove the core loop architecture without depending on external Whisper API. This enables testing of the complete flow: audio input → transcript → evaluation → results.
+
+**Independent Test**: Can be fully tested by submitting audio files and verifying mock transcripts are returned within expected timeframes, delivering reliable M0 trial functionality.
+
+**Acceptance Scenarios**:
+
+1. **Given** a user submits an audio file for transcript generation, **When** the fake ASR service processes it, **Then** a mock transcript is returned within 2 seconds
+2. **Given** the fake ASR service is configured with different response times, **When** processing audio files, **Then** response times match the configured values
+3. **Given** a user submits audio in different formats, **When** the fake ASR processes them, **Then** appropriate mock transcripts are returned for each format
+4. **Given** the fake ASR service encounters an error, **When** processing fails, **Then** appropriate error handling and fallback responses are provided
+
+---
+
+### User Story 4 - Performance Monitoring & Optimization (Priority: P2)
 
 The system continuously monitors performance metrics to ensure optimal user experience and can identify performance degradation before it impacts users.
 
@@ -76,7 +99,8 @@ The system continuously monitors performance metrics to ensure optimal user expe
 - **FR-007**: System MUST monitor and track transcript generation response times
 - **FR-008**: System MUST provide responsive design that adapts to different mobile screen sizes
 - **FR-009**: System MUST handle network connectivity issues gracefully during mobile usage
-- **FR-010**: System MUST maintain performance targets of 250ms for monitored operations
+- **FR-010**: System MUST maintain performance targets of 250ms for core evaluation operations (/api/evaluate endpoint processing)
+- **FR-011**: System MUST handle edge cases gracefully including slow networks (2G), peak usage periods, API outages, limited device resources, and cross-device sessions
 
 ### Key Entities
 
@@ -92,7 +116,7 @@ The system continuously monitors performance metrics to ensure optimal user expe
 - **SC-002**: Layout shift score (CLS) remains below 0.1 for mobile users
 - **SC-003**: Transcript generation completes within 10 seconds for 90% of requests
 - **SC-004**: System error rate for transcript generation remains below 1%
-- **SC-005**: Mobile user satisfaction score improves by 20% based on performance feedback
+- **SC-005**: Mobile user satisfaction score improves by 20% from baseline (measured via user feedback survey, target: 4.0/5.0 → 4.8/5.0)
 - **SC-006**: System maintains 99.5% uptime during peak usage periods
 - **SC-007**: Performance monitoring captures 100% of critical user interactions
 - **SC-008**: Circuit breaker prevents cascade failures during API outages

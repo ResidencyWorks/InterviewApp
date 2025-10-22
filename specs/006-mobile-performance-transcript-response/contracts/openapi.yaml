@@ -1,0 +1,872 @@
+openapi: 3.0.3
+info:
+  title: ResidencyWorks M0 Trial API
+  description: API specification for the ResidencyWorks MatchReady Interview Drills trial system
+  version: 1.0.0
+  contact:
+    name: ResidencyWorks Team
+    email: support@residencyworks.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://m0residencyworks.vercel.app/api
+    description: Staging server
+  - url: https://api.residencyworks.com/api
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      summary: Initiate magic link authentication
+      description: Send a magic link to the user's email address
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: user@example.com
+      responses:
+        '200':
+          description: Magic link sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Magic link sent to your email"
+                      expires_in:
+                        type: integer
+                        description: Seconds until link expires
+                        example: 3600
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid email format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: End user session
+      description: Log out the current user and invalidate session
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Logged out successfully"
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /evaluate:
+    post:
+      summary: Evaluate interview drill submission
+      description: Process and evaluate a user's interview drill response
+      tags:
+        - Evaluation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluateRequest'
+      responses:
+        '200':
+          description: Evaluation completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/EvaluateResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Get evaluation service health status
+      description: Check the health status of the evaluation service
+      tags:
+        - Evaluation
+      responses:
+        '200':
+          description: Health status retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/HealthResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '500':
+          description: Health check failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content-packs:
+    get:
+      summary: List content packs
+      description: Retrieve a paginated list of content packs with filtering
+      tags:
+        - Content Packs
+      parameters:
+        - name: status
+          in: query
+          description: Filter by content pack status
+          schema:
+            type: string
+            enum: [DRAFT, ACTIVE, ARCHIVED]
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of items to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: sortBy
+          in: query
+          description: Sort field
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, name, version]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Content packs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContentPack'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Upload a new content pack
+      description: Upload and validate a new content pack file
+      tags:
+        - Content Packs
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - name
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JSON content pack file (max 10MB)
+                name:
+                  type: string
+                  description: Content pack name
+                  example: "Medical Interview Basics v1.2.0"
+                description:
+                  type: string
+                  description: Optional description
+                  example: "Basic medical interview questions for residency preparation"
+      responses:
+        '201':
+          description: Content pack uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContentPack'
+                  uploadId:
+                    type: string
+                    format: uuid
+        '400':
+          description: Validation error or invalid JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content-packs/active:
+    get:
+      summary: Get the currently active content pack
+      description: Retrieve the currently active content pack
+      tags:
+        - Content Packs
+      responses:
+        '200':
+          description: Active content pack retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/ContentPack'
+                      - type: "null"
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content-packs/{id}/activate:
+    post:
+      summary: Activate a content pack
+      description: Activate a content pack (hot-swap)
+      tags:
+        - Content Packs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content pack ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Content pack activated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContentPack'
+                  previousPack:
+                    $ref: '#/components/schemas/ContentPack'
+                  message:
+                    type: string
+                    example: "Content pack activated successfully"
+        '400':
+          description: Content pack validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Content pack not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /webhooks/stripe:
+    post:
+      summary: Handle Stripe payment webhooks
+      description: Process Stripe payment webhook events
+      tags:
+        - Webhooks
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Stripe webhook payload
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+                  eventId:
+                    type: string
+                    description: Stripe event ID
+                  processed:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Webhook processed successfully"
+        '400':
+          description: Invalid webhook signature or payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Webhook processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /analytics/track:
+    post:
+      summary: Track custom analytics events
+      description: Track custom analytics events for monitoring
+      tags:
+        - Analytics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackEventRequest'
+      responses:
+        '200':
+          description: Event tracked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tracked:
+                    type: boolean
+                    example: true
+                  eventId:
+                    type: string
+                    description: PostHog event ID
+        '400':
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      summary: Overall system health check
+      description: Check the health status of all system components
+      tags:
+        - Health
+      security: []
+      responses:
+        '200':
+          description: System healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealthResponse'
+        '503':
+          description: System unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase session token
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid request data"
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+
+    EvaluateRequest:
+      type: object
+      required:
+        - questionId
+        - userId
+      properties:
+        content:
+          type: string
+          minLength: 10
+          description: Text response (minimum 10 characters)
+          example: "I would approach this patient with empathy and professionalism..."
+        audioUrl:
+          type: string
+          description: Audio file URL or base64 data URL
+          example: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEA..."
+        questionId:
+          type: string
+          description: Content pack question ID
+          example: "q_medical_history_001"
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        metadata:
+          type: object
+          description: Additional metadata
+          example:
+            deviceType: "mobile"
+            browser: "Chrome"
+            sessionId: "sess_123"
+
+    EvaluateResponse:
+      type: object
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        feedback:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            score:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: Overall score (0-100)
+            feedback:
+              type: string
+              description: Overall feedback text
+            strengths:
+              type: array
+              items:
+                type: string
+              description: Array of strengths
+            improvements:
+              type: array
+              items:
+                type: string
+              description: Array of improvements
+            generatedAt:
+              type: string
+              format: date-time
+            model:
+              type: string
+              description: AI model used
+            processingTimeMs:
+              type: integer
+              description: Processing time in milliseconds
+        evaluationRequest:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+            requestedAt:
+              type: string
+              format: date-time
+            retryCount:
+              type: integer
+        status:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+            progress:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: Progress percentage
+            message:
+              type: string
+              description: Status message
+            startedAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+            completedAt:
+              type: string
+              format: date-time
+        processingTimeMs:
+          type: integer
+          description: Total processing time
+
+    HealthResponse:
+      type: object
+      properties:
+        service:
+          type: string
+          example: "llm-feedback-engine"
+        version:
+          type: string
+          example: "1.0.0"
+        status:
+          type: string
+          enum: [HEALTHY, DEGRADED, UNHEALTHY]
+        components:
+          type: object
+          properties:
+            circuitBreaker:
+              type: object
+              properties:
+                state:
+                  type: string
+                  enum: [CLOSED, OPEN, HALF_OPEN]
+            adapters:
+              type: object
+              properties:
+                speech:
+                  type: string
+                  enum: [HEALTHY, DEGRADED, UNHEALTHY]
+                text:
+                  type: string
+                  enum: [HEALTHY, DEGRADED, UNHEALTHY]
+            analytics:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNHEALTHY]
+            monitoring:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNHEALTHY]
+        timestamp:
+          type: string
+          format: date-time
+
+    ContentPack:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: string
+          description: Semantic version
+          example: "1.2.0"
+        name:
+          type: string
+          example: "Medical Interview Basics"
+        description:
+          type: string
+          example: "Basic medical interview questions for residency preparation"
+        schemaVersion:
+          type: string
+          example: "1.0.0"
+        content:
+          type: object
+          description: Content pack data
+        metadata:
+          type: object
+          description: Additional metadata
+        status:
+          type: string
+          enum: [DRAFT, ACTIVE, ARCHIVED]
+        uploadedBy:
+          type: string
+          format: uuid
+        fileSize:
+          type: integer
+          description: File size in bytes
+        checksum:
+          type: string
+          description: SHA256 hash
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        activatedAt:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        total:
+          type: integer
+        hasMore:
+          type: boolean
+
+    TrackEventRequest:
+      type: object
+      required:
+        - event
+      properties:
+        event:
+          type: string
+          description: Event name
+          example: "drill_started"
+        properties:
+          type: object
+          description: Event properties
+        userId:
+          type: string
+          format: uuid
+          description: Override user ID
+
+    SystemHealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [HEALTHY, DEGRADED, UNHEALTHY]
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNHEALTHY]
+            redis:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNHEALTHY]
+            openai:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNHEALTHY]
+            posthog:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNHEALTHY]
+            sentry:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNHEALTHY]
+        performance:
+          type: object
+          properties:
+            averageResponseTime:
+              type: number
+              description: Average response time in milliseconds
+            errorRate:
+              type: number
+              description: Error rate percentage
+            uptime:
+              type: number
+              description: Uptime in seconds
+
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ForbiddenError:
+      description: Access denied due to insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFoundError:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: The request data is invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: An unexpected error occurred
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

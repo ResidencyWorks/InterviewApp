@@ -40,7 +40,7 @@ export async function POST(
 			);
 		}
 
-		// Check if user has admin role (PRO entitlement level)
+		// Authorize by admin role or PRO entitlement
 		const { data: userData } = (await supabase
 			.from("users")
 			.select("entitlement_level")
@@ -50,7 +50,18 @@ export async function POST(
 			error: Error | null;
 		};
 
-		if (userData?.entitlement_level !== "PRO") {
+		const userMetadata = user.user_metadata as
+			| Record<string, unknown>
+			| null
+			| undefined;
+		const role =
+			typeof userMetadata?.role === "string"
+				? (userMetadata.role as string)
+				: "user";
+		const isAdminRole = role === "admin" || role === "content_admin";
+		const hasProEntitlement = userData?.entitlement_level === "PRO";
+
+		if (!isAdminRole && !hasProEntitlement) {
 			return NextResponse.json(
 				{
 					error: "FORBIDDEN",

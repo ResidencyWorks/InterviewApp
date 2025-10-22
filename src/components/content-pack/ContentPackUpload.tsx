@@ -20,9 +20,29 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import type { ValidationResult } from "@/lib/domain/entities/ValidationResult";
 import { UploadProgress } from "./UploadProgress";
 import { ValidationResults } from "./ValidationResults";
+
+// UI-only validation types (subset of domain entity)
+type UIValidationError = {
+	path: string;
+	message: string;
+	code: string;
+	severity: "error" | "warning";
+};
+
+type UIValidationWarning = {
+	path: string;
+	message: string;
+	code: string;
+	suggestion?: string;
+};
+
+type UIValidationResult = {
+	isValid: boolean;
+	errors: UIValidationError[];
+	warnings: UIValidationWarning[];
+};
 
 interface UploadStatus {
 	status: "idle" | "uploading" | "validating" | "completed" | "failed";
@@ -52,36 +72,92 @@ export function ContentPackUpload({
 		progress: 0,
 	});
 	const [validationResult, setValidationResult] =
-		useState<ValidationResult | null>(null);
+		useState<UIValidationResult | null>(null);
 	const [dragActive, setDragActive] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const handleFileUpload = useCallback(
 		async (file: File) => {
+			console.log("ContentPackUpload: Starting upload for file:", file.name);
 			setUploadStatus({ status: "uploading", progress: 0 });
 			setValidationResult(null);
 
 			try {
+				console.log("ContentPackUpload: Creating form data");
 				// Create form data
 				const formData = new FormData();
 				formData.append("file", file);
 				formData.append("name", file.name.replace(".json", ""));
 				formData.append("description", `Uploaded content pack: ${file.name}`);
 
+				console.log("ContentPackUpload: Sending request to /api/content-packs");
 				// Upload file
 				const response = await fetch("/api/content-packs", {
 					method: "POST",
 					body: formData,
 				});
 
+				console.log("ContentPackUpload: Response status:", response.status);
 				if (!response.ok) {
-					const errorData = await response.json();
-					throw new Error(errorData.message || "Upload failed");
+					console.log("ContentPackUpload: Response not ok, parsing error");
+					let errorData: {
+						error?: string;
+						message?: string;
+						details?: {
+							errors?: UIValidationError[];
+							warnings?: UIValidationWarning[];
+						};
+					} | null = null;
+					try {
+						errorData = await response.json();
+						console.log("ContentPackUpload: Error data:", errorData);
+					} catch (_e) {
+						console.log("ContentPackUpload: Failed to parse error response");
+						// ignore
+					}
+
+					// Surface backend validation errors
+					if (
+						response.status === 400 &&
+						errorData?.error === "VALIDATION_FAILED" &&
+						errorData?.details
+					) {
+						console.log("ContentPackUpload: Setting validation result");
+						setValidationResult({
+							isValid: false,
+							errors: errorData.details.errors || [],
+							warnings: errorData.details.warnings || [],
+						});
+						setUploadStatus({
+							status: "failed",
+							progress: 0,
+							error: "Validation failed. See details below.",
+						});
+						return;
+					}
+
+					console.log("ContentPackUpload: Throwing error:", errorData?.message);
+					throw new Error(errorData?.message || "Upload failed");
 				}
 
+				console.log("ContentPackUpload: Parsing successful response");
 				const result = await response.json();
+				console.log("ContentPackUpload: Response data:", result);
+				console.log("ContentPackUpload: Result data structure:", {
+					hasData: !!result.data,
+					dataId: result.data?.id,
+					dataStatus: result.data?.status,
+					hasUploadId: !!result.uploadId,
+				});
 
+				console.log("ContentPackUpload: Setting upload status to completed");
 				setUploadStatus({
+					status: "completed",
+					progress: 100,
+					uploadId: result.uploadId,
+					contentPackId: result.data.id,
+				});
+				console.log("ContentPackUpload: Upload status set, current state:", {
 					status: "completed",
 					progress: 100,
 					uploadId: result.uploadId,
@@ -90,11 +166,16 @@ export function ContentPackUpload({
 
 				// If validation failed, show validation results
 				if (result.data.status === "invalid" && result.validation) {
+					console.log(
+						"ContentPackUpload: Setting validation result for invalid pack",
+					);
 					setValidationResult(result.validation);
 				}
 
+				console.log("ContentPackUpload: Calling onUploadComplete");
 				onUploadComplete?.(result.data.id);
 			} catch (error) {
+				console.error("ContentPackUpload: Upload error:", error);
 				const errorMessage =
 					error instanceof Error ? error.message : "Upload failed";
 				setUploadStatus({
@@ -192,6 +273,10 @@ export function ContentPackUpload({
 	};
 
 	const getStatusMessage = () => {
+		console.log(
+			"ContentPackUpload: getStatusMessage called, current status:",
+			uploadStatus.status,
+		);
 		switch (uploadStatus.status) {
 			case "uploading":
 				return "Uploading content pack...";
