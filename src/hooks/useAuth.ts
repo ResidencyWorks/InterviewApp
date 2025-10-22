@@ -96,10 +96,16 @@ export function useAuth() {
 	 * @returns Promise that resolves when magic link is sent
 	 */
 	const signIn = async (email: string) => {
+		// Next.js client/server—both are fine as long as it's absolute
+		const origin =
+			typeof window !== "undefined"
+				? window.location.origin
+				: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"; // set this in Vercel
+
 		const { error } = await supabase.auth.signInWithOtp({
 			email,
 			options: {
-				emailRedirectTo: `${window.location.origin}/auth/callback`,
+				emailRedirectTo: `${origin}/auth/callback`,
 			},
 		});
 		if (error) throw error;

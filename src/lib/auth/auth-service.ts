@@ -21,13 +21,18 @@ export class AuthService {
 				throw createAuthError("Invalid email format", 400, "INVALID_EMAIL");
 			}
 
+			// Next.js client/server—both are fine as long as it's absolute
+			const origin =
+				typeof window !== "undefined"
+					? window.location.origin
+					: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"; // set this in Vercel
+
 			const { error } = await this.supabase.auth.signInWithOtp({
 				email: request.email,
 				options: {
 					data: request.options?.data,
 					emailRedirectTo:
-						request.options?.emailRedirectTo ||
-						`${window.location.origin}/auth/callback`,
+						request.options?.emailRedirectTo || `${origin}/auth/callback`,
 				},
 			});
 

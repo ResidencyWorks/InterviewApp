@@ -34,17 +34,18 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Email is required" }, { status: 400 });
 		}
 
-		// Send magic link
-		const { error } = await supabase.auth.signInWithOtp({
+		// Next.js client/server—both are fine as long as it's absolute
+		const origin =
+			typeof window !== "undefined"
+				? window.location.origin
+				: process.env.NEXT_PUBLIC_SITE_URL!; // set this in Vercel
+
+		await supabase.auth.signInWithOtp({
 			email,
 			options: {
-				emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/callback`,
+				emailRedirectTo: `${origin}/auth/callback`, // your handler/page
 			},
 		});
-
-		if (error) {
-			return NextResponse.json({ error: error.message }, { status: 400 });
-		}
 
 		return NextResponse.json({
 			message: "Magic link sent successfully",
