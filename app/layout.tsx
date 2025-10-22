@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { PostHogProvider } from "../src/components/PostHogProvider";
+import { LayoutShiftPrevention } from "../src/components/ui/LayoutShiftPrevention";
 import { WebVitals } from "../src/components/WebVitals";
 
 export const metadata: Metadata = {
@@ -63,6 +64,7 @@ export default function RootLayout({
 		<html lang="en">
 			<body>
 				<PostHogProvider>
+					<LayoutShiftPrevention />
 					<WebVitals />
 					<ErrorBoundary>{children}</ErrorBoundary>
 				</PostHogProvider>
