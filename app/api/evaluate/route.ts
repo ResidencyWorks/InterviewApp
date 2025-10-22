@@ -4,8 +4,14 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createErrorResponse } from "@/lib/api/api-helpers";
+import {
+	createErrorResponse,
+	createRateLimitResponse,
+	createUnauthorizedResponse,
+} from "@/lib/api/api-helpers";
 import { FakeASRService } from "@/lib/asr/FakeASRService";
+import { evaluateTranscript } from "@/lib/evaluation/evaluation-engine";
+import { validateEvaluationResult } from "@/lib/evaluation/evaluation-schema";
 import { createLLMFeedbackService } from "@/lib/llm/application/services/LLMFeedbackService";
 import {
 	CircuitBreakerError,
@@ -15,6 +21,59 @@ import {
 import { OpenAISpeechAdapter } from "@/lib/llm/infrastructure/openai/OpenAISpeechAdapter";
 import { OpenAITextAdapter } from "@/lib/llm/infrastructure/openai/OpenAITextAdapter";
 import { parseConfig } from "@/lib/llm/types/config";
+
+// Simple in-memory rate limiting store
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+/**
+ * Simple authentication check
+ */
+function checkAuthentication(request: NextRequest): NextResponse | null {
+	const authHeader = request.headers.get("authorization");
+	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		return createUnauthorizedResponse("Authentication required");
+	}
+	return null; // Authentication passed
+}
+
+/**
+ * Simple rate limiting check
+ */
+function checkRateLimit(
+	request: NextRequest,
+	maxRequests = 10,
+	windowMs = 60000,
+): NextResponse | null {
+	const clientId = request.headers.get("x-forwarded-for") || "unknown";
+	const now = Date.now();
+
+	// Clean up expired entries
+	for (const [key, value] of Array.from(rateLimitStore.entries())) {
+		if (value.resetTime < now) {
+			rateLimitStore.delete(key);
+		}
+	}
+
+	const current = rateLimitStore.get(clientId);
+
+	if (!current) {
+		rateLimitStore.set(clientId, { count: 1, resetTime: now + windowMs });
+		return null; // Rate limit passed
+	}
+
+	if (current.resetTime < now) {
+		rateLimitStore.set(clientId, { count: 1, resetTime: now + windowMs });
+		return null; // Rate limit passed
+	}
+
+	if (current.count >= maxRequests) {
+		const retryAfter = Math.ceil((current.resetTime - now) / 1000);
+		return createRateLimitResponse(retryAfter);
+	}
+
+	current.count++;
+	return null; // Rate limit passed
+}
 
 /**
  * Request validation schema
@@ -96,6 +155,18 @@ const EvaluateRequestSchema = z
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
 	try {
+		// Authentication check
+		const authError = checkAuthentication(request);
+		if (authError) {
+			return authError;
+		}
+
+		// Rate limiting check
+		const rateLimitError = checkRateLimit(request, 10, 60000); // 10 requests per minute
+		if (rateLimitError) {
+			return rateLimitError;
+		}
+
 		// Check request size limit (2MB max)
 		const contentLength = request.headers.get("content-length");
 		if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
@@ -108,6 +179,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 		// Parse and validate request body
 		const body = await request.json();
+
+		// Simple transcript-only fallback path for M0
+		interface TranscriptOnlyBody {
+			transcript: string;
+		}
+		const maybeTranscript = body as Partial<TranscriptOnlyBody>;
+		if (
+			typeof maybeTranscript.transcript === "string" &&
+			maybeTranscript.transcript.trim().length > 0
+		) {
+			const result = await evaluateTranscript(maybeTranscript.transcript);
+			const validated = validateEvaluationResult(result);
+			return NextResponse.json(validated, { status: 200 });
+		}
 
 		// Check parsed body size
 		const bodyString = JSON.stringify(body);

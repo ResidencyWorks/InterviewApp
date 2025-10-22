@@ -1,3 +1,108 @@
+import type {
+	ICategoryScore,
+	IEvaluationMetrics,
+	IEvaluationResult,
+	IEvaluationSummary,
+} from "./evaluation-schema";
+
+function clamp(value: number, min: number, max: number): number {
+	return Math.min(max, Math.max(min, value));
+}
+
+function computeMetrics(transcript: string): IEvaluationMetrics {
+	const lengthScore = clamp(transcript.trim().split(/\s+/).length / 200, 0, 1);
+	const hasNumbers = /\d/.test(transcript) ? 0.2 : 0;
+	const hasBullets = /[-•*]/.test(transcript) ? 0.1 : 0;
+	return {
+		clarity: clamp(0.5 + hasBullets - (lengthScore > 0.9 ? 0.1 : 0), 0, 1),
+		impact: clamp(0.4 + hasNumbers, 0, 1),
+		specificity: clamp(
+			0.3 + hasNumbers + (transcript.includes("for example") ? 0.2 : 0),
+			0,
+			1,
+		),
+		structure: clamp(0.4 + hasBullets, 0, 1),
+		empathy: clamp(
+			transcript.match(/(we|team|support|help)/i) ? 0.7 : 0.4,
+			0,
+			1,
+		),
+		agency: clamp(transcript.match(/(I|owned|led|drove)/) ? 0.7 : 0.4, 0, 1),
+		reflection: clamp(
+			transcript.match(/(learned|next time|in hindsight|improve)/i) ? 0.7 : 0.4,
+			0,
+			1,
+		),
+	};
+}
+
+function scoreFromMetric(m: number): number {
+	// Map 0..1 to 0..5
+	return clamp(Math.round(m * 5 * 10) / 10, 0, 5);
+}
+
+function computeCategories(metrics: IEvaluationMetrics): ICategoryScore[] {
+	const categories = [
+		{
+			category: "communication",
+			score: scoreFromMetric((metrics.clarity + metrics.structure) / 2),
+		},
+		{
+			category: "problem_solving",
+			score: scoreFromMetric((metrics.specificity + metrics.impact) / 2),
+		},
+		{
+			category: "leadership",
+			score: scoreFromMetric((metrics.agency + metrics.impact) / 2),
+		},
+		{
+			category: "collaboration",
+			score: scoreFromMetric((metrics.empathy + metrics.clarity) / 2),
+		},
+		{
+			category: "adaptability",
+			score: scoreFromMetric((metrics.reflection + metrics.clarity) / 2),
+		},
+		{
+			category: "ownership",
+			score: scoreFromMetric((metrics.agency + metrics.structure) / 2),
+		},
+		{
+			category: "curiosity",
+			score: scoreFromMetric((metrics.specificity + metrics.reflection) / 2),
+		},
+	] as ICategoryScore[];
+	return categories;
+}
+
+function computeSummary(transcript: string): IEvaluationSummary {
+	const bullets = [
+		"Be more specific with concrete outcomes and metrics.",
+		"Improve structure using brief bullets or clear sections.",
+		"Reflect on lessons learned and what you'd do differently.",
+	];
+	const practiceRule =
+		transcript.length > 600
+			? "Keep answers under 2 minutes; prioritize the key outcome first."
+			: "Lead with situation → action → outcome in 3 sentences.";
+	return { bullets, practiceRule };
+}
+
+export async function evaluateTranscript(
+	transcript: string,
+): Promise<IEvaluationResult> {
+	const metrics = computeMetrics(transcript);
+	const categories = computeCategories(metrics);
+	const avg = categories.reduce((s, c) => s + c.score, 0) / categories.length;
+	const summary = computeSummary(transcript);
+	return {
+		totalScore: Math.round(avg * 10) / 10,
+		metrics,
+		categories,
+		summary,
+	};
+}
+
 import { analytics } from "@/lib/analytics";
 import { contentPackService } from "@/lib/content";
 import { errorMonitoring } from "@/lib/error-monitoring";

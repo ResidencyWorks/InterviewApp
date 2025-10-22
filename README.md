@@ -181,3 +181,9 @@ To run from source:
 # Go >= 1.22
 go run . help
 ```
+
+## Demo: Day-3 Flow
+1. Start dev server: pnpm dev
+2. Go to /practice
+3. Paste a transcript and submit
+4. Review results and summary
