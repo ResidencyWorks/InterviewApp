@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { analytics } from "@/lib/analytics";
+import { getServerAuthService } from "@/lib/auth/server-auth-service";
 import { errorMonitoring } from "@/lib/error-monitoring";
 import { contentPackCache } from "@/lib/redis";
 import type { ContentPack, ContentPackData } from "@/types/content";
@@ -44,11 +45,22 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 				}
 			}
 
+			// Resolve current user for attribution
+			let createdBy = "system";
+			try {
+				const auth = await getServerAuthService();
+				const currentUser = await auth.getUser();
+				createdBy = currentUser?.id || "system";
+			} catch {
+				// Fallback to system if auth is unavailable
+				createdBy = "system";
+			}
+
 			// Create content pack
 			const contentPack: ContentPack = {
 				content: data,
 				created_at: new Date().toISOString(),
-				created_by: "system", // TODO: Get from auth context
+				created_by: createdBy,
 				download_count: 0,
 				id: uuidv4(),
 				is_active: false,
@@ -292,7 +304,7 @@ export class ContentPackLoader implements ContentPackServiceInterface {
 	 * @param id - Content pack ID
 	 * @returns Promise resolving to statistics object
 	 */
-	async getStatistics(id: string): Promise<Record<string, any> | null> {
+	async getStatistics(id: string): Promise<Record<string, unknown> | null> {
 		try {
 			const pack = await this.get(id);
 			if (!pack) {

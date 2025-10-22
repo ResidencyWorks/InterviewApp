@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { analytics } from "@/lib/analytics";
+import { getServerAuthService } from "@/lib/auth/server-auth-service";
 import { databaseService } from "@/lib/db";
 import { errorMonitoring } from "@/lib/error-monitoring";
 import { cacheKeys, cacheTTL, redisCache } from "@/lib/redis";
@@ -30,9 +31,21 @@ export class EvaluationService implements EvaluationServiceInterface {
 		const startTime = Date.now();
 		const resultId = uuidv4();
 
+		// Resolve user for analytics (available in both success and error paths)
+		let currentUserId = "system";
+
 		try {
+			// Resolve user for analytics
+			try {
+				const auth = await getServerAuthService();
+				const currentUser = await auth.getUser();
+				currentUserId = currentUser?.id || "system";
+			} catch {
+				currentUserId = "system";
+			}
+
 			// Track evaluation started
-			analytics.trackEvaluationStarted("system", request.content_pack_id);
+			analytics.trackEvaluationStarted(currentUserId, request.content_pack_id);
 
 			// Create evaluation result record
 			const evaluationResult: EvaluationResult = {
@@ -51,15 +64,19 @@ export class EvaluationService implements EvaluationServiceInterface {
 				response_type: request.type,
 				status: "PROCESSING",
 				updated_at: new Date().toISOString(),
-				user_id: "system", // TODO: Get from auth context
+				user_id: currentUserId,
 			};
 
 			// Save initial result
 			await databaseService.insert("evaluation_results", evaluationResult);
 
-			// Perform evaluation
+			// Perform evaluation with user metadata
+			const evaluationRequest = {
+				...request,
+				metadata: { ...(request.metadata || {}), user_id: currentUserId },
+			};
 			const evaluation: EvaluationResponse =
-				await this.engine.evaluate(request);
+				await this.engine.evaluate(evaluationRequest);
 
 			// Update result with evaluation data
 			const updatedResult: EvaluationResult = {
@@ -87,7 +104,7 @@ export class EvaluationService implements EvaluationServiceInterface {
 
 			// Track completion
 			analytics.trackEvaluationCompleted(
-				"system", // TODO: Get from auth context
+				currentUserId,
 				{
 					categories: evaluation.categories as unknown as Record<
 						string,
@@ -106,7 +123,7 @@ export class EvaluationService implements EvaluationServiceInterface {
 
 			// Track failure
 			analytics.trackEvaluationFailed(
-				"system", // TODO: Get from auth context
+				currentUserId,
 				error instanceof Error ? error.message : "Unknown error",
 				request.content_pack_id,
 			);
@@ -232,7 +249,7 @@ export class EvaluationService implements EvaluationServiceInterface {
 	 * @param userId - User ID
 	 * @returns Promise resolving to analytics data
 	 */
-	async getAnalytics(userId: string): Promise<Record<string, any>> {
+	async getAnalytics(userId: string): Promise<Record<string, unknown>> {
 		try {
 			const results = await this.listResults(userId, 1, 1000); // Get all results for analytics
 

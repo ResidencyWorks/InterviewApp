@@ -103,7 +103,7 @@ export class OpenAIEvaluationEngine implements EvaluationEngine {
 
 			// Track analytics
 			analytics.trackEvaluationCompleted(
-				"system", // TODO: Get from context
+				request.metadata?.user_id || "system",
 				{
 					categories: evaluation.categories as unknown as Record<
 						string,
@@ -122,7 +122,7 @@ export class OpenAIEvaluationEngine implements EvaluationEngine {
 
 			// Track error analytics
 			analytics.trackEvaluationFailed(
-				"system", // TODO: Get from context
+				request.metadata?.user_id || "system",
 				error instanceof Error ? error.message : "Unknown error",
 				request.content_pack_id,
 			);
