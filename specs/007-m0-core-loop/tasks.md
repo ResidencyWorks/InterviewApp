@@ -20,16 +20,16 @@ This file lists dependency-ordered, executable tasks organized by user story.
 
 ## Phase 3: User Story 1 - Submit transcript and receive scored results (P1)
 
-- [ ] T010 [US1] Implement evaluation engine rules at /workspaces/InterviewApp/src/lib/evaluation/evaluation-engine.ts
+- [X] T010 [US1] Implement evaluation engine rules at /workspaces/InterviewApp/src/lib/evaluation/evaluation-engine.ts
 - [ ] T011 [US1] Implement refactor summary stub at /workspaces/InterviewApp/src/lib/evaluation/refactor-summary.ts
-- [ ] T012 [US1] Create POST /api/evaluate endpoint at /workspaces/InterviewApp/app/api/evaluate/route.ts
+- [X] T012 [US1] Create POST /api/evaluate endpoint at /workspaces/InterviewApp/app/api/evaluate/route.ts
 - [ ] T013 [P] [US1] Add unit test happy path for schema at /workspaces/InterviewApp/tests/evaluation-schema.happy.test.ts
 - [ ] T014 [P] [US1] Add unit test failure path for schema at /workspaces/InterviewApp/tests/evaluation-schema.fail.test.ts
-- [ ] T015 [US1] Create client store for results at /workspaces/InterviewApp/src/store/evaluationResultsStore.ts
-- [ ] T016 [US1] Build submit UI at /workspaces/InterviewApp/app/(dashboard)/practice/page.tsx
-- [ ] T017 [US1] Build results view with chips and metrics at /workspaces/InterviewApp/src/components/evaluation/ResultsView.tsx
-- [ ] T018 [US1] Fire analytics events (start/submit/score) in UI at /workspaces/InterviewApp/app/(dashboard)/practice/page.tsx
-- [ ] T018a [US1] Fire drill_started analytics event on page load at /workspaces/InterviewApp/app/(dashboard)/practice/page.tsx
+- [X] T015 [US1] Create client store for results at /workspaces/InterviewApp/src/store/evaluationResultsStore.ts
+- [X] T016 [US1] Build submit UI at /workspaces/InterviewApp/app/(dashboard)/practice/page.tsx
+- [X] T017 [US1] Build results view with chips and metrics at /workspaces/InterviewApp/src/components/evaluation/ResultsView.tsx
+- [X] T018 [US1] Fire analytics events (start/submit/score) in UI at /workspaces/InterviewApp/app/(dashboard)/practice/page.tsx
+- [X] T018a [US1] Fire drill_started analytics event on page load at /workspaces/InterviewApp/app/(dashboard)/practice/page.tsx
 
 ## Phase 4: User Story 2 - Auth and entitlement-gated access post-checkout (P2)
 
@@ -49,11 +49,11 @@ This file lists dependency-ordered, executable tasks organized by user story.
 
 ## Final Phase: Polish & Cross-Cutting
 
-- [ ] T029 Add basic loading/error states to practice UI at /workspaces/InterviewApp/app/(dashboard)/practice/page.tsx
-- [ ] T030 Document test instructions in docs/owner-runbook.md at /workspaces/InterviewApp/docs/owner-runbook.md
-- [ ] T031 Ensure README lists Day-3 demo flow at /workspaces/InterviewApp/README.md
-- [ ] T032 Add performance monitoring for evaluation endpoint at /workspaces/InterviewApp/src/lib/monitoring/PerformanceMonitor.ts
-- [ ] T033 Add performance validation for content pack hot-swap at /workspaces/InterviewApp/src/lib/content-pack/ContentPackActivation.ts
+- [X] T029 Add basic loading/error states to practice UI at /workspaces/InterviewApp/app/(dashboard)/practice/page.tsx
+- [X] T030 Document test instructions in docs/owner-runbook.md at /workspaces/InterviewApp/docs/owner-runbook.md
+- [X] T031 Ensure README lists Day-3 demo flow at /workspaces/InterviewApp/README.md
+- [X] T032 Add performance monitoring for evaluation endpoint at /workspaces/InterviewApp/src/lib/monitoring/PerformanceMonitor.ts
+- [X] T033 Add performance validation for content pack hot-swap at /workspaces/InterviewApp/src/lib/content-pack/ContentPackActivation.ts
 
 ## Dependencies (Story Order)
 

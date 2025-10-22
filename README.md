@@ -1,189 +1,261 @@
-# Supabase CLI
+# MatchReady Interview App - M0 Core Loop
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+A working skeleton of the core practice loop for behavioral interview preparation. This is the **Day-3 trial delivery** for ResidencyWorks.
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+## Overview
 
-This repository contains all the functionality for Supabase CLI.
+The M0 core loop delivers:
+- **Submit**: Type or paste a practice response
+- **Evaluate**: Get scored results with 7 behavioral competencies
+- **Learn**: Review improvements and practice rules
+- **Track**: Analytics events fire for every drill
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+## Quick Start
 
-## Getting started
+### Prerequisites
+- Node.js 22.x
+- pnpm 10.x
 
-### Install the CLI
-
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
-
-```bash
-npm i supabase --save-dev
-```
-
-To install the beta release channel:
+### Installation & Development
 
 ```bash
-npm i supabase@beta --save-dev
+# Install dependencies
+pnpm install
+
+# Set up git hooks
+pnpm prepare
+
+# Start dev server (runs on http://localhost:3000)
+pnpm dev
 ```
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+### Environment Setup
 
+Copy and configure `.env.example`:
+```bash
+cp .env.example .env.local
 ```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+
+**Required for M0:**
+```
+NEXT_PUBLIC_DEMO_USER_ID=demo
+NEXT_PUBLIC_USE_FAKE_ASR=true
 ```
 
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+**Optional (enhances experience):**
+```
+NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
+STRIPE_SECRET_KEY=your_stripe_key
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+```
 
-<details>
-  <summary><b>macOS</b></summary>
+## Day-3 Demo Flow
 
-  Available via [Homebrew](https://brew.sh). To install:
+### 1. Navigate to Practice
+Visit `http://localhost:3000/practice`
 
-  ```sh
-  brew install supabase/tap/supabase
-  ```
+### 2. Submit a Response
+- Type or paste a behavioral transcript (80-200 words recommended)
+- Example: "I had a conflict with a team member over project scope..."
+- Click "Submit Response"
 
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
+### 3. Review Results
+You'll see:
+- **Overall Score**: 0–100 (higher is better)
+- **Duration, Words, WPM**: Metrics about your response
+- **7 Category Chips**: 
+  - Communication
+  - Problem Solving
+  - Leadership
+  - Collaboration
+  - Adaptability
+  - Ownership
+  - Curiosity
+- Each shows **PASS** ✅ or **FLAG** ⚠️ with specific feedback
+- **What to Practice**: 1-3 improvement suggestions
+- **Practice Rule**: Next focus area
 
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
+### 4. Track Analytics
+If PostHog is configured:
+- Open your PostHog dashboard
+- Verify events: `drill_started`, `drill_submitted`, `score_returned`
+- Each event includes user and session context
 
-<details>
-  <summary><b>Windows</b></summary>
+## Features
 
-  Available via [Scoop](https://scoop.sh). To install:
+### Core Loop
+- ✅ Submit transcript via form
+- ✅ Evaluate against 7 behavioral competencies
+- ✅ Display results with category chips
+- ✅ Show improvement suggestions
+- ✅ Fire analytics events
 
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
+### Auth & Entitlements (M0)
+- ✅ Simple bearer token auth
+- ✅ In-memory entitlements cache (1-hour TTL)
+- ✅ Stripe webhook for checkout completion
+- ✅ Idempotency protection for webhook replays
 
-  To upgrade:
+### Content Packs
+- ✅ Load and validate JSON content packs
+- ✅ Hot-swap packs without redeployment
+- ✅ Emit `content_pack_loaded` analytics event
+- ✅ Dry-run validation before activation
 
-  ```powershell
-  scoop update supabase
-  ```
-</details>
+### UX & Polish
+- ✅ Loading spinner during evaluation
+- ✅ Error states with dismissible messages
+- ✅ Entitlement gating
+- ✅ Word count and character counter
+- ✅ Responsive design
 
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
+## Testing
 
 ```bash
-supabase bootstrap
+# Run all tests
+pnpm test
+
+# Run unit tests only
+pnpm test:unit
+
+# Run integration tests
+pnpm test:integration
+
+# Watch mode
+pnpm test:watch
 ```
 
-Or using npx:
+### Test Coverage
+- **Evaluation Schema**: Happy path and failure cases for ResidencyWorks contract
+- **Webhook Idempotency**: Stripe events replayed safely
+- **Content Pack Validation**: Schema validation for JSON packs
 
-```bash
-npx supabase bootstrap
+See [docs/owner-runbook.md](docs/owner-runbook.md) for detailed test instructions.
+
+## API Endpoints
+
+### POST /api/evaluate
+Evaluate a transcript and return scored results.
+
+**Request:**
+```json
+{
+  "transcript": "I led a team project that..."
+}
 ```
 
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
-
-## Docs
-
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
-
-## Breaking changes
-
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
-
-## Developing
-
-To run from source:
-
-```sh
-# Go >= 1.22
-go run . help
+**Response (ResidencyWorks Contract):**
+```json
+{
+  "overall_score": 75,
+  "duration_s": 12.5,
+  "words": 180,
+  "wpm": 150,
+  "category_chips": [
+    {
+      "id": "communication",
+      "name": "Communication",
+      "passFlag": "PASS",
+      "note": "Clear articulation of key points"
+    },
+    // ... 7 total categories
+  ],
+  "what_changed": [
+    "Add specific metrics to support claims",
+    "Use STAR framework for behavioral questions"
+  ],
+  "practice_rule": "Keep answers under 2 minutes for maximum impact"
+}
 ```
 
-## Demo: Day-3 Flow
-1. Start dev server: pnpm dev
-2. Go to /practice
-3. Paste a transcript and submit
-4. Review results and summary
+### POST /api/webhooks/stripe
+Handles Stripe webhook events. On `checkout.session.completed`:
+- Grants practice access to user (idempotent)
+- Stores event ID for deduplication
+- TTL: 1 hour
+
+## Operations
+
+See [docs/owner-runbook.md](docs/owner-runbook.md) for:
+- Daily operations checklist
+- Test instructions
+- Manual testing procedures
+- Troubleshooting guide
+- Performance monitoring
+- Rollback procedures
+
+## Architecture
+
+- **Frontend**: Next.js 16 with React 19, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **State**: React Context + `useSyncExternalStore` (no external dependencies)
+- **Validation**: Zod schemas
+- **Analytics**: PostHog integration (console fallback)
+- **Auth**: Simple bearer token + in-memory stores
+
+## Project Structure
+
+```
+/app
+  /(dashboard)/practice/page.tsx          # Main practice UI
+  /api/evaluate/route.ts                  # Evaluation endpoint
+  /api/webhooks/stripe/route.ts           # Stripe webhook
+  /admin/content-packs/page.tsx           # Content pack admin
+
+/src/lib
+  /evaluation                             # Evaluation engine & schema
+  /analytics                              # PostHog + analytics
+  /content-pack                           # Pack loading & validation
+  /entitlements                           # Access control
+  /auth                                   # Authentication helpers
+  /error                                  # Error tracking
+
+/src/components
+  /evaluation                             # Results display
+  /content-pack                           # Pack UI
+
+/src/store                                # Client-side state
+
+/tests                                    # Unit & integration tests
+
+/sample-data                              # Sample content pack
+```
+
+## Development Notes
+
+### Performance
+- Evaluation endpoint target: <2 seconds
+- In-memory stores are suitable for M0 only
+- For production: Migrate to Redis/database
+
+### Monitoring
+- Sentry configured for error tracking
+- PostHog for analytics
+- Browser console logs available in dev mode
+
+### Known Limitations (M0)
+- ASR is fake (uses word count estimation)
+- Evaluation is rule-based (not ML-based)
+- In-memory stores will reset on deployment
+- No persistent user accounts yet
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Evaluation endpoint returns 400 | Check request JSON: `{transcript: string}` |
+| Results don't display | Verify Zod schema validation in console |
+| PostHog events missing | Set `NEXT_PUBLIC_POSTHOG_KEY`; check network tab |
+| Content pack won't load | Verify JSON structure matches sample pack |
+| Spinner never stops | Check server logs; might indicate timeout |
+
+## Contact & Support
+
+- **Owner Runbook**: See [docs/owner-runbook.md](docs/owner-runbook.md)
+- **Specification**: See [specs/007-m0-core-loop/spec.md](specs/007-m0-core-loop/spec.md)
+- **Tasks**: See [specs/007-m0-core-loop/tasks.md](specs/007-m0-core-loop/tasks.md)
+
+---
+
+**Status**: ✅ M0 Core Loop ready for Day-3 trial delivery
+**Last Updated**: 2025-10-22

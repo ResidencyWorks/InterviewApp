@@ -8,7 +8,21 @@ describe("evaluation schema happy path", () => {
 			"I led the migration reducing latency by 35% and costs by 20%.";
 		const result = await evaluateTranscript(transcript);
 		const validated = validateEvaluationResult(result);
-		expect(validated.totalScore).toBeGreaterThan(0);
-		expect(validated.categories).toHaveLength(7);
+		expect(validated.overall_score).toBeGreaterThan(0);
+		expect(validated.overall_score).toBeLessThanOrEqual(100);
+		expect(validated.category_chips).toHaveLength(7);
+		expect(validated.duration_s).toBeGreaterThan(0);
+		expect(validated.words).toBeGreaterThan(0);
+		expect(validated.wpm).toBeGreaterThan(0);
+		expect(validated.practice_rule).toBeDefined();
+		expect(typeof validated.practice_rule).toBe("string");
+
+		// Verify each category chip has required fields
+		validated.category_chips.forEach((chip) => {
+			expect(chip.id).toBeDefined();
+			expect(chip.name).toBeDefined();
+			expect(["PASS", "FLAG"]).toContain(chip.passFlag);
+			expect(chip.note).toBeDefined();
+		});
 	});
 });

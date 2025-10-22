@@ -12,42 +12,25 @@ export const CATEGORY_IDS = [
 
 export type CategoryId = (typeof CATEGORY_IDS)[number];
 
-export const metricScoreSchema = z.object({
-	id: z.string(),
-	label: z.string(),
-	weight: z.number().min(0).max(1),
-});
-
-export const categoryScoreSchema = z.object({
-	category: z.enum(CATEGORY_IDS),
-	score: z.number().min(0).max(5),
-});
-
-export const evaluationMetricsSchema = z.object({
-	clarity: z.number().min(0).max(1),
-	impact: z.number().min(0).max(1),
-	specificity: z.number().min(0).max(1),
-	structure: z.number().min(0).max(1),
-	empathy: z.number().min(0).max(1),
-	agency: z.number().min(0).max(1),
-	reflection: z.number().min(0).max(1),
-});
-
-export const evaluationSummarySchema = z.object({
-	bullets: z.array(z.string()).min(1).max(5),
-	practiceRule: z.string(),
+// ResidencyWorks contract schema
+export const categoryChipSchema = z.object({
+	id: z.enum(CATEGORY_IDS),
+	name: z.string().min(1),
+	passFlag: z.enum(["PASS", "FLAG"]),
+	note: z.string().min(1),
 });
 
 export const evaluationResultSchema = z.object({
-	totalScore: z.number().min(0).max(5),
-	metrics: evaluationMetricsSchema,
-	categories: z.array(categoryScoreSchema).length(CATEGORY_IDS.length),
-	summary: evaluationSummarySchema,
+	overall_score: z.number().min(0).max(100),
+	duration_s: z.number().min(0),
+	words: z.number().min(0),
+	wpm: z.number().min(0),
+	category_chips: z.array(categoryChipSchema).length(CATEGORY_IDS.length),
+	what_changed: z.array(z.string()).min(0).max(3),
+	practice_rule: z.string().min(1),
 });
 
-export type IEvaluationMetrics = z.infer<typeof evaluationMetricsSchema>;
-export type ICategoryScore = z.infer<typeof categoryScoreSchema>;
-export type IEvaluationSummary = z.infer<typeof evaluationSummarySchema>;
+export type ICategoryChip = z.infer<typeof categoryChipSchema>;
 export type IEvaluationResult = z.infer<typeof evaluationResultSchema>;
 
 export function validateEvaluationResult(value: unknown): IEvaluationResult {
