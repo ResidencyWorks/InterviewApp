@@ -5,6 +5,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createErrorResponse } from "@/lib/api/api-helpers";
+import { FakeASRService } from "@/lib/asr/FakeASRService";
 import { createLLMFeedbackService } from "@/lib/llm/application/services/LLMFeedbackService";
 import {
 	CircuitBreakerError,
@@ -137,12 +138,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		});
 
 		// Initialize adapters
-		const speechAdapter = new OpenAISpeechAdapter({
-			apiKey: config.openai.apiKey,
-			model: config.openai.whisperModel,
-			timeout: config.openai.timeout,
-			maxRetries: config.openai.maxRetries,
-		});
+		const useFakeAsr =
+			process.env.NEXT_PUBLIC_USE_FAKE_ASR === "true" ||
+			process.env.USE_FAKE_ASR === "true";
+		const speechAdapter = useFakeAsr
+			? new FakeASRService({ minDelayMs: 300, maxDelayMs: 1200 })
+			: new OpenAISpeechAdapter({
+					apiKey: config.openai.apiKey,
+					model: config.openai.whisperModel,
+					timeout: config.openai.timeout,
+					maxRetries: config.openai.maxRetries,
+				});
 
 		const textAdapter = new OpenAITextAdapter({
 			apiKey: config.openai.apiKey,

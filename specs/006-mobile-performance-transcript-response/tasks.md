@@ -125,21 +125,21 @@
 
 ### Transcript Generation Reliability
 
-- [ ] T049 [P] [US2] Implement fake ASR service for M0 trial in src/lib/asr/FakeASRService.ts
-- [ ] T050 [US2] Add transcript generation timeout handling in src/lib/transcript/TranscriptService.ts
-- [ ] T051 [P] [US2] Implement circuit breaker for transcript generation in src/lib/circuit-breaker/TranscriptCircuitBreaker.ts
-- [ ] T052 [US2] Add transcript generation retry logic in src/lib/retry/TranscriptRetry.ts
-- [ ] T053 [P] [US2] Create transcript generation monitoring in src/lib/monitoring/TranscriptMonitoring.ts
-- [ ] T054 [US2] Implement transcript generation error recovery in src/lib/error/TranscriptErrorRecovery.ts
-- [ ] T055 [P] [US2] Add transcript generation performance tracking in src/lib/analytics/transcript-analytics.ts
-- [ ] T056 [US2] Create transcript generation test suite in tests/integration/transcript/transcript-generation.test.ts
-- [ ] T057 [US2] Implement transcript generation health checks in src/lib/health/TranscriptHealth.ts
-- [ ] T058 [US2] Add transcript generation rate limiting in src/lib/rate-limit/TranscriptRateLimit.ts
-- [ ] T058a [US2] Implement edge case handling for slow networks (2G) in src/lib/network/SlowNetworkHandler.ts
-- [ ] T058b [US2] Add peak usage period handling in src/lib/load/PeakUsageHandler.ts
-- [ ] T058c [US2] Implement API outage fallback in src/lib/fallback/APIFallbackHandler.ts
-- [ ] T058d [US2] Add limited device resource handling in src/lib/device/ResourceManager.ts
-- [ ] T058e [US2] Implement cross-device session management in src/lib/session/CrossDeviceSession.ts
+ - [x] T049 [P] [US2] Implement fake ASR service for M0 trial in src/lib/asr/FakeASRService.ts
+- [x] T050 [US2] Add transcript generation timeout handling in src/lib/transcript/TranscriptService.ts
+- [x] T051 [P] [US2] Implement circuit breaker for transcript generation in src/lib/circuit-breaker/TranscriptCircuitBreaker.ts
+- [x] T052 [US2] Add transcript generation retry logic in src/lib/retry/TranscriptRetry.ts
+- [x] T053 [P] [US2] Create transcript generation monitoring in src/lib/monitoring/TranscriptMonitoring.ts
+ - [x] T054 [US2] Implement transcript generation error recovery in src/lib/error/TranscriptErrorRecovery.ts
+- [x] T055 [P] [US2] Add transcript generation performance tracking in src/lib/analytics/transcript-analytics.ts
+ - [x] T056 [US2] Create transcript generation test suite in tests/integration/transcript/transcript-generation.test.ts
+- [x] T057 [US2] Implement transcript generation health checks in src/lib/health/TranscriptHealth.ts
+- [x] T058 [US2] Add transcript generation rate limiting in src/lib/rate-limit/TranscriptRateLimit.ts
+ - [x] T058a [US2] Implement edge case handling for slow networks (2G) in src/lib/network/SlowNetworkHandler.ts
+- [x] T058b [US2] Add peak usage period handling in src/lib/load/PeakUsageHandler.ts
+- [x] T058c [US2] Implement API outage fallback in src/lib/fallback/APIFallbackHandler.ts
+- [x] T058d [US2] Add limited device resource handling in src/lib/device/ResourceManager.ts
+- [x] T058e [US2] Implement cross-device session management in src/lib/session/CrossDeviceSession.ts
 
 **Checkpoint**: At this point, User Story 2 should be fully functional and testable independently
 
@@ -153,11 +153,11 @@
 
 ### Fake ASR Implementation
 
-- [ ] T059 [P] [US3] Implement fake ASR service in src/lib/asr/FakeASRService.ts
-- [ ] T060 [US3] Add configurable response time simulation in src/lib/asr/ResponseTimeSimulator.ts
-- [ ] T061 [P] [US3] Create mock transcript generator in src/lib/asr/MockTranscriptGenerator.ts
-- [ ] T062 [US3] Implement audio format validation in src/lib/asr/AudioFormatValidator.ts
-- [ ] T063 [US3] Add fake ASR error handling in src/lib/asr/FakeASRErrorHandler.ts
+ - [x] T059 [P] [US3] Implement fake ASR service in src/lib/asr/FakeASRService.ts
+ - [x] T060 [US3] Add configurable response time simulation in src/lib/asr/ResponseTimeSimulator.ts
+ - [x] T061 [P] [US3] Create mock transcript generator in src/lib/asr/MockTranscriptGenerator.ts
+ - [x] T062 [US3] Implement audio format validation in src/lib/asr/AudioFormatValidator.ts
+ - [x] T063 [US3] Add fake ASR error handling in src/lib/asr/FakeASRErrorHandler.ts
 
 **Checkpoint**: At this point, User Story 3 should be fully functional and testable independently
 
