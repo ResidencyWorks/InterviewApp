@@ -5,11 +5,9 @@
  */
 
 import type { ContentPack, ContentPackStatus } from "../entities/ContentPack";
-import type { LoadEvent } from "../entities/LoadEvent";
 import { createLoadEvent } from "../entities/LoadEvent";
 import type { IAnalyticsService } from "../interfaces/IAnalyticsService";
 import type {
-	ContentPackActivationResult,
 	ContentPackFilters,
 	ContentPackServiceConfig,
 	ContentPackStatistics,
@@ -110,7 +108,7 @@ export class ContentPackService implements IContentPackService {
 			}
 
 			// Create load event for analytics
-			const activationTimeMs = Date.now() - startTime;
+			const _activationTimeMs = Date.now() - startTime;
 			const loadEvent = createLoadEvent({
 				contentPackId: updatedContentPack.id,
 				version: updatedContentPack.version,
@@ -144,7 +142,7 @@ export class ContentPackService implements IContentPackService {
 	/**
 	 * Deactivate the current content pack
 	 */
-	async deactivateContentPack(userId: string): Promise<ContentPack | null> {
+	async deactivateContentPack(_userId: string): Promise<ContentPack | null> {
 		const activePack = await this.getActiveContentPack();
 		if (!activePack) {
 			return null;
@@ -171,7 +169,10 @@ export class ContentPackService implements IContentPackService {
 	async getContentPack(id: string): Promise<ContentPack | null> {
 		// Check cache first
 		if (this.config.cacheEnabled && this.cache.has(id)) {
-			return this.cache.get(id)!;
+			const cached = this.cache.get(id);
+			if (cached) {
+				return cached;
+			}
 		}
 
 		try {
@@ -203,7 +204,7 @@ export class ContentPackService implements IContentPackService {
 	 */
 	async archiveContentPack(
 		contentPackId: string,
-		userId: string,
+		_userId: string,
 	): Promise<ContentPack> {
 		const contentPack = await this.getContentPack(contentPackId);
 		if (!contentPack) {

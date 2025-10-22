@@ -1,10 +1,10 @@
-import type { Session, User } from "@supabase/supabase-js";
+import type { AuthUser, Session } from "@supabase/supabase-js";
 
 /**
  * Authentication state interface
  */
 export interface AuthState {
-	user: User | null;
+	user: AuthUser | null;
 	session: Session | null;
 	loading: boolean;
 }
@@ -47,7 +47,7 @@ export interface UserProfile {
  * Authentication context interface
  */
 export interface AuthContextType {
-	user: User | null;
+	user: AuthUser | null;
 	session: Session | null;
 	loading: boolean;
 	signIn: (email: string) => Promise<void>;

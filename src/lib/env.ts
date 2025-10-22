@@ -18,10 +18,12 @@ const envSchema = z.object({
 	// Authentication
 	GOOGLE_CLIENT_ID: z.string().optional(),
 	GOOGLE_CLIENT_SECRET: z.string().optional(),
+
 	// Application settings
 	NODE_ENV: z
 		.enum(["development", "production", "test"])
 		.default("development"),
+	NEXT_PUBLIC_APP_URL: z.string().url().optional(),
 
 	// External services
 	OPENAI_API_KEY: z.string().optional(),
@@ -45,10 +47,10 @@ const envSchema = z.object({
 
 	// Redis (Upstash)
 	UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-	VERCEL_ENV: z.enum(["development", "preview", "production"]).optional(),
 
 	// Deployment
 	VERCEL_URL: z.string().optional(),
+	VERCEL_ENV: z.enum(["development", "preview", "production"]).optional(),
 });
 
 // Parse and validate environment variables
@@ -85,3 +87,29 @@ export const hasPostHog = !!env.POSTHOG_API_KEY;
 export const hasSentry = !!env.SENTRY_DSN;
 export const hasStripe = !!env.STRIPE_SECRET_KEY;
 export const hasRedis = !!env.UPSTASH_REDIS_REST_URL;
+
+// Helper function to get the correct app URL
+export const getAppUrl = (): string => {
+	// Priority order: NEXT_PUBLIC_APP_URL > VERCEL_URL > localhost fallback
+	if (env.NEXT_PUBLIC_APP_URL) {
+		return env.NEXT_PUBLIC_APP_URL;
+	}
+
+	if (env.VERCEL_URL) {
+		return `https://${env.VERCEL_URL}`;
+	}
+
+	// Fallback to localhost for development
+	return "http://localhost:3000";
+};
+
+// Helper function to get the app URL for client-side use
+export const getClientAppUrl = (): string => {
+	// For client-side, we need to use NEXT_PUBLIC_APP_URL or construct from window.location
+	if (typeof window !== "undefined") {
+		return window.location.origin;
+	}
+
+	// Server-side fallback
+	return getAppUrl();
+};

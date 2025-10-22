@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import type { NextRequest, NextResponse } from "next/server";
+import { getAppUrl } from "../env";
 
 /**
  * Security middleware for enhanced protection
@@ -24,7 +25,9 @@ export class SecurityMiddleware {
 		}
 
 		// Block suspicious origins
+		const appUrl = getAppUrl();
 		const allowedOrigins = [
+			appUrl,
 			process.env.NEXT_PUBLIC_APP_URL,
 			"http://localhost:3000",
 			"https://localhost:3000",

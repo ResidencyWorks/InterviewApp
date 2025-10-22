@@ -2,16 +2,11 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-	eslint: {
-		// Linting is handled by Biome
-		ignoreDuringBuilds: true,
-	},
-
 	// External packages for server-side rendering
 	serverExternalPackages: ["@supabase/ssr"],
 	transpilePackages: ["import-in-the-middle", "require-in-the-middle"],
 	images: {
-		domains: ["localhost"],
+		remotePatterns: [{ hostname: "localhost" }],
 	},
 	async headers() {
 		return [

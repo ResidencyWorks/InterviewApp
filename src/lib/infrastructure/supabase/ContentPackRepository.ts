@@ -7,6 +7,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Tables } from "@/types/database";
 import {
 	type ContentPack,
 	ContentPackStatus,
@@ -18,23 +19,8 @@ import {
 	RepositoryResult,
 } from "../../domain/repositories/IContentPackRepository";
 
-interface SupabaseContentPack {
-	id: string;
-	version: string;
-	name: string;
-	description?: string;
-	schema_version: string;
-	content: any;
-	metadata?: any;
-	status: string;
-	created_at: string;
-	updated_at: string;
-	activated_at?: string;
-	activated_by?: string;
-	uploaded_by: string;
-	file_size: number;
-	checksum: string;
-}
+// Use the generated database types instead of custom interface
+type SupabaseContentPack = Tables<"content_packs">;
 
 export class SupabaseContentPackRepository implements IContentPackRepository {
 	constructor(private supabase: SupabaseClient) {}
@@ -47,15 +33,16 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 			const supabaseData: Omit<SupabaseContentPack, "id"> = {
 				version: contentPack.version,
 				name: contentPack.name,
-				description: contentPack.description,
+				description: contentPack.description ?? null,
 				schema_version: contentPack.schemaVersion,
-				content: contentPack.content,
-				metadata: contentPack.metadata,
+				content: contentPack.content as any, // ContentPackData to Json
+				metadata: contentPack.metadata as any, // ContentPackMetadata to Json
 				status: contentPack.status,
+				is_active: contentPack.status === "activated",
 				created_at: contentPack.createdAt.toISOString(),
 				updated_at: contentPack.updatedAt.toISOString(),
-				activated_at: contentPack.activatedAt?.toISOString(),
-				activated_by: contentPack.activatedBy,
+				activated_at: contentPack.activatedAt?.toISOString() ?? null,
+				activated_by: contentPack.activatedBy ?? null,
 				uploaded_by: contentPack.uploadedBy,
 				file_size: contentPack.fileSize,
 				checksum: contentPack.checksum,
@@ -196,14 +183,15 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 			if (updates.schemaVersion !== undefined)
 				supabaseUpdates.schema_version = updates.schemaVersion;
 			if (updates.content !== undefined)
-				supabaseUpdates.content = updates.content;
+				supabaseUpdates.content = updates.content as any; // ContentPackData to Json
 			if (updates.metadata !== undefined)
-				supabaseUpdates.metadata = updates.metadata;
+				supabaseUpdates.metadata = updates.metadata as any; // ContentPackMetadata to Json
 			if (updates.status !== undefined) supabaseUpdates.status = updates.status;
 			if (updates.activatedAt !== undefined)
-				supabaseUpdates.activated_at = updates.activatedAt?.toISOString();
+				supabaseUpdates.activated_at =
+					updates.activatedAt?.toISOString() ?? null;
 			if (updates.activatedBy !== undefined)
-				supabaseUpdates.activated_by = updates.activatedBy;
+				supabaseUpdates.activated_by = updates.activatedBy ?? null;
 			if (updates.fileSize !== undefined)
 				supabaseUpdates.file_size = updates.fileSize;
 			if (updates.checksum !== undefined)
@@ -350,18 +338,18 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 			id: data.id,
 			version: data.version,
 			name: data.name,
-			description: data.description,
+			description: data.description ?? undefined,
 			schemaVersion: data.schema_version,
-			content: data.content,
-			metadata: data.metadata,
+			content: data.content as any, // Json to ContentPackData
+			metadata: data.metadata as any, // Json to ContentPackMetadata
 			status: data.status as ContentPackStatus,
-			createdAt: new Date(data.created_at),
-			updatedAt: new Date(data.updated_at),
+			createdAt: new Date(data.created_at!),
+			updatedAt: new Date(data.updated_at!),
 			activatedAt: data.activated_at ? new Date(data.activated_at) : undefined,
-			activatedBy: data.activated_by,
-			uploadedBy: data.uploaded_by,
-			fileSize: data.file_size,
-			checksum: data.checksum,
+			activatedBy: data.activated_by ?? undefined,
+			uploadedBy: data.uploaded_by!,
+			fileSize: data.file_size!,
+			checksum: data.checksum!,
 		};
 	}
 }

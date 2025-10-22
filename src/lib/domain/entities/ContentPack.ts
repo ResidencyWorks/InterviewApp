@@ -3,6 +3,8 @@
  *
  * Represents a content pack configuration file containing evaluation criteria,
  * content, and metadata for the InterviewApp system.
+ *
+ * Note: This entity should align with the database schema in types/database.ts
  */
 
 export interface ContentPackData {

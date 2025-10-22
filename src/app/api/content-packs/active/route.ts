@@ -23,7 +23,7 @@ import { createClient } from "@/lib/supabase/server";
  * GET /api/content-packs/active
  * Get the currently active content pack
  */
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
 	try {
 		// Get authenticated user
 		const supabase = await createClient();
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
  * DELETE /api/content-packs/active
  * Deactivate the currently active content pack
  */
-export async function DELETE(request: NextRequest): Promise<NextResponse> {
+export async function DELETE(_request: NextRequest): Promise<NextResponse> {
 	try {
 		// Get authenticated user
 		const supabase = await createClient();

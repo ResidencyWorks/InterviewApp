@@ -4,25 +4,17 @@ import {
 	Activity,
 	AlertTriangle,
 	CheckCircle,
-	Clock,
 	Database,
 	RefreshCw,
 	Server,
 	Settings,
 	Upload,
-	Users,
 } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -147,7 +139,7 @@ export function SystemStatus({
 		}
 	};
 
-	const getStatusColor = (status: string) => {
+	const _getStatusColor = (status: string) => {
 		switch (status) {
 			case "connected":
 			case "active":

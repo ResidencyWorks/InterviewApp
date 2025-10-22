@@ -1,6 +1,6 @@
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { createClient as createServerClient } from "@/lib/supabase/server";
+import type { AuthUser } from "@/types/auth";
 import { createAuthError, isValidEmail } from "./auth-helpers";
 import type { MagicLinkRequest, UserProfile } from "./auth-types";
 
@@ -85,7 +85,7 @@ export class AuthService {
 	 * Get current user
 	 * @returns Promise resolving to user or null
 	 */
-	async getUser(): Promise<User | null> {
+	async getUser(): Promise<AuthUser | null> {
 		try {
 			const {
 				data: { user },
@@ -128,7 +128,7 @@ export class AuthService {
 	 * @param updates - User profile updates
 	 * @returns Promise resolving to updated user or null
 	 */
-	async updateProfile(updates: Partial<UserProfile>): Promise<User | null> {
+	async updateProfile(updates: Partial<UserProfile>): Promise<AuthUser | null> {
 		try {
 			const {
 				data: { user },
@@ -166,100 +166,5 @@ export class AuthService {
 	}
 }
 
-/**
- * Authentication service for server-side operations
- */
-export class ServerAuthService {
-	private supabase: SupabaseClient | null = null;
-
-	async initialize() {
-		this.supabase = await createServerClient();
-	}
-
-	/**
-	 * Get current session (server-side)
-	 * @returns Promise resolving to session or null
-	 */
-	async getSession(): Promise<Session | null> {
-		try {
-			if (!this.supabase) {
-				throw new Error("Supabase client not initialized");
-			}
-			const {
-				data: { session },
-				error,
-			} = await this.supabase.auth.getSession();
-			if (error) {
-				console.error("Error getting session:", error);
-				return null;
-			}
-			return session;
-		} catch (error) {
-			console.error("Error getting session:", error);
-			return null;
-		}
-	}
-
-	/**
-	 * Get current user (server-side)
-	 * @returns Promise resolving to user or null
-	 */
-	async getUser(): Promise<User | null> {
-		try {
-			if (!this.supabase) {
-				throw new Error("Supabase client not initialized");
-			}
-			const {
-				data: { user },
-				error,
-			} = await this.supabase.auth.getUser();
-			if (error) {
-				console.error("Error getting user:", error);
-				return null;
-			}
-			return user;
-		} catch (error) {
-			console.error("Error getting user:", error);
-			return null;
-		}
-	}
-
-	/**
-	 * Verify JWT token
-	 * @param token - JWT token to verify
-	 * @returns Promise resolving to user or null
-	 */
-	async verifyToken(token: string): Promise<User | null> {
-		try {
-			if (!this.supabase) {
-				throw new Error("Supabase client not initialized");
-			}
-			const {
-				data: { user },
-				error,
-			} = await this.supabase.auth.getUser(token);
-			if (error) {
-				console.error("Error verifying token:", error);
-				return null;
-			}
-			return user;
-		} catch (error) {
-			console.error("Error verifying token:", error);
-			return null;
-		}
-	}
-}
-
 // Export singleton instances
 export const authService = new AuthService();
-
-// Lazy-loaded server auth service to avoid cookies() being called during build
-let _serverAuthService: ServerAuthService | null = null;
-
-export async function getServerAuthService(): Promise<ServerAuthService> {
-	if (!_serverAuthService) {
-		_serverAuthService = new ServerAuthService();
-		await _serverAuthService.initialize();
-	}
-	return _serverAuthService;
-}

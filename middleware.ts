@@ -27,6 +27,8 @@ const PUBLIC_ROUTES = [
 	"/auth/callback",
 	"/api/auth",
 	"/api/health",
+	"/ingest", // PostHog analytics endpoints
+	"/complete-profile", // Profile completion page
 ];
 
 /**
@@ -36,12 +38,13 @@ export async function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 	console.log("Middleware - Processing request for:", pathname);
 
-	// Skip middleware for static files and API routes that don't need auth
+	// Skip middleware for static files, analytics, and API routes that don't need auth
 	if (
 		pathname.startsWith("/_next") ||
 		pathname.startsWith("/static") ||
 		pathname.startsWith("/favicon") ||
-		pathname.startsWith("/api/health")
+		pathname.startsWith("/api/health") ||
+		pathname.startsWith("/ingest") // PostHog analytics endpoints
 	) {
 		return NextResponse.next();
 	}
@@ -153,6 +156,37 @@ export async function middleware(request: NextRequest) {
 				}
 			}
 
+			// Check profile completion for authenticated users
+			const fullName = user.user_metadata?.full_name;
+			const hasFullName = !!fullName?.trim();
+			const isProfileComplete = hasFullName;
+
+			console.log("Middleware - Profile completion check:", {
+				userId: user.id,
+				userEmail: user.email,
+				fullName,
+				hasFullName,
+				isProfileComplete,
+				currentPath: pathname,
+				userMetadata: user.user_metadata,
+			});
+
+			// If profile is incomplete and user is trying to access dashboard or other protected routes
+			if (!isProfileComplete && pathname !== "/complete-profile") {
+				console.log(
+					"Middleware - Profile incomplete, redirecting to complete-profile",
+				);
+				const completeProfileUrl = new URL("/complete-profile", request.url);
+				return NextResponse.redirect(completeProfileUrl);
+			}
+
+			// If profile is complete and user is on complete-profile page, redirect to dashboard
+			if (isProfileComplete && pathname === "/complete-profile") {
+				console.log("Middleware - Profile complete, redirecting to dashboard");
+				const dashboardUrl = new URL("/dashboard", request.url);
+				return NextResponse.redirect(dashboardUrl);
+			}
+
 			// Add user info to headers for API routes
 			response.headers.set("x-user-id", user.id);
 			response.headers.set("x-user-email", user.email || "");
@@ -203,7 +237,8 @@ export const config = {
 		 * - _next/image (image optimization files)
 		 * - favicon.ico (favicon file)
 		 * - public folder
+		 * - ingest (analytics endpoints)
 		 */
-		"/((?!_next/static|_next/image|favicon.ico|public/).*)",
+		"/((?!_next/static|_next/image|favicon.ico|public/|ingest/).*)",
 	],
 };

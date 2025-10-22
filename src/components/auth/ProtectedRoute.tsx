@@ -1,5 +1,6 @@
 "use client";
 
+import type { AuthUser } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks";
@@ -100,7 +101,7 @@ export function withAuth<P extends object>(
  * Hook to check if user has required permissions
  */
 export function usePermissions() {
-	const { user } = useAuth();
+	const { user } = useAuth() as { user: AuthUser | null };
 
 	const hasRole = (role: string): boolean => {
 		if (!user) return false;

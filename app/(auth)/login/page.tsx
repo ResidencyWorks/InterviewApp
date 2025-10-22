@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -24,12 +25,33 @@ export default function LoginPage() {
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
 	const [emailId, setEmailId] = useState("email-input");
-	const { signIn } = useAuth();
+	const { signIn, user, loading: authLoading } = useAuth();
+	const router = useRouter();
 
 	// Generate unique ID only on client side to prevent hydration mismatch
 	useEffect(() => {
 		setEmailId(`email-${Math.random().toString(36).substr(2, 9)}`);
 	}, []);
+
+	// Redirect authenticated users to dashboard (middleware will handle profile completion routing)
+	useEffect(() => {
+		if (user && !authLoading) {
+			console.log("Login page - User authenticated, redirecting to dashboard");
+			router.push("/dashboard");
+		}
+	}, [user, authLoading, router]);
+
+	// Show loading state while checking authentication
+	if (user && authLoading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center bg-gray-50">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+					<p className="mt-2 text-gray-600">Redirecting...</p>
+				</div>
+			</div>
+		);
+	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
