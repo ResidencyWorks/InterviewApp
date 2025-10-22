@@ -249,7 +249,7 @@ INSERT INTO public.user_progress (
   NOW() - INTERVAL '10 days',
   NOW() - INTERVAL '6 days'
 )
-ON CONFLICT (user_id, content_pack_id) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
 
 -- ==============================================
 -- ADDITIONAL EVALUATION ANALYTICS
@@ -331,4 +331,4 @@ INSERT INTO public.evaluation_analytics (
   NOW() - INTERVAL '6 days',
   NOW() - INTERVAL '6 days'
 )
-ON CONFLICT (user_id, date) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues

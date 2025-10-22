@@ -496,7 +496,7 @@ INSERT INTO public.evaluation_categories (name, description, weight) VALUES
 ('Data Analysis', 'Ability to analyze and interpret data', 0.8),
 ('Leadership', 'Leadership qualities and team collaboration', 0.6),
 ('Adaptability', 'Ability to adapt to changing requirements', 0.7)
-ON CONFLICT (name) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
 
 -- ==============================================
 -- SAMPLE USERS SEED DATA
@@ -621,7 +621,7 @@ INSERT INTO auth.users (
   '',
   ''
 )
-ON CONFLICT (id) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
 
 -- Now insert corresponding records in public.users
 INSERT INTO public.users (
@@ -678,7 +678,7 @@ INSERT INTO public.users (
   NOW() - INTERVAL '10 days',
   NOW() - INTERVAL '1 day'
 )
-ON CONFLICT (id) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
 
 -- ==============================================
 -- USER ENTITLEMENTS SEED DATA
@@ -727,7 +727,7 @@ INSERT INTO public.user_entitlements (
   NOW() - INTERVAL '10 days',
   NOW() - INTERVAL '1 day'
 )
-ON CONFLICT (user_id) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
 
 -- ==============================================
 -- SAMPLE EVALUATION RESULTS SEED DATA
@@ -917,7 +917,7 @@ INSERT INTO public.user_progress (
   NOW() - INTERVAL '10 days',
   NOW() - INTERVAL '1 day'
 )
-ON CONFLICT (user_id, content_pack_id) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
 
 -- ==============================================
 -- EVALUATION ANALYTICS SEED DATA
@@ -990,25 +990,19 @@ INSERT INTO public.evaluation_analytics (
   NOW() - INTERVAL '1 day',
   NOW() - INTERVAL '1 day'
 )
-ON CONFLICT (user_id, date) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
 
 -- ==============================================
 -- SYSTEM STATUS SEED DATA
 -- ==============================================
 
--- Insert system status data
-INSERT INTO public.system_status (status_type, status_value, details, updated_by) VALUES
-('content_pack_status', 'active', '{"message": "Software Engineering Fundamentals content pack is active", "active_pack_id": "550e8400-e29b-41d4-a716-446655440001"}', 'system'),
-('fallback_mode', 'inactive', '{"message": "System is running with active content pack", "fallback_active": false}', 'system'),
-('database_connection', 'connected', '{"message": "Database connection is healthy", "response_time_ms": 12}', 'system'),
-('analytics_service', 'active', '{"message": "Analytics service is operational", "posthog_available": true}', 'system'),
-('system_health', 'operational', '{"message": "System is fully operational", "overall_status": "healthy"}', 'system'),
-('performance_metrics', 'excellent', '{"average_response_time_ms": 45, "error_rate_percent": 0.1, "request_count": 1250}', 'system')
-ON CONFLICT (status_type) DO UPDATE SET
-  status_value = EXCLUDED.status_value,
-  details = EXCLUDED.details,
-  last_updated = NOW(),
-  updated_by = EXCLUDED.updated_by;
+-- Insert system status data (using function to handle upserts)
+SELECT public.update_system_status('content_pack_status', 'active', '{"message": "Software Engineering Fundamentals content pack is active", "active_pack_id": "550e8400-e29b-41d4-a716-446655440001"}', 'system');
+SELECT public.update_system_status('fallback_mode', 'inactive', '{"message": "System is running with active content pack", "fallback_active": false}', 'system');
+SELECT public.update_system_status('database_connection', 'connected', '{"message": "Database connection is healthy", "response_time_ms": 12}', 'system');
+SELECT public.update_system_status('analytics_service', 'active', '{"message": "Analytics service is operational", "posthog_available": true}', 'system');
+SELECT public.update_system_status('system_health', 'operational', '{"message": "System is fully operational", "overall_status": "healthy"}', 'system');
+SELECT public.update_system_status('performance_metrics', 'excellent', '{"average_response_time_ms": 45, "error_rate_percent": 0.1, "request_count": 1250}', 'system');
 
 -- ==============================================
 -- VALIDATION RESULTS SEED DATA
@@ -1063,7 +1057,7 @@ INSERT INTO public.validation_results (
   NOW() - INTERVAL '3 days',
   NOW() - INTERVAL '3 days'
 )
-ON CONFLICT (content_pack_id) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
 
 -- ==============================================
 -- UPLOAD QUEUE SEED DATA

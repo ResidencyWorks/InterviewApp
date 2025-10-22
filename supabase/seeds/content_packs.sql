@@ -468,4 +468,4 @@ INSERT INTO public.content_packs (
   11520,
   'f6789012345678901234567890abcdef1234567890abcdef1234567890ab'
 )
-ON CONFLICT (id) DO NOTHING;
+-- Note: Removed ON CONFLICT clause to avoid constraint issues
