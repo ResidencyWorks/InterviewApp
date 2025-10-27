@@ -52,5 +52,25 @@
 	"typescript.preferences.importModuleSpecifier": "relative",
 	"typescript.preferences.includePackageJsonAutoImports": "auto",
 	"typescript.suggest.autoImports": true,
-	"typescript.updateImportsOnFileMove.enabled": "always"
+	"typescript.updateImportsOnFileMove.enabled": "always",
+	"workbench.colorCustomizations": {
+		"activityBar.activeBackground": "#a27dad",
+		"activityBar.background": "#a27dad",
+		"activityBar.foreground": "#15202b",
+		"activityBar.inactiveForeground": "#15202b99",
+		"activityBarBadge.background": "#62593e",
+		"activityBarBadge.foreground": "#e7e7e7",
+		"commandCenter.border": "#e7e7e799",
+		"sash.hoverBorder": "#a27dad",
+		"statusBar.background": "#8b5f98",
+		"statusBar.foreground": "#e7e7e7",
+		"statusBarItem.hoverBackground": "#a27dad",
+		"statusBarItem.remoteBackground": "#8b5f98",
+		"statusBarItem.remoteForeground": "#e7e7e7",
+		"titleBar.activeBackground": "#8b5f98",
+		"titleBar.activeForeground": "#e7e7e7",
+		"titleBar.inactiveBackground": "#8b5f9899",
+		"titleBar.inactiveForeground": "#e7e7e799"
+	},
+	"peacock.remoteColor": "#8b5f98"
 }
