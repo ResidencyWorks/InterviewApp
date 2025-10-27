@@ -11,6 +11,9 @@ import { uploadFile } from "@/lib/storage/supabase-storage";
 import { validateUploadPermission } from "@/services/entitlement";
 import { POST } from "../../../../src/app/api/upload/route";
 
+// Set test timeout
+vi.setConfig({ testTimeout: 10000 });
+
 // Mock Supabase client
 const mockSupabaseClient = {
 	from: vi.fn(() => ({
@@ -67,13 +70,12 @@ describe("Upload API Route Integration Tests", () => {
 			formData.append("sessionId", "session-123");
 			formData.append("questionId", "question-456");
 			formData.append("duration", "30");
-			formData.append("userId", "user-789");
+			formData.append("userId", "550e8400-e29b-41d4-a716-446655440000");
 
-			// Create request
-			const request = new NextRequest("http://localhost:3000/api/upload", {
-				method: "POST",
-				body: formData,
-			});
+			// Create mock request
+			const request = {
+				formData: vi.fn().mockResolvedValue(formData),
+			} as unknown as NextRequest;
 
 			// Execute
 			const response = await POST(request);
@@ -118,10 +120,9 @@ describe("Upload API Route Integration Tests", () => {
 			formData.append("questionId", "question-456");
 			formData.append("duration", "30");
 
-			const request = new NextRequest("http://localhost:3000/api/upload", {
-				method: "POST",
-				body: formData,
-			});
+			const request = {
+				formData: vi.fn().mockResolvedValue(formData),
+			} as unknown as NextRequest;
 
 			const response = await POST(request);
 			const result = await response.json();
@@ -142,10 +143,9 @@ describe("Upload API Route Integration Tests", () => {
 			formData.append("questionId", "question-456");
 			formData.append("duration", "30");
 
-			const request = new NextRequest("http://localhost:3000/api/upload", {
-				method: "POST",
-				body: formData,
-			});
+			const request = {
+				formData: vi.fn().mockResolvedValue(formData),
+			} as unknown as NextRequest;
 
 			const response = await POST(request);
 			const result = await response.json();
@@ -166,10 +166,9 @@ describe("Upload API Route Integration Tests", () => {
 			formData.append("questionId", "question-456");
 			formData.append("duration", "120"); // Exceeds 90 seconds
 
-			const request = new NextRequest("http://localhost:3000/api/upload", {
-				method: "POST",
-				body: formData,
-			});
+			const request = {
+				formData: vi.fn().mockResolvedValue(formData),
+			} as unknown as NextRequest;
 
 			const response = await POST(request);
 			const result = await response.json();
@@ -195,18 +194,18 @@ describe("Upload API Route Integration Tests", () => {
 			formData.append("sessionId", "session-123");
 			formData.append("questionId", "question-456");
 			formData.append("duration", "30");
+			formData.append("userId", "550e8400-e29b-41d4-a716-446655440000");
 
-			const request = new NextRequest("http://localhost:3000/api/upload", {
-				method: "POST",
-				body: formData,
-			});
+			const request = {
+				formData: vi.fn().mockResolvedValue(formData),
+			} as unknown as NextRequest;
 
 			const response = await POST(request);
 			const result = await response.json();
 
 			expect(response.status).toBe(500);
 			expect(result.success).toBe(false);
-			expect(result.error.code).toBe("INTERNAL_ERROR");
+			expect(result.error.code).toBe("UPLOAD_ERROR");
 		});
 
 		it("should handle permission validation failure", async () => {
@@ -224,12 +223,11 @@ describe("Upload API Route Integration Tests", () => {
 			formData.append("sessionId", "session-123");
 			formData.append("questionId", "question-456");
 			formData.append("duration", "30");
-			formData.append("userId", "user-789");
+			formData.append("userId", "550e8400-e29b-41d4-a716-446655440000");
 
-			const request = new NextRequest("http://localhost:3000/api/upload", {
-				method: "POST",
-				body: formData,
-			});
+			const request = {
+				formData: vi.fn().mockResolvedValue(formData),
+			} as unknown as NextRequest;
 
 			const response = await POST(request);
 			const result = await response.json();

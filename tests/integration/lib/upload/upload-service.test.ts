@@ -6,6 +6,15 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { uploadFile } from "@/lib/storage/supabase-storage";
+import {
+	logUploadCompleted,
+	logUploadFailed,
+	logUploadProgress,
+	logUploadStarted,
+} from "@/lib/upload/analytics";
+import { captureUploadError } from "@/lib/upload/errors";
+import { retryWithBackoff } from "@/lib/upload/retry-logic";
 import type { UploadOptions } from "@/lib/upload/upload-service";
 import {
 	uploadFileWithFetchProgress,
@@ -60,15 +69,13 @@ describe("Upload Service Integration Tests", () => {
 	describe("uploadWithProgress", () => {
 		it("should successfully upload file with progress tracking", async () => {
 			// Mock successful upload
-			vi.mocked(
-				require("@/lib/storage/supabase-storage").uploadFile,
-			).mockResolvedValue({
+			vi.mocked(uploadFile).mockResolvedValue({
 				success: true,
 			});
 
-			vi.mocked(
-				require("@/lib/upload/retry-logic").retryWithBackoff,
-			).mockImplementation(async (fn: () => Promise<any>) => fn());
+			vi.mocked(retryWithBackoff).mockImplementation(
+				async (fn: () => Promise<unknown>) => fn(),
+			);
 
 			// Execute
 			const result = await uploadWithProgress(mockOptions);
@@ -87,29 +94,27 @@ describe("Upload Service Integration Tests", () => {
 			);
 
 			// Verify analytics events
-			expect(
-				require("@/lib/upload/analytics").logUploadStarted,
-			).toHaveBeenCalledWith("recording-456", mockFile.size);
-			expect(
-				require("@/lib/upload/analytics").logUploadProgress,
-			).toHaveBeenCalledWith("recording-456", 100);
-			expect(
-				require("@/lib/upload/analytics").logUploadCompleted,
-			).toHaveBeenCalledWith("recording-456", expect.any(Number));
+			expect(logUploadStarted).toHaveBeenCalledWith(
+				"recording-456",
+				mockFile.size,
+			);
+			expect(logUploadProgress).toHaveBeenCalledWith("recording-456", 100);
+			expect(logUploadCompleted).toHaveBeenCalledWith(
+				"recording-456",
+				expect.any(Number),
+			);
 		});
 
 		it("should handle upload failure with retry logic", async () => {
 			// Mock upload failure
-			vi.mocked(
-				require("@/lib/storage/supabase-storage").uploadFile,
-			).mockResolvedValue({
+			vi.mocked(uploadFile).mockResolvedValue({
 				success: false,
 				error: "Network error",
 			});
 
-			vi.mocked(
-				require("@/lib/upload/retry-logic").retryWithBackoff,
-			).mockRejectedValue(new Error("Upload failed after retries"));
+			vi.mocked(retryWithBackoff).mockRejectedValue(
+				new Error("Upload failed after retries"),
+			);
 
 			// Execute
 			const result = await uploadWithProgress(mockOptions);
@@ -120,26 +125,24 @@ describe("Upload Service Integration Tests", () => {
 			expect(result.recordingId).toBeUndefined();
 
 			// Verify error handling
-			expect(
-				require("@/lib/upload/analytics").logUploadFailed,
-			).toHaveBeenCalledWith("recording-456", "UPLOAD_ERROR", 1);
-			expect(
-				require("@/lib/upload/errors").captureUploadError,
-			).toHaveBeenCalled();
+			expect(logUploadFailed).toHaveBeenCalledWith(
+				"recording-456",
+				"UPLOAD_ERROR",
+				1,
+			);
+			expect(captureUploadError).toHaveBeenCalled();
 		});
 
 		it("should track upload duration", async () => {
 			// Mock successful upload with delay
-			vi.mocked(
-				require("@/lib/storage/supabase-storage").uploadFile,
-			).mockImplementation(async () => {
+			vi.mocked(uploadFile).mockImplementation(async () => {
 				await new Promise((resolve) => setTimeout(resolve, 100));
 				return { success: true };
 			});
 
-			vi.mocked(
-				require("@/lib/upload/retry-logic").retryWithBackoff,
-			).mockImplementation(async (fn: () => Promise<any>) => fn());
+			vi.mocked(retryWithBackoff).mockImplementation(
+				async (fn: () => Promise<unknown>) => fn(),
+			);
 
 			// Execute
 			const result = await uploadWithProgress(mockOptions);
@@ -148,13 +151,12 @@ describe("Upload Service Integration Tests", () => {
 			expect(result.success).toBe(true);
 
 			// Verify duration was logged
-			expect(
-				require("@/lib/upload/analytics").logUploadCompleted,
-			).toHaveBeenCalledWith("recording-456", expect.any(Number));
+			expect(logUploadCompleted).toHaveBeenCalledWith(
+				"recording-456",
+				expect.any(Number),
+			);
 
-			const loggedDuration = vi.mocked(
-				require("@/lib/upload/analytics").logUploadCompleted,
-			).mock.calls[0][1];
+			const loggedDuration = vi.mocked(logUploadCompleted).mock.calls[0][1];
 			expect(loggedDuration).toBeGreaterThanOrEqual(100);
 		});
 	});
@@ -173,10 +175,9 @@ describe("Upload Service Integration Tests", () => {
 			};
 
 			// Mock XMLHttpRequest
-			vi.stubGlobal(
-				"XMLHttpRequest",
-				vi.fn(() => mockXHR),
-			);
+			vi.stubGlobal("XMLHttpRequest", function MockXHR() {
+				return mockXHR;
+			});
 
 			const progressCallback = vi.fn();
 
@@ -236,10 +237,9 @@ describe("Upload Service Integration Tests", () => {
 				send: vi.fn(),
 			};
 
-			vi.stubGlobal(
-				"XMLHttpRequest",
-				vi.fn(() => mockXHR),
-			);
+			vi.stubGlobal("XMLHttpRequest", function MockXHR() {
+				return mockXHR;
+			});
 
 			const uploadPromise = uploadFileWithFetchProgress(
 				mockFile,
@@ -267,10 +267,9 @@ describe("Upload Service Integration Tests", () => {
 				send: vi.fn(),
 			};
 
-			vi.stubGlobal(
-				"XMLHttpRequest",
-				vi.fn(() => mockXHR),
-			);
+			vi.stubGlobal("XMLHttpRequest", function MockXHR() {
+				return mockXHR;
+			});
 
 			const uploadPromise = uploadFileWithFetchProgress(
 				mockFile,
@@ -299,10 +298,9 @@ describe("Upload Service Integration Tests", () => {
 				status: 500,
 			};
 
-			vi.stubGlobal(
-				"XMLHttpRequest",
-				vi.fn(() => mockXHR),
-			);
+			vi.stubGlobal("XMLHttpRequest", function MockXHR() {
+				return mockXHR;
+			});
 
 			const uploadPromise = uploadFileWithFetchProgress(
 				mockFile,
