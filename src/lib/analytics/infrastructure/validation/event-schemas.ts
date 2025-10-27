@@ -133,20 +133,24 @@ class EventContextValidator implements IEventValidator<EventContext> {
 }
 
 /**
- * Event type validator
+ * Event type validators
  */
-class EventTypeValidator {
-	static validateAnalyticsEventType(type: unknown): type is AnalyticsEventType {
-		return AnalyticsEventTypeSchema.safeParse(type).success;
-	}
+export function validateAnalyticsEventType(
+	type: unknown,
+): type is AnalyticsEventType {
+	return AnalyticsEventTypeSchema.safeParse(type).success;
+}
 
-	static validateErrorSeverity(severity: unknown): severity is ErrorSeverity {
-		return ErrorSeveritySchema.safeParse(severity).success;
-	}
+export function validateErrorSeverity(
+	severity: unknown,
+): severity is ErrorSeverity {
+	return ErrorSeveritySchema.safeParse(severity).success;
+}
 
-	static validateErrorCategory(category: unknown): category is ErrorCategory {
-		return ErrorCategorySchema.safeParse(category).success;
-	}
+export function validateErrorCategory(
+	category: unknown,
+): category is ErrorCategory {
+	return ErrorCategorySchema.safeParse(category).success;
 }
 
 /**
@@ -409,6 +413,5 @@ export {
 	AnalyticsEventValidator,
 	ErrorEventValidator,
 	EventContextValidator,
-	EventTypeValidator,
 	EventValidationService,
 };

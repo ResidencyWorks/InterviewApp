@@ -77,7 +77,7 @@ export default function ContentPacksPage(_props: ContentPacksPageProps) {
 		setError(error);
 	};
 
-	const handleContentPackUpdate = (updatedPack: ContentPack) => {
+	const _handleContentPackUpdate = (updatedPack: ContentPack) => {
 		setContentPacks((prev) =>
 			prev.map((pack) => (pack.id === updatedPack.id ? updatedPack : pack)),
 		);
