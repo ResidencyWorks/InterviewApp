@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
 			userId: userId || "anonymous",
 			sessionId,
 			questionId,
+			responseType: "audio",
 			fileName,
 			mimeType: file.type,
 			fileSize: file.size,

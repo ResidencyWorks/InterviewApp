@@ -9,12 +9,18 @@ CREATE TABLE IF NOT EXISTS recordings (
   session_id TEXT NOT NULL,
   question_id TEXT NOT NULL,
 
-  -- File metadata
-  file_name TEXT NOT NULL,
-  mime_type TEXT NOT NULL,
-  file_size BIGINT NOT NULL,
-  duration INT NOT NULL CHECK (duration <= 90),
-  storage_path TEXT NOT NULL,
+  -- Response type: audio or text
+  response_type TEXT NOT NULL DEFAULT 'audio' CHECK (response_type IN ('audio', 'text')),
+
+  -- File metadata (for audio responses)
+  file_name TEXT,
+  mime_type TEXT,
+  file_size BIGINT,
+  duration INT CHECK (duration IS NULL OR duration <= 90),
+  storage_path TEXT,
+
+  -- Text content (for text responses)
+  text_content TEXT,
 
   -- Timestamps
   recorded_at TIMESTAMPTZ NOT NULL,
@@ -34,11 +40,27 @@ CREATE TABLE IF NOT EXISTS recordings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Add constraints to ensure data integrity
+ALTER TABLE recordings
+  ADD CONSTRAINT check_text_response_has_content
+  CHECK (
+    (response_type = 'audio' AND text_content IS NULL) OR
+    (response_type = 'text' AND text_content IS NOT NULL AND text_content != '')
+  );
+
+ALTER TABLE recordings
+  ADD CONSTRAINT check_audio_response_has_files
+  CHECK (
+    (response_type = 'text' AND file_name IS NULL) OR
+    (response_type = 'audio' AND file_name IS NOT NULL)
+  );
+
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_recordings_user_id ON recordings(user_id);
 CREATE INDEX IF NOT EXISTS idx_recordings_expires_at ON recordings(expires_at) WHERE status = 'completed';
 CREATE INDEX IF NOT EXISTS idx_recordings_status ON recordings(status);
 CREATE INDEX IF NOT EXISTS idx_recordings_session_id ON recordings(session_id);
+CREATE INDEX IF NOT EXISTS idx_recordings_response_type ON recordings(response_type);
 
 -- Enable Row Level Security
 ALTER TABLE recordings ENABLE ROW LEVEL SECURITY;

@@ -20,6 +20,7 @@ describe("Recording Model", () => {
 		userId: "user-123",
 		sessionId: "session-456",
 		questionId: "question-789",
+		responseType: "audio" as const,
 		fileName: "test.webm",
 		mimeType: "audio/webm",
 		fileSize: 1024 * 1024, // 1MB

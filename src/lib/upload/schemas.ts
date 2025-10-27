@@ -136,3 +136,69 @@ export function validateUploadRequest(data: unknown): {
 		return { valid: false, error: "Unknown validation error" };
 	}
 }
+
+/**
+ * Text submission request schema
+ */
+export const TextSubmissionRequestSchema = z.object({
+	textContent: z.string().min(10).max(5000), // 10-5000 characters
+	sessionId: z.string().min(1),
+	questionId: z.string().min(1),
+	userId: z.string().uuid().optional(),
+});
+
+/**
+ * Text submission response schema
+ */
+export const TextSubmissionResponseSchema = z.object({
+	success: z.boolean(),
+	recordingId: z.string().uuid().optional(),
+	status: RecordingStatusSchema.optional(),
+	textLength: z.number().optional(),
+	error: z
+		.object({
+			code: z.string(),
+			message: z.string(),
+		})
+		.optional(),
+});
+
+/**
+ * Validated text submission request type
+ */
+export type ValidatedTextSubmissionRequest = z.infer<
+	typeof TextSubmissionRequestSchema
+>;
+
+/**
+ * Validated text submission response type
+ */
+export type ValidatedTextSubmissionResponse = z.infer<
+	typeof TextSubmissionResponseSchema
+>;
+
+/**
+ * Validate text submission request
+ *
+ * @param data - Request data to validate
+ * @returns Validation result
+ */
+export function validateTextSubmissionRequest(data: unknown): {
+	valid: boolean;
+	data?: ValidatedTextSubmissionRequest;
+	error?: string;
+} {
+	try {
+		const validated = TextSubmissionRequestSchema.parse(data);
+		return { valid: true, data: validated };
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			return {
+				valid: false,
+				error: error.issues.map((e) => e.message).join(", "),
+			};
+		}
+
+		return { valid: false, error: "Unknown validation error" };
+	}
+}

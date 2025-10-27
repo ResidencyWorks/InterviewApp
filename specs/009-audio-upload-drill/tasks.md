@@ -18,14 +18,14 @@
 **Purpose**: Project initialization and shared configuration
 
 - [X] T001 Create `drill-recordings` bucket in Supabase Storage (private, RLS enabled)
-- [ ] T002 Configure Supabase bucket lifecycle policy for 30-day auto-delete
-- [ ] T003 [P] Configure Supabase bucket CORS policies for signed URL playback
+- [X] T002 Configure Supabase bucket lifecycle policy for 30-day auto-delete
+- [X] T003 [P] Configure Supabase bucket CORS policies for signed URL playback
 - [X] T004 Create `recordings` table in PostgreSQL with indexes (see data-model.md)
 - [X] T005 Add environment variables to `.env.local` (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 - [X] T006 [P] Install @supabase/supabase-js dependency
-- [ ] T007 [P] Setup PostHog analytics initialization
-- [ ] T008 [P] Setup Sentry error tracking
-- [ ] T009 [P] Configure Vercel deployment settings
+- [X] T007 [P] Setup PostHog analytics initialization
+- [X] T008 [P] Setup Sentry error tracking
+- [X] T009 [P] Configure Vercel deployment settings
 
 ---
 
@@ -88,7 +88,7 @@
 - [X] T030 [US2] Implement manual mode switching between recording and text input
 - [X] T031 [US2] Update upload service to handle text submissions (alternative to audio file)
 - [X] T032 [US2] Add form validation for text input (length limits, character validation)
-- [ ] T033 [US2] Store text responses in database alongside audio recordings metadata
+- [X] T033 [US2] Store text responses in database alongside audio recordings metadata
 - [X] T034 [US2] Integrate PostHog analytics for permission denial and fallback usage events
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - users can submit audio OR text responses
@@ -105,16 +105,16 @@
 
 ### Implementation for User Story 3
 
-- [ ] T035 [P] [US3] Create UploadProgress component in `src/components/drill/UploadProgress.tsx`
-- [ ] T036 [US3] Implement progress percentage calculation from bytes uploaded
-- [ ] T037 [US3] Integrate retry logic with exponential backoff from T018
-- [ ] T038 [US3] Add upload progress event emission (every 1 second during upload, every 10% increment)
-- [ ] T039 [US3] Implement retry UI feedback (showing retry attempts and delays)
-- [ ] T040 [US3] Add manual retry button after max retry attempts exhausted
-- [ ] T041 [US3] Update upload service to track progress state in UploadSession model
-- [ ] T042 [US3] Log progress events to PostHog (start, progress every 10%, retry, completion, failure)
-- [ ] T043 [US3] Add network error detection and error categorization (retryable vs. permanent)
-- [ ] T044 [US3] Implement progress indicator updates (real-time, every 1 second per FR-003)
+- [X] T035 [P] [US3] Create UploadProgress component in `src/components/drill/UploadProgress.tsx`
+- [X] T036 [US3] Implement progress percentage calculation from bytes uploaded
+- [X] T037 [US3] Integrate retry logic with exponential backoff from T018
+- [X] T038 [US3] Add upload progress event emission (every 1 second during upload, every 10% increment)
+- [X] T039 [US3] Implement retry UI feedback (showing retry attempts and delays)
+- [X] T040 [US3] Add manual retry button after max retry attempts exhausted
+- [X] T041 [US3] Update upload service to track progress state in UploadSession model
+- [X] T042 [US3] Log progress events to PostHog (start, progress every 10%, retry, completion, failure)
+- [X] T043 [US3] Add network error detection and error categorization (retryable vs. permanent)
+- [X] T044 [US3] Implement progress indicator updates (real-time, every 1 second per FR-003)
 
 **Checkpoint**: All user stories should now be independently functional - full upload experience with retry and progress tracking
 
@@ -144,18 +144,18 @@
 
 - [X] T052 [P] Add JSDoc comments to all exported functions per Constitution requirements
 - [X] T053 [P] Run biome format and lint on all new files
-- [X] T054 Add unit tests for retry logic in `tests/unit/lib/upload/retry-logic.test.ts`
-- [X] T055 Add unit tests for signed URL generation in `tests/unit/lib/storage/signed-url.test.ts`
-- [X] T056 Add unit tests for Recording model in `tests/unit/models/recording.test.ts`
-- [ ] T057 Add integration tests for upload API route in `tests/integration/api/upload/route.test.ts`
-- [ ] T058 Add integration tests for upload service in `tests/integration/lib/upload/upload-service.test.ts`
-- [ ] T059 Add E2E test for full upload flow in `tests/e2e/upload-flow.spec.ts`
-- [ ] T060 Test cross-browser compatibility (Chrome, Firefox, Safari)
-- [ ] T061 Validate all success criteria from spec.md are met
-- [ ] T062 Run quickstart.md validation
-- [ ] T063 Performance testing (verify upload p95 < 2s, signed URL p95 < 500ms)
-- [ ] T064 Update documentation in `docs/` if needed
-- [ ] T065 Security audit (verify service role credentials never exposed)
+- [X] T054 [P] Add unit tests for retry logic in `tests/unit/lib/upload/retry-logic.test.ts`
+- [X] T055 [P] Add unit tests for signed URL generation in `tests/unit/lib/storage/signed-url.test.ts`
+- [X] T056 [P] Add unit tests for Recording model in `tests/unit/models/recording.test.ts`
+- [X] T057 Add integration tests for upload API route in `tests/integration/api/upload/route.test.ts`
+- [X] T058 Add integration tests for upload service in `tests/integration/lib/upload/upload-service.test.ts`
+- [X] T059 Add E2E test for full upload flow in `tests/e2e/upload-flow.spec.ts`
+- [X] T060 Test cross-browser compatibility (Chrome, Firefox, Safari)
+- [X] T061 Validate all success criteria from spec.md are met
+- [X] T062 Run quickstart.md validation
+- [X] T063 Performance testing (verify upload p95 < 2s, signed URL p95 < 500ms)
+- [X] T064 Update documentation in `docs/` if needed
+- [X] T065 Security audit (verify service role credentials never exposed)
 
 ---
 

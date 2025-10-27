@@ -16,8 +16,13 @@ export type RecordingStatus =
 	| "expired";
 
 /**
+ * Response type - audio or text
+ */
+export type ResponseType = "audio" | "text";
+
+/**
  * Recording domain entity
- * Represents audio recording metadata and lifecycle
+ * Represents audio recording or text response metadata and lifecycle
  */
 export interface Recording {
 	/** Unique identifier (UUID v4) */
@@ -32,12 +37,18 @@ export interface Recording {
 	/** Question being answered */
 	questionId: string;
 
-	/** File metadata */
-	fileName: string;
-	mimeType: string;
-	fileSize: number;
-	duration: number;
-	storagePath: string;
+	/** Response type: audio or text */
+	responseType: ResponseType;
+
+	/** File metadata (for audio responses) */
+	fileName?: string;
+	mimeType?: string;
+	fileSize?: number;
+	duration?: number;
+	storagePath?: string;
+
+	/** Text content (for text responses) */
+	textContent?: string;
 
 	/** Timestamps */
 	recordedAt: Date;
@@ -64,11 +75,15 @@ export function createRecording(params: {
 	userId: string;
 	sessionId: string;
 	questionId: string;
-	fileName: string;
-	mimeType: string;
-	fileSize: number;
-	duration: number;
-	storagePath: string;
+	responseType: ResponseType;
+	// Audio response fields (optional)
+	fileName?: string;
+	mimeType?: string;
+	fileSize?: number;
+	duration?: number;
+	storagePath?: string;
+	// Text response fields (optional)
+	textContent?: string;
 	recordedAt: Date;
 }): Recording {
 	const now = new Date();
@@ -76,7 +91,18 @@ export function createRecording(params: {
 	expiresAt.setDate(expiresAt.getDate() + 30);
 
 	return {
-		...params,
+		id: params.id,
+		userId: params.userId,
+		sessionId: params.sessionId,
+		questionId: params.questionId,
+		responseType: params.responseType,
+		fileName: params.fileName,
+		mimeType: params.mimeType,
+		fileSize: params.fileSize,
+		duration: params.duration,
+		storagePath: params.storagePath,
+		textContent: params.textContent,
+		recordedAt: params.recordedAt,
 		uploadedAt: now,
 		expiresAt,
 		status: "recording",
