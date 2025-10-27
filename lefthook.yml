@@ -6,13 +6,15 @@ pre-commit:
   parallel: true
   commands:
     check:
-      run: pnpm biome check --write --diagnostic-level error .
-      glob: "*.{ts,tsx,js,jsx,json,md}"
+      run: pnpm biome check --write --diagnostic-level error {staged_files}
+      glob: "*.{ts,tsx,js,jsx,json}"
+      stage_fixed: true
       fail_text: "❌ Linting failed. Please fix the issues above."
       pass_text: "✅ Linting passed"
 
     typecheck:
       run: pnpm tsc --noEmit
+      glob: "*.{ts,tsx}"
       fail_text: "❌ Type checking failed. Please fix the type errors above."
       pass_text: "✅ Type checking passed"
 
