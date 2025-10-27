@@ -17,12 +17,12 @@
 
 **Purpose**: Project initialization and shared configuration
 
-- [ ] T001 Create `drill-recordings` bucket in Supabase Storage (private, RLS enabled)
+- [X] T001 Create `drill-recordings` bucket in Supabase Storage (private, RLS enabled)
 - [ ] T002 Configure Supabase bucket lifecycle policy for 30-day auto-delete
 - [ ] T003 [P] Configure Supabase bucket CORS policies for signed URL playback
-- [ ] T004 Create `recordings` table in PostgreSQL with indexes (see data-model.md)
-- [ ] T005 Add environment variables to `.env.local` (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-- [ ] T006 [P] Install @supabase/supabase-js dependency
+- [X] T004 Create `recordings` table in PostgreSQL with indexes (see data-model.md)
+- [X] T005 Add environment variables to `.env.local` (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+- [X] T006 [P] Install @supabase/supabase-js dependency
 - [ ] T007 [P] Setup PostHog analytics initialization
 - [ ] T008 [P] Setup Sentry error tracking
 - [ ] T009 [P] Configure Vercel deployment settings
@@ -35,13 +35,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T010 Create base Recording domain model in `src/models/recording.ts`
-- [ ] T011 [P] Create Supabase storage client wrapper in `src/lib/storage/supabase-storage.ts`
-- [ ] T012 [P] Create user entitlement validation service in `src/services/entitlement.ts`
-- [ ] T013 [P] Create upload types and interfaces in `src/lib/upload/types.ts`
-- [ ] T014 Setup error handling infrastructure (error types, Sentry integration)
-- [ ] T015 [P] Configure Zod validation schemas in `src/lib/upload/schemas.ts`
-- [ ] T016 [P] Setup PostHog analytics event logging utilities
+- [X] T010 Create base Recording domain model in `src/models/recording.ts`
+- [X] T011 [P] Create Supabase storage client wrapper in `src/lib/storage/supabase-storage.ts`
+- [X] T012 [P] Create user entitlement validation service in `src/services/entitlement.ts`
+- [X] T013 [P] Create upload types and interfaces in `src/lib/upload/types.ts`
+- [X] T014 Setup error handling infrastructure (error types, Sentry integration)
+- [X] T015 [P] Configure Zod validation schemas in `src/lib/upload/schemas.ts`
+- [X] T016 [P] Setup PostHog analytics event logging utilities
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -57,16 +57,16 @@
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] Create UploadSession tracking model in `src/lib/upload/types.ts`
-- [ ] T018 [P] [US1] Implement exponential backoff retry logic in `src/lib/upload/retry-logic.ts` (base delay: 1s, multiplier: 2x, jitter: ±25%, attempts: 1s, 2s, 4s)
-- [ ] T019 [US1] Implement core upload service orchestration in `src/lib/upload/upload-service.ts` (depends on T018)
-- [ ] T020 [US1] Implement POST /api/upload API route in `src/app/api/upload/route.ts` (depends on T019)
-- [ ] T021 [P] [US1] Create AudioRecorder component with MediaRecorder wrapper in `src/components/drill/AudioRecorder.tsx`
-- [ ] T022 [US1] Integrate upload service with AudioRecorder component (depends on T020, T021)
-- [ ] T023 [US1] Implement file metadata validation and recording status tracking (size, type, duration, recording → uploading → completed)
-- [ ] T024 [US1] Add upload cancellation handling when new recording starts (FR-016)
-- [ ] T025 [US1] Add success/error message handling and user feedback
-- [ ] T026 [US1] Integrate PostHog analytics for upload events (depends on T016)
+- [X] T017 [P] [US1] Create UploadSession tracking model in `src/lib/upload/types.ts`
+- [X] T018 [P] [US1] Implement exponential backoff retry logic in `src/lib/upload/retry-logic.ts` (base delay: 1s, multiplier: 2x, jitter: ±25%, attempts: 1s, 2s, 4s)
+- [X] T019 [US1] Implement core upload service orchestration in `src/lib/upload/upload-service.ts` (depends on T018)
+- [X] T020 [US1] Implement POST /api/upload API route in `src/app/api/upload/route.ts` (depends on T019)
+- [X] T021 [P] [US1] Create AudioRecorder component with MediaRecorder wrapper in `src/components/drill/AudioRecorder.tsx`
+- [X] T022 [US1] Integrate upload service with AudioRecorder component (depends on T020, T021)
+- [X] T023 [US1] Implement file metadata validation and recording status tracking (size, type, duration, recording → uploading → completed)
+- [X] T024 [US1] Add upload cancellation handling when new recording starts (FR-016)
+- [X] T025 [US1] Add success/error message handling and user feedback
+- [X] T026 [US1] Integrate PostHog analytics for upload events (depends on T016)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently - users can record and upload audio responses
 
@@ -82,14 +82,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Create TextFallback component in `src/components/drill/TextFallback.tsx`
-- [ ] T028 [US2] Implement microphone permission detection logic in AudioRecorder component
-- [ ] T029 [US2] Add automatic fallback UI display when permissions are denied
-- [ ] T030 [US2] Implement manual mode switching between recording and text input
-- [ ] T031 [US2] Update upload service to handle text submissions (alternative to audio file)
-- [ ] T032 [US2] Add form validation for text input (length limits, character validation)
+- [X] T027 [P] [US2] Create TextFallback component in `src/components/drill/TextFallback.tsx`
+- [X] T028 [US2] Implement microphone permission detection logic in AudioRecorder component
+- [X] T029 [US2] Add automatic fallback UI display when permissions are denied
+- [X] T030 [US2] Implement manual mode switching between recording and text input
+- [X] T031 [US2] Update upload service to handle text submissions (alternative to audio file)
+- [X] T032 [US2] Add form validation for text input (length limits, character validation)
 - [ ] T033 [US2] Store text responses in database alongside audio recordings metadata
-- [ ] T034 [US2] Integrate PostHog analytics for permission denial and fallback usage events
+- [X] T034 [US2] Integrate PostHog analytics for permission denial and fallback usage events
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - users can submit audio OR text responses
 
@@ -128,13 +128,13 @@
 
 ### Implementation for Signed URL Playback
 
-- [ ] T045 [P] Implement signed URL generation service in `src/lib/storage/signed-url.ts`
-- [ ] T046 Create POST /api/recordings/[recordingId]/signed-url API route in `src/app/api/recordings/[recordingId]/signed-url/route.ts`
-- [ ] T047 Implement URL expiry validation (15-minute limit)
-- [ ] T048 Add playback access control (verify user owns recording)
-- [ ] T049 [P] Implement lifecycle cleanup service in `src/lib/storage/lifecycle.ts`
-- [ ] T050 Create scheduled job or Edge Function for automatic 30-day file deletion
-- [ ] T051 Add metadata cleanup when files are deleted from storage
+- [X] T045 [P] Implement signed URL generation service in `src/lib/storage/signed-url.ts`
+- [X] T046 Create POST /api/recordings/[recordingId]/signed-url API route in `src/app/api/recordings/[recordingId]/signed-url/route.ts`
+- [X] T047 Implement URL expiry validation (15-minute limit)
+- [X] T048 Add playback access control (verify user owns recording)
+- [X] T049 [P] Implement lifecycle cleanup service in `src/lib/storage/lifecycle.ts`
+- [X] T050 Create scheduled job or Edge Function for automatic 30-day file deletion
+- [X] T051 Add metadata cleanup when files are deleted from storage
 
 ---
 
@@ -142,11 +142,11 @@
 
 **Purpose**: Final improvements and quality assurance
 
-- [ ] T052 [P] Add JSDoc comments to all exported functions per Constitution requirements
-- [ ] T053 [P] Run biome format and lint on all new files
-- [ ] T054 Add unit tests for retry logic in `tests/unit/lib/upload/retry-logic.test.ts`
-- [ ] T055 Add unit tests for signed URL generation in `tests/unit/lib/storage/signed-url.test.ts`
-- [ ] T056 Add unit tests for Recording model in `tests/unit/models/recording.test.ts`
+- [X] T052 [P] Add JSDoc comments to all exported functions per Constitution requirements
+- [X] T053 [P] Run biome format and lint on all new files
+- [X] T054 Add unit tests for retry logic in `tests/unit/lib/upload/retry-logic.test.ts`
+- [X] T055 Add unit tests for signed URL generation in `tests/unit/lib/storage/signed-url.test.ts`
+- [X] T056 Add unit tests for Recording model in `tests/unit/models/recording.test.ts`
 - [ ] T057 Add integration tests for upload API route in `tests/integration/api/upload/route.test.ts`
 - [ ] T058 Add integration tests for upload service in `tests/integration/lib/upload/upload-service.test.ts`
 - [ ] T059 Add E2E test for full upload flow in `tests/e2e/upload-flow.spec.ts`
