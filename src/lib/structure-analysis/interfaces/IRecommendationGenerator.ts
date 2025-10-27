@@ -3,8 +3,8 @@
  * @fileoverview Defines the contract for recommendation generation services
  */
 
-import type { CleanupRecommendation } from "../entities/CleanupRecommendation.js";
-import type { ProjectStructure } from "../entities/ProjectStructure.js";
+import type { CleanupRecommendation } from "../entities/CleanupRecommendation";
+import type { ProjectStructure } from "../entities/ProjectStructure";
 
 /**
  * Recommendation generation options

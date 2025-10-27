@@ -4,7 +4,7 @@
  */
 
 import * as fs from "node:fs/promises";
-import type { File } from "../entities/File.js";
+import type { File } from "../entities/File";
 
 /**
  * Pattern matching options

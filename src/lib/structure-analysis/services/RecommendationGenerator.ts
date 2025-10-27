@@ -1,7 +1,7 @@
-import type { CleanupRecommendation } from "../entities/CleanupRecommendation.js";
-import { createCleanupRecommendation } from "../entities/CleanupRecommendation.js";
-import type { ProjectStructure } from "../entities/ProjectStructure.js";
-import { ImpactEffortCalculator } from "./ImpactEffortCalculator.js";
+import type { CleanupRecommendation } from "../entities/CleanupRecommendation";
+import { createCleanupRecommendation } from "../entities/CleanupRecommendation";
+import type { ProjectStructure } from "../entities/ProjectStructure";
+import { ImpactEffortCalculator } from "./ImpactEffortCalculator";
 
 export class RecommendationGeneratorService {
 	private calculator = new ImpactEffortCalculator();

@@ -3,7 +3,7 @@
  * @fileoverview Type definitions for project structure analysis
  */
 
-import type { AnalysisConfig } from "../config/schema.js";
+import type { AnalysisConfig } from "../config/schema";
 
 /**
  * Analysis options for running structure analysis

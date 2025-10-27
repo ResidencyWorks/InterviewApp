@@ -1,4 +1,4 @@
-import type { CleanupRecommendation } from "../entities/CleanupRecommendation.js";
+import type { CleanupRecommendation } from "../entities/CleanupRecommendation";
 
 export class MigrationPlanGenerator {
 	generate(recommendation: CleanupRecommendation): {

@@ -1,5 +1,5 @@
-import type { StructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { PatternComplianceReporter } from "./PatternComplianceReporter.js";
+import type { StructuralInconsistency } from "../entities/StructuralInconsistency";
+import { PatternComplianceReporter } from "./PatternComplianceReporter";
 
 export class ConsistencyReportGenerator {
 	private reporter = new PatternComplianceReporter();

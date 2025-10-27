@@ -5,11 +5,11 @@
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type { Directory } from "../entities/Directory.js";
-import { createDirectory, getAllFiles } from "../entities/Directory.js";
-import type { File } from "../entities/File.js";
-import { createFile, isSourceFile } from "../entities/File.js";
-import { PatternMatcher } from "./PatternMatcher.js";
+import type { Directory } from "../entities/Directory";
+import { createDirectory, getAllFiles } from "../entities/Directory";
+import type { File } from "../entities/File";
+import { createFile, isSourceFile } from "../entities/File";
+import { PatternMatcher } from "./PatternMatcher";
 
 /**
  * Directory traversal options

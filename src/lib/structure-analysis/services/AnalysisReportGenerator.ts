@@ -2,7 +2,7 @@
  * AnalysisReportGenerator service
  */
 
-import type { ProjectStructure } from "../entities/ProjectStructure.js";
+import type { ProjectStructure } from "../entities/ProjectStructure";
 
 export interface AnalysisReport {
 	generatedAt: string;

@@ -3,12 +3,12 @@
  * @fileoverview Analyzes analytics services for duplications and inconsistencies
  */
 
-import type { File } from "../entities/File.js";
-import type { ServiceDuplication } from "../entities/ServiceDuplication.js";
-import { createServiceDuplication } from "../entities/ServiceDuplication.js";
-import type { StructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { createStructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { PatternMatcher } from "../services/PatternMatcher.js";
+import type { File } from "../entities/File";
+import type { ServiceDuplication } from "../entities/ServiceDuplication";
+import { createServiceDuplication } from "../entities/ServiceDuplication";
+import type { StructuralInconsistency } from "../entities/StructuralInconsistency";
+import { createStructuralInconsistency } from "../entities/StructuralInconsistency";
+import { PatternMatcher } from "../services/PatternMatcher";
 
 /**
  * Analytics service analysis result

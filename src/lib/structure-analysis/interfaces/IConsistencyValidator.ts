@@ -3,8 +3,8 @@
  * @fileoverview Defines the contract for consistency validation services
  */
 
-import type { File } from "../entities/File.js";
-import type { StructuralInconsistency } from "../entities/StructuralInconsistency.js";
+import type { File } from "../entities/File";
+import type { StructuralInconsistency } from "../entities/StructuralInconsistency";
 
 /**
  * Consistency validation options

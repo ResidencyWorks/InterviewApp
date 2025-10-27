@@ -1,7 +1,7 @@
-import type { File } from "../entities/File.js";
-import type { StructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { createStructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { DependencyAnalyzer } from "../services/DependencyAnalyzer.js";
+import type { File } from "../entities/File";
+import type { StructuralInconsistency } from "../entities/StructuralInconsistency";
+import { createStructuralInconsistency } from "../entities/StructuralInconsistency";
+import { DependencyAnalyzer } from "../services/DependencyAnalyzer";
 
 export class DependencyPatternValidator {
 	private analyzer = new DependencyAnalyzer();

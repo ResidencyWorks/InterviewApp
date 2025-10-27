@@ -3,16 +3,16 @@
  * @fileoverview Main analysis service for project structure analysis using Onion Architecture pattern
  */
 
-import type { Directory } from "../entities/Directory.js";
-import type { ProjectStructure } from "../entities/ProjectStructure.js";
-import { createProjectStructure } from "../entities/ProjectStructure.js";
+import type { Directory } from "../entities/Directory";
+import type { ProjectStructure } from "../entities/ProjectStructure";
+import { createProjectStructure } from "../entities/ProjectStructure";
 import type {
 	AnalysisResult,
 	IAnalysisService,
 	ProgressCallback,
-} from "../interfaces/IAnalysisService.js";
-import type { AnalysisOptions } from "../types/analysis-options.js";
-import { FileSystemScanner } from "./FileSystemScanner.js";
+} from "../interfaces/IAnalysisService";
+import type { AnalysisOptions } from "../types/analysis-options";
+import { FileSystemScanner } from "./FileSystemScanner";
 
 /**
  * ProjectStructureAnalyzer implementing Onion Architecture

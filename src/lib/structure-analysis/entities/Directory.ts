@@ -3,7 +3,7 @@
  * @fileoverview Represents a single directory in the project structure
  */
 
-import type { File } from "./File.js";
+import type { File } from "./File";
 
 /**
  * Single directory in the project structure

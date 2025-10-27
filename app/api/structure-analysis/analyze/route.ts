@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ProjectStructureAnalyzer } from "../../../../src/lib/structure-analysis/services/ProjectStructureAnalyzer.js";
+import { ProjectStructureAnalyzer } from "@/lib/structure-analysis/services/ProjectStructureAnalyzer";
 
 export async function POST(request: Request) {
 	try {

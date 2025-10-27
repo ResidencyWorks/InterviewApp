@@ -1,9 +1,9 @@
-import type { File } from "../entities/File.js";
-import type { StructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { DependencyPatternValidator } from "../validators/DependencyPatternValidator.js";
-import { ErrorHandlingValidator } from "../validators/ErrorHandlingValidator.js";
-import { InterfaceConsistencyChecker } from "../validators/InterfaceConsistencyChecker.js";
-import { NamingConventionValidator } from "../validators/NamingConventionValidator.js";
+import type { File } from "../entities/File";
+import type { StructuralInconsistency } from "../entities/StructuralInconsistency";
+import { DependencyPatternValidator } from "../validators/DependencyPatternValidator";
+import { ErrorHandlingValidator } from "../validators/ErrorHandlingValidator";
+import { InterfaceConsistencyChecker } from "../validators/InterfaceConsistencyChecker";
+import { NamingConventionValidator } from "../validators/NamingConventionValidator";
 
 export interface ConsistencyValidationSummary {
 	inconsistencies: StructuralInconsistency[];

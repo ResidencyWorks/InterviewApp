@@ -3,8 +3,8 @@
  * @fileoverview Defines the contract for duplication detection services
  */
 
-import type { File } from "../entities/File.js";
-import type { ServiceDuplication } from "../entities/ServiceDuplication.js";
+import type { File } from "../entities/File";
+import type { ServiceDuplication } from "../entities/ServiceDuplication";
 
 /**
  * Duplication detection options

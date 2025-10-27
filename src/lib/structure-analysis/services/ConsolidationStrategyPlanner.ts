@@ -1,4 +1,4 @@
-import type { CleanupRecommendation } from "../entities/CleanupRecommendation.js";
+import type { CleanupRecommendation } from "../entities/CleanupRecommendation";
 
 export class ConsolidationStrategyPlanner {
 	plan(_recommendation: CleanupRecommendation): string[] {

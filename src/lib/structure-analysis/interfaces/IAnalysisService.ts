@@ -3,8 +3,8 @@
  * @fileoverview Defines the contract for project structure analysis services
  */
 
-import type { ProjectStructure } from "../entities/ProjectStructure.js";
-import type { AnalysisOptions } from "../types/analysis-options.js";
+import type { ProjectStructure } from "../entities/ProjectStructure";
+import type { AnalysisOptions } from "../types/analysis-options";
 
 /**
  * Analysis result

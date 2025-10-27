@@ -1,5 +1,5 @@
-import type { CleanupRecommendation } from "../entities/CleanupRecommendation.js";
-import { ImpactEffortCalculator } from "./ImpactEffortCalculator.js";
+import type { CleanupRecommendation } from "../entities/CleanupRecommendation";
+import { ImpactEffortCalculator } from "./ImpactEffortCalculator";
 
 export class RecommendationPrioritizer {
 	private calculator = new ImpactEffortCalculator();

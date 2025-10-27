@@ -2,8 +2,8 @@
  * UnusedFileDetector service
  */
 
-import type { File } from "../entities/File.js";
-import { DependencyAnalyzer } from "./DependencyAnalyzer.js";
+import type { File } from "../entities/File";
+import { DependencyAnalyzer } from "./DependencyAnalyzer";
 
 export class UnusedFileDetector {
 	private dependencyAnalyzer = new DependencyAnalyzer();

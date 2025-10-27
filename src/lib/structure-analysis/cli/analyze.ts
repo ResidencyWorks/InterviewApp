@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { access } from "node:fs/promises";
-import { ProjectStructureAnalyzer } from "../services/ProjectStructureAnalyzer.js";
+import { ProjectStructureAnalyzer } from "../services/ProjectStructureAnalyzer";
 
 async function main() {
 	const args = process.argv.slice(2);

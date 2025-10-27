@@ -3,10 +3,10 @@
  * @fileoverview Represents the overall organization of directories, files, and their relationships
  */
 
-import type { CleanupRecommendation } from "./CleanupRecommendation.js";
-import type { Directory } from "./Directory.js";
-import type { ServiceDuplication } from "./ServiceDuplication.js";
-import type { StructuralInconsistency } from "./StructuralInconsistency.js";
+import type { CleanupRecommendation } from "./CleanupRecommendation";
+import type { Directory } from "./Directory";
+import type { ServiceDuplication } from "./ServiceDuplication";
+import type { StructuralInconsistency } from "./StructuralInconsistency";
 
 /**
  * Overall project structure analysis result

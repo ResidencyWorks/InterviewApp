@@ -1,4 +1,4 @@
-import type { StructuralInconsistency } from "../entities/StructuralInconsistency.js";
+import type { StructuralInconsistency } from "../entities/StructuralInconsistency";
 
 export interface PatternComplianceReport {
 	generatedAt: string;

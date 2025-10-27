@@ -1,7 +1,7 @@
-import type { File } from "../entities/File.js";
-import type { StructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { createStructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { PatternMatcher } from "../services/PatternMatcher.js";
+import type { File } from "../entities/File";
+import type { StructuralInconsistency } from "../entities/StructuralInconsistency";
+import { createStructuralInconsistency } from "../entities/StructuralInconsistency";
+import { PatternMatcher } from "../services/PatternMatcher";
 
 export class ErrorHandlingValidator {
 	private matcher = new PatternMatcher();

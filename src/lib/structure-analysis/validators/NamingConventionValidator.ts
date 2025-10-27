@@ -1,6 +1,6 @@
-import type { File } from "../entities/File.js";
-import type { StructuralInconsistency } from "../entities/StructuralInconsistency.js";
-import { createStructuralInconsistency } from "../entities/StructuralInconsistency.js";
+import type { File } from "../entities/File";
+import type { StructuralInconsistency } from "../entities/StructuralInconsistency";
+import { createStructuralInconsistency } from "../entities/StructuralInconsistency";
 
 export class NamingConventionValidator {
 	async validate(files: File[]): Promise<StructuralInconsistency[]> {
