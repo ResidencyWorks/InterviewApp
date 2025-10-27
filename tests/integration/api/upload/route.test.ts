@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { uploadFile } from "@/lib/storage/supabase-storage";
 import { validateUploadPermission } from "@/services/entitlement";
-import { POST } from "../../../../app/api/content/upload/route";
+import { POST } from "../../../../src/app/api/upload/route";
 
 // Mock Supabase client
 const mockSupabaseClient = {
