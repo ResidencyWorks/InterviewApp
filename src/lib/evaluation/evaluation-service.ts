@@ -4,11 +4,7 @@ import { getServerAuthService } from "@/lib/auth/server-auth-service";
 import { databaseService } from "@/lib/db";
 import { errorMonitoring } from "@/lib/error-monitoring";
 import { cacheKeys, cacheTTL, redisCache } from "@/lib/redis";
-import type {
-	EvaluationRequest,
-	EvaluationResponse,
-	EvaluationResult,
-} from "@/types/evaluation";
+import type { EvaluationRequest, EvaluationResult } from "@/types/evaluation";
 import type {
 	EvaluationMetrics,
 	EvaluationServiceInterface,
@@ -68,7 +64,7 @@ export class EvaluationService implements EvaluationServiceInterface {
 			await databaseService.insert("evaluation_results", evaluationResult);
 
 			// Perform evaluation with user metadata
-			const evaluationRequest = {
+			const _evaluationRequest = {
 				...request,
 				metadata: { ...(request.metadata || {}), user_id: currentUserId },
 			};

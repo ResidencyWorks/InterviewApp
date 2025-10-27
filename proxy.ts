@@ -34,7 +34,7 @@ const PUBLIC_ROUTES = [
 /**
  * Authentication and content pack loading middleware
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 	console.log("Middleware - Processing request for:", pathname);
 

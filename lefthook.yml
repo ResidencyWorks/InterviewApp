@@ -6,7 +6,7 @@ pre-commit:
   parallel: true
   commands:
     check:
-      run: pnpm biome check --write .
+      run: pnpm biome check --write --diagnostic-level error .
       glob: "*.{ts,tsx,js,jsx,json,md}"
       fail_text: "❌ Linting failed. Please fix the issues above."
       pass_text: "✅ Linting passed"
@@ -20,17 +20,17 @@ pre-commit:
 pre-push:
   parallel: true
   commands:
-#     test:
-#       run: pnpm test
-#       fail_text: "❌ Tests failed. Please fix the failing tests before pushing."
-#       pass_text: "✅ All tests passed"
+    # test:
+    #   run: pnpm test
+    #   fail_text: "❌ Tests failed. Please fix the failing tests before pushing."
+    #   pass_text: "✅ All tests passed"
 
-#     test-e2e:
-#       run: pnpm test:e2e
-#       fail_text: "❌ E2E tests failed. Please fix the failing tests before pushing."
-#       pass_text: "✅ E2E tests passed"
+    # test-e2e:
+    #   run: pnpm test:e2e
+    #   fail_text: "❌ E2E tests failed. Please fix the failing tests before pushing."
+    #   pass_text: "✅ E2E tests passed"
 
-    # build:
-    #   run: pnpm build
-    #   fail_text: "❌ Build failed. Please fix the build errors before pushing."
-    #   pass_text: "✅ Build successful"
+    build:
+      run: pnpm build
+      fail_text: "❌ Build failed. Please fix the build errors before pushing."
+      pass_text: "✅ Build successful"

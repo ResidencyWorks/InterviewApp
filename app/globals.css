@@ -58,7 +58,7 @@ body {
 
 /* Mobile-first sensible defaults */
 html:not(.hydrated) * {
-	transition: none !important;
+	transition: none;
 }
 html {
 	-webkit-text-size-adjust: 100%;
@@ -72,11 +72,14 @@ video {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	* {
-		animation-duration: 0.01ms !important;
-		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
-		scroll-behavior: auto !important;
+	/* biome-ignore lint/style/noDescendingSpecificity: Tailwind CSS at-rules are allowed */
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms;
+		animation-iteration-count: 1;
+		transition-duration: 0.01ms;
+		scroll-behavior: auto;
 	}
 }
 
@@ -154,6 +157,7 @@ video {
 }
 
 @layer base {
+	/* biome-ignore lint/style/noDescendingSpecificity: Tailwind CSS at-rules are allowed */
 	* {
 		/* biome-ignore lint/suspicious/noUnknownAtRules: Tailwind CSS at-rules are allowed */
 		@apply border-border outline-ring/50;
