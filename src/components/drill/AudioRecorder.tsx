@@ -43,6 +43,7 @@ export function AudioRecorder({
 	questionId: _questionId,
 	userId: _userId,
 	onRecordingComplete,
+	onError,
 	maxDuration = 90,
 }: AudioRecorderProps) {
 	const [isRecording, setIsRecording] = useState(false);
@@ -52,29 +53,114 @@ export function AudioRecorder({
 	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 	const audioChunksRef = useRef<Blob[]>([]);
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const stopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const streamRef = useRef<MediaStream | null>(null);
 	const recordingIdRef = useRef<string | null>(null);
+	const durationRef = useRef<number>(0);
 
 	/**
 	 * Stop recording
 	 */
 	const stopRecording = useCallback(() => {
-		if (mediaRecorderRef.current && isRecording) {
-			mediaRecorderRef.current.stop();
-			setIsRecording(false);
-
-			// Log recording stopped
-			if (recordingIdRef.current) {
-				logRecordingStopped(recordingIdRef.current, duration);
-			}
-
-			// Clear timer
-			if (timerRef.current) {
-				clearInterval(timerRef.current);
-				timerRef.current = null;
-			}
+		const mediaRecorder = mediaRecorderRef.current;
+		if (mediaRecorder && mediaRecorder.state !== "inactive") {
+			mediaRecorder.stop();
 		}
-	}, [isRecording, duration]);
+		setIsRecording(false);
+
+		// Log recording stopped with the latest duration
+		if (recordingIdRef.current) {
+			logRecordingStopped(recordingIdRef.current, durationRef.current);
+		}
+
+		// Clear timer
+		if (timerRef.current) {
+			clearInterval(timerRef.current);
+			timerRef.current = null;
+		}
+
+		if (stopTimeoutRef.current) {
+			clearTimeout(stopTimeoutRef.current);
+			stopTimeoutRef.current = null;
+		}
+	}, []);
+
+	/**
+	 * Resolve a microphone stream with environment and permission checks
+	 */
+	const getMicrophoneStream = useCallback(async (): Promise<MediaStream> => {
+		if (typeof window === "undefined") {
+			throw new Error("Microphone is only available in the browser.");
+		}
+
+		if (!window.isSecureContext) {
+			throw new Error(
+				"Microphone requires a secure context. Use HTTPS or http://localhost.",
+			);
+		}
+
+		if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+			throw new Error("This browser does not support audio recording.");
+		}
+
+		try {
+			// Best-effort: check current permission state without prompting (not supported in all browsers)
+			const permissions = (
+				navigator as unknown as { permissions?: Permissions }
+			).permissions;
+			if (permissions?.query) {
+				try {
+					const status = await permissions.query({
+						name: "microphone" as unknown as PermissionName,
+					});
+					if (status.state === "denied") {
+						throw new Error(
+							"Microphone permission is blocked. Enable it in site settings.",
+						);
+					}
+					// If "prompt" or "granted", proceed to request
+				} catch {
+					// Ignore and fall back to direct getUserMedia
+				}
+			}
+
+			return await navigator.mediaDevices.getUserMedia({
+				audio: {
+					channelCount: 1,
+					echoCancellation: true,
+					noiseSuppression: true,
+					autoGainControl: true,
+				},
+			});
+		} catch (e) {
+			const err = e as DOMException & { name?: string; message?: string };
+			// Map common errors to actionable messages
+			if (err?.name) {
+				switch (err.name) {
+					case "NotAllowedError":
+						throw new Error(
+							"Microphone permission denied. Click the camera/mic icon in the address bar to allow.",
+						);
+					case "NotFoundError":
+						throw new Error(
+							"No microphone found. Please connect a mic or check OS input settings.",
+						);
+					case "NotReadableError":
+						throw new Error(
+							"Microphone is in use by another app. Close it and try again.",
+						);
+					case "SecurityError":
+						throw new Error(
+							"Access blocked by browser security policy. Ensure HTTPS or localhost.",
+						);
+					default:
+						throw new Error(err.message || "Unable to access microphone.");
+				}
+			}
+
+			throw new Error("Unable to access microphone.");
+		}
+	}, []);
 
 	/**
 	 * Start recording audio
@@ -84,15 +170,8 @@ export function AudioRecorder({
 			setError(null);
 			audioChunksRef.current = [];
 
-			// Request microphone access
-			const stream = await navigator.mediaDevices.getUserMedia({
-				audio: {
-					channelCount: 1,
-					echoCancellation: true,
-					noiseSuppression: true,
-					autoGainControl: true,
-				},
-			});
+			// Request microphone access with checks
+			const stream = await getMicrophoneStream();
 
 			streamRef.current = stream;
 
@@ -141,11 +220,13 @@ export function AudioRecorder({
 
 			setIsRecording(true);
 			setDuration(0);
+			durationRef.current = 0;
 
 			// Start timer
 			timerRef.current = setInterval(() => {
 				setDuration((prev) => {
 					const newDuration = prev + 1;
+					durationRef.current = newDuration;
 					// Auto-stop at max duration
 					if (newDuration >= maxDuration) {
 						stopRecording();
@@ -153,44 +234,71 @@ export function AudioRecorder({
 					return newDuration;
 				});
 			}, 1000);
+
+			// Hard cutoff to ensure exact stop at maxDuration seconds
+			stopTimeoutRef.current = setTimeout(() => {
+				stopRecording();
+			}, maxDuration * 1000);
 		} catch (err) {
 			console.error("Failed to start recording:", err);
-			setError("Failed to access microphone. Please grant permission.");
+			const message =
+				(err as Error)?.message ||
+				"Failed to access microphone. Please grant permission.";
+			setError(message);
+			// Bubble error to parent if provided
+			onError?.(new Error(message));
 		}
-	}, [maxDuration, onRecordingComplete, duration, stopRecording]);
+	}, [
+		maxDuration,
+		onRecordingComplete,
+		duration,
+		stopRecording,
+		onError,
+		getMicrophoneStream,
+	]);
 
 	/**
 	 * Cancel recording
 	 */
 	const cancelRecording = useCallback(() => {
-		if (mediaRecorderRef.current && isRecording) {
-			mediaRecorderRef.current.stop();
-			setIsRecording(false);
-			audioChunksRef.current = [];
-
-			// Stop all tracks
-			if (streamRef.current) {
-				streamRef.current.getTracks().forEach((track) => {
-					track.stop();
-				});
-				streamRef.current = null;
-			}
-
-			// Clear timer
-			if (timerRef.current) {
-				clearInterval(timerRef.current);
-				timerRef.current = null;
-			}
-
-			setDuration(0);
+		const mediaRecorder = mediaRecorderRef.current;
+		if (mediaRecorder && mediaRecorder.state !== "inactive") {
+			mediaRecorder.stop();
 		}
-	}, [isRecording]);
+		setIsRecording(false);
+		audioChunksRef.current = [];
+
+		// Stop all tracks
+		if (streamRef.current) {
+			streamRef.current.getTracks().forEach((track) => {
+				track.stop();
+			});
+			streamRef.current = null;
+		}
+
+		// Clear timer
+		if (timerRef.current) {
+			clearInterval(timerRef.current);
+			timerRef.current = null;
+		}
+
+		if (stopTimeoutRef.current) {
+			clearTimeout(stopTimeoutRef.current);
+			stopTimeoutRef.current = null;
+		}
+
+		setDuration(0);
+		durationRef.current = 0;
+	}, []);
 
 	// Cleanup on unmount
 	useEffect(() => {
 		return () => {
 			if (timerRef.current) {
 				clearInterval(timerRef.current);
+			}
+			if (stopTimeoutRef.current) {
+				clearTimeout(stopTimeoutRef.current);
 			}
 			if (streamRef.current) {
 				streamRef.current.getTracks().forEach((track) => {

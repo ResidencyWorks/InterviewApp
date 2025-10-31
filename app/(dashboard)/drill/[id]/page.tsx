@@ -94,19 +94,66 @@ export default function DrillInterfacePage() {
 
 			// Handle audio file upload if present
 			if (data.audioBlob && data.type === "audio") {
-				// For now, we'll use a placeholder URL since we need to implement file upload
-				// In a real implementation, you'd upload the file to a storage service first
-				audioUrl = `data:audio/wav;base64,${await blobToBase64(data.audioBlob)}`;
-				// Derive actual duration from the recorded audio metadata
-				audioDurationSeconds = await getAudioDurationSeconds(data.audioBlob);
+				// Estimate duration from blob size: ~64kbps = 8KB/s for compressed audio
+				// This is a rough estimate; server will validate actual duration
+				audioDurationSeconds = Math.max(
+					1,
+					Math.round(data.audioBlob.size / 8192),
+				);
+				console.log(
+					"📊 Estimated audio duration:",
+					audioDurationSeconds,
+					"seconds from blob size:",
+					data.audioBlob.size,
+					"bytes",
+				);
 			}
 
-			// Prepare request body for the LLM feedback service
-			const requestBody = {
-				content: data.type === "text" ? data.content : undefined,
-				audioUrl: audioUrl,
-				questionId: questionId,
-				userId: user?.id ?? "anonymous",
+			// Use FormData for audio uploads to avoid size limits with base64 encoding
+			let body: FormData | string;
+			let contentType: string | undefined;
+
+			if (data.type === "audio" && data.audioBlob) {
+				// Send audio as FormData with multipart encoding (much more efficient than base64)
+				body = new FormData();
+				body.append("audioFile", data.audioBlob, "recording.wav");
+				body.append("questionId", questionId);
+				body.append("userId", user?.id ?? "anonymous");
+				body.append(
+					"metadata",
+					JSON.stringify({
+						contentPackId: "default",
+						responseType: data.type,
+						questionTitle: question.title,
+						questionCategory: question.category,
+						questionDifficulty: question.difficulty,
+					}),
+				);
+			} else {
+				// Send text as JSON
+				body = JSON.stringify({
+					content: data.type === "text" ? data.content : undefined,
+					audioUrl: audioUrl,
+					questionId: questionId,
+					userId: user?.id ?? "anonymous",
+					metadata: {
+						contentPackId: "default",
+						responseType: data.type,
+						questionTitle: question.title,
+						questionCategory: question.category,
+						questionDifficulty: question.difficulty,
+					},
+				});
+				contentType = "application/json";
+			}
+
+			console.log("📤 Sending evaluation request:", {
+				questionId,
+				responseType: data.type,
+				hasContent: data.type === "text",
+				hasAudio: data.type === "audio" && !!data.audioBlob,
+				contentLength: data.type === "text" ? data.content.length : "FormData",
+				audioUrlType: data.type === "audio" ? "multipart" : "json",
 				metadata: {
 					contentPackId: "default",
 					responseType: data.type,
@@ -114,36 +161,49 @@ export default function DrillInterfacePage() {
 					questionCategory: question.category,
 					questionDifficulty: question.difficulty,
 				},
+			});
+
+			const fetchOptions: RequestInit = {
+				method: "POST",
+				body,
 			};
 
-			console.log("📤 Sending evaluation request:", {
-				questionId,
-				responseType: data.type,
-				hasContent: Boolean(requestBody.content),
-				hasAudio: Boolean(requestBody.audioUrl),
-				contentLength: requestBody.content?.length || 0,
-				audioUrlType: requestBody.audioUrl?.startsWith("data:")
-					? "base64"
-					: "url",
-				metadata: requestBody.metadata,
-			});
+			if (contentType) {
+				fetchOptions.headers = { "Content-Type": contentType };
+			}
+			// For FormData, don't set Content-Type header - fetch will set it with boundary
 
-			const response = await fetch("/api/evaluate", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(requestBody),
-			});
+			const response = await fetch("/api/evaluate", fetchOptions);
 
 			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
+				const errorData =
+					response.status === 500
+						? {}
+						: await response.json().catch(() => ({}));
 				throw new Error(
 					errorData.message || `Evaluation failed: ${response.statusText}`,
 				);
 			}
 
-			const result = await response.json();
+			let result: {
+				success: boolean;
+				data?: {
+					feedback: Record<string, unknown>;
+					submissionId: string;
+					processingTimeMs: number;
+					status: { status: string };
+				};
+			} | null;
+			try {
+				result = await response.json();
+			} catch (parseErr) {
+				console.error("Failed to parse response:", parseErr);
+				throw new Error("Invalid response from evaluation service");
+			}
+
+			if (!result) {
+				throw new Error("Invalid response format from evaluation service");
+			}
 
 			console.log("📥 Received evaluation response:", {
 				success: result.success,
@@ -173,7 +233,7 @@ export default function DrillInterfacePage() {
 						: 0;
 
 				// Generate more realistic category breakdown with some variation
-				const baseScore = feedback.score;
+				const baseScore = (feedback.score as number) || 0;
 				const variation = 5; // ±5 points variation
 				const clarity = Math.max(
 					0,
@@ -211,8 +271,8 @@ export default function DrillInterfacePage() {
 						delivery: Math.round(delivery),
 						structure: Math.round(structure),
 					},
-					feedback: feedback.feedback,
-					score: feedback.score,
+					feedback: (feedback.feedback as string) || "No feedback available",
+					score: baseScore,
 					status: "COMPLETED",
 					created_at: new Date().toISOString(),
 					updated_at: new Date().toISOString(),
@@ -307,53 +367,6 @@ export default function DrillInterfacePage() {
 		} finally {
 			setIsSubmitting(false);
 		}
-	};
-
-	// Helper function to convert blob to base64
-	const blobToBase64 = (blob: Blob): Promise<string> => {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.onload = () => {
-				const result = reader.result as string;
-				resolve(result.split(",")[1]); // Remove data:audio/wav;base64, prefix
-			};
-			reader.onerror = reject;
-			reader.readAsDataURL(blob);
-		});
-	};
-
-	// Helper to get audio duration in seconds from a Blob
-	const getAudioDurationSeconds = (blob: Blob): Promise<number> => {
-		return new Promise((resolve, reject) => {
-			try {
-				const url = URL.createObjectURL(blob);
-				const audio = new Audio();
-				audio.preload = "metadata";
-				audio.src = url;
-				audio.onloadedmetadata = () => {
-					// Chrome bug may report Infinity initially; seek to update
-					if (Number.isFinite(audio.duration)) {
-						const seconds = Math.max(1, Math.round(audio.duration));
-						URL.revokeObjectURL(url);
-						resolve(seconds);
-						return;
-					}
-
-					audio.currentTime = 1e101;
-					audio.ontimeupdate = () => {
-						const seconds = Math.max(1, Math.round(audio.duration));
-						URL.revokeObjectURL(url);
-						resolve(seconds);
-					};
-				};
-				audio.onerror = () => {
-					URL.revokeObjectURL(url);
-					reject(new Error("Failed to load audio for duration"));
-				};
-			} catch (e) {
-				reject(e as Error);
-			}
-		});
 	};
 
 	const handleError = (error: Error) => {

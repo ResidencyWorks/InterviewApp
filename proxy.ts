@@ -13,6 +13,7 @@ const PROTECTED_ROUTES = [
 	"/profile",
 	"/settings",
 	"/admin",
+	"/complete-profile",
 ];
 
 /**
@@ -27,8 +28,8 @@ const PUBLIC_ROUTES = [
 	"/auth/callback",
 	"/api/auth",
 	"/api/health",
+	"/api/evaluate",
 	"/ingest", // PostHog analytics endpoints
-	"/complete-profile", // Profile completion page
 ];
 
 /**
@@ -44,6 +45,7 @@ export async function proxy(request: NextRequest) {
 		pathname.startsWith("/static") ||
 		pathname.startsWith("/favicon") ||
 		pathname.startsWith("/api/health") ||
+		pathname.startsWith("/api/evaluate") ||
 		pathname.startsWith("/ingest") // PostHog analytics endpoints
 	) {
 		return NextResponse.next();
@@ -57,13 +59,6 @@ export async function proxy(request: NextRequest) {
 		console.error("Failed to initialize content pack loader:", error);
 	}
 
-	// Check if route is public
-	console.log(
-		"Middleware - Checking if public route:",
-		pathname,
-		"Public routes:",
-		PUBLIC_ROUTES,
-	);
 	const isPublic = isPublicPath(pathname, PUBLIC_ROUTES);
 	console.log("Middleware - Is public route:", isPublic);
 
@@ -238,7 +233,8 @@ export const config = {
 		 * - favicon.ico (favicon file)
 		 * - public folder
 		 * - ingest (analytics endpoints)
+		 * - api/evaluate (audio upload with FormData)
 		 */
-		"/((?!_next/static|_next/image|favicon.ico|public/|ingest/).*)",
+		"/((?!_next/static|_next/image|favicon.ico|public/|ingest/|api/evaluate).*)",
 	],
 };

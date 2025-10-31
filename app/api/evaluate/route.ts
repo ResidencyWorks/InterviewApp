@@ -149,9 +149,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			return rateLimitError;
 		}
 
-		// Check request size limit (2MB max)
+		// Check request size limit (2MB max for JSON, 25MB for multipart audio)
 		const contentLength = request.headers.get("content-length");
-		if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+		const contentType = request.headers.get("content-type");
+		const isMultipart = contentType?.includes("multipart/form-data");
+		const maxSize = isMultipart ? 25 * 1024 * 1024 : 2 * 1024 * 1024; // 25MB for audio, 2MB for JSON
+
+		if (contentLength && parseInt(contentLength, 10) > maxSize) {
 			return createErrorResponse(
 				"Request payload too large",
 				"PAYLOAD_TOO_LARGE",
@@ -159,8 +163,72 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		// Parse and validate request body
-		const body = await request.json();
+		// Parse and validate request body (use clone to avoid disturbing original body in dev)
+		let body: Record<string, unknown>;
+		try {
+			if (isMultipart) {
+				// Handle FormData (audio upload) - don't clone formData, read it once
+				const formData = await request.formData();
+				const audioFile = formData.get("audioFile") as File | null;
+				const questionId = formData.get("questionId") as string;
+				const userId = formData.get("userId") as string;
+				const metadataStr = formData.get("metadata") as string;
+
+				let metadata = {};
+				if (metadataStr) {
+					try {
+						metadata = JSON.parse(metadataStr);
+					} catch {
+						// Ignore metadata parse error
+					}
+				}
+
+				if (!audioFile) {
+					return createErrorResponse(
+						"Audio file is required",
+						"MISSING_AUDIO_FILE",
+						400,
+					);
+				}
+
+				console.log("📁 Received FormData with audio file:", {
+					fileName: audioFile.name,
+					fileSize: audioFile.size,
+					fileType: audioFile.type,
+					questionId,
+					userId,
+				});
+
+				// Convert audio file to base64 data URL for processing
+				let arrayBuffer: ArrayBuffer;
+				try {
+					arrayBuffer = await audioFile.arrayBuffer();
+				} catch (bufferError) {
+					console.error("Failed to read audio file buffer:", bufferError);
+					return createErrorResponse(
+						"Failed to read audio file",
+						"AUDIO_READ_ERROR",
+						400,
+					);
+				}
+
+				const base64String = Buffer.from(arrayBuffer).toString("base64");
+				const audioUrl = `data:${audioFile.type || "audio/wav"};base64,${base64String}`;
+
+				body = {
+					audioUrl,
+					questionId,
+					userId,
+					metadata,
+				};
+			} else {
+				// Handle JSON request - use clone for JSON to avoid body lock
+				body = await request.clone().json();
+			}
+		} catch (parseError) {
+			console.error("Failed to parse request body:", parseError);
+			return createErrorResponse("Invalid request body", "INVALID_BODY", 400);
+		}
 
 		// Simple transcript-only fallback path for M0
 		interface TranscriptOnlyBody {
@@ -249,58 +317,97 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		});
 
 		// Evaluate the submission
-		const result = await feedbackService.evaluateSubmission({
-			content: validatedData.content || "",
-			audioUrl: validatedData.audioUrl,
-			questionId: validatedData.questionId,
-			userId: validatedData.userId,
-			metadata: validatedData.metadata,
-		});
+		try {
+			const result = await feedbackService.evaluateSubmission({
+				content: validatedData.content || "",
+				audioUrl: validatedData.audioUrl,
+				questionId: validatedData.questionId,
+				userId: validatedData.userId,
+				metadata: validatedData.metadata,
+			});
 
-		// Log evaluation result details
-		console.log("✅ Evaluation completed:", {
-			submissionId: result.submission.id,
-			score: result.feedback.score,
-			processingTimeMs: result.processingTimeMs,
-			model: result.feedback.model,
-			status: result.status.status,
-			hasStrengths: result.feedback.strengths.length > 0,
-			hasImprovements: result.feedback.improvements.length > 0,
-		});
-
-		// Return successful response
-		return NextResponse.json({
-			success: true,
-			data: {
+			// Log evaluation result details
+			console.log("✅ Evaluation completed:", {
 				submissionId: result.submission.id,
-				feedback: {
-					id: result.feedback.id,
-					score: result.feedback.score,
-					feedback: result.feedback.feedback,
-					strengths: result.feedback.strengths,
-					improvements: result.feedback.improvements,
-					generatedAt: result.feedback.generatedAt,
-					model: result.feedback.model,
-					processingTimeMs: result.feedback.processingTimeMs,
-				},
-				evaluationRequest: {
-					id: result.evaluationRequest.id,
-					status: result.evaluationRequest.status,
-					requestedAt: result.evaluationRequest.requestedAt,
-					retryCount: result.evaluationRequest.retryCount,
-				},
-				status: {
-					id: result.status.id,
-					status: result.status.status,
-					progress: result.status.progress,
-					message: result.status.message,
-					startedAt: result.status.startedAt,
-					updatedAt: result.status.updatedAt,
-					completedAt: result.status.completedAt,
-				},
+				score: result.feedback.score,
 				processingTimeMs: result.processingTimeMs,
-			},
-		});
+				model: result.feedback.model,
+				status: result.status.status,
+				hasStrengths: result.feedback.strengths.length > 0,
+				hasImprovements: result.feedback.improvements.length > 0,
+			});
+
+			// Return successful response
+			return NextResponse.json({
+				success: true,
+				data: {
+					submissionId: result.submission.id,
+					feedback: {
+						id: result.feedback.id,
+						score: result.feedback.score,
+						feedback: result.feedback.feedback,
+						strengths: result.feedback.strengths,
+						improvements: result.feedback.improvements,
+						generatedAt: result.feedback.generatedAt,
+						model: result.feedback.model,
+						processingTimeMs: result.feedback.processingTimeMs,
+					},
+					evaluationRequest: {
+						id: result.evaluationRequest.id,
+						status: result.evaluationRequest.status,
+						requestedAt: result.evaluationRequest.requestedAt,
+						retryCount: result.evaluationRequest.retryCount,
+					},
+					status: {
+						id: result.status.id,
+						status: result.status.status,
+						progress: result.status.progress,
+						message: result.status.message,
+						startedAt: result.status.startedAt,
+						updatedAt: result.status.updatedAt,
+						completedAt: result.status.completedAt,
+					},
+					processingTimeMs: result.processingTimeMs,
+				},
+			});
+		} catch (evaluateError) {
+			console.error("❌ Evaluation failed:", evaluateError);
+			if (evaluateError instanceof ValidationError) {
+				return createErrorResponse(
+					evaluateError.message,
+					evaluateError.code,
+					evaluateError.statusCode,
+					evaluateError.details,
+				);
+			}
+			if (evaluateError instanceof LLMServiceError) {
+				return createErrorResponse(
+					evaluateError.message,
+					evaluateError.code,
+					evaluateError.statusCode,
+					{
+						apiError: evaluateError.apiError,
+					},
+				);
+			}
+			if (evaluateError instanceof CircuitBreakerError) {
+				return createErrorResponse(
+					evaluateError.message,
+					evaluateError.code,
+					evaluateError.statusCode,
+					{
+						retryAfter: evaluateError.retryAfter,
+					},
+				);
+			}
+			return createErrorResponse("Evaluation failed", "EVALUATION_ERROR", 500, {
+				message:
+					evaluateError instanceof Error
+						? evaluateError.message
+						: String(evaluateError),
+				stack: evaluateError instanceof Error ? evaluateError.stack : "",
+			});
+		}
 	} catch (error) {
 		// Handle validation errors
 		if (error instanceof z.ZodError) {
@@ -344,7 +451,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		}
 
 		// Handle unexpected errors
-		console.error("Unexpected error in evaluate endpoint:", error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorStack = error instanceof Error ? error.stack : "";
+		console.error("❌ Unexpected error in evaluate endpoint:", {
+			message: errorMessage,
+			stack: errorStack,
+			type: error instanceof Error ? error.name : typeof error,
+		});
 		return createErrorResponse(
 			"Internal server error",
 			"INTERNAL_SERVER_ERROR",

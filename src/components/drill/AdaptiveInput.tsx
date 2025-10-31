@@ -49,30 +49,50 @@ export function AdaptiveInput({
 	useEffect(() => {
 		const checkMicrophone = async () => {
 			try {
-				// Check if the MediaDevices API is available
-				if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+				if (!window.isSecureContext) {
 					setMicAvailable(false);
+					setShowFallback(true);
 					return;
 				}
 
-				// Try to access microphone
-				const stream = await navigator.mediaDevices.getUserMedia({
-					audio: true,
-				});
+				if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+					setMicAvailable(false);
+					setShowFallback(true);
+					return;
+				}
 
-				// Stop the stream immediately
-				stream.getTracks().forEach((track) => {
-					track.stop();
-				});
+				const permissions = (navigator as any).permissions as
+					| Permissions
+					| undefined;
+				if (permissions && permissions.query) {
+					try {
+						const status = await permissions.query({
+							name: "microphone" as unknown as PermissionName,
+						});
+						if (status.state === "denied") {
+							setMicAvailable(false);
+							setShowFallback(true);
+							if (userId) {
+								logPermissionDenied(userId);
+							}
+							return;
+						}
+						// If "granted" or "prompt", allow audio path without prompting now
+						setMicAvailable(true);
+						setShowFallback(false);
+						return;
+					} catch {
+						// Fall through to optimistic enable
+					}
+				}
 
+				// Optimistic: allow audio, the actual prompt happens on click
 				setMicAvailable(true);
-			} catch (error) {
-				// Microphone not available or permission denied
-				console.log("Microphone not available:", error);
+				setShowFallback(false);
+			} catch (e) {
+				console.log("Microphone precheck error:", e);
 				setMicAvailable(false);
 				setShowFallback(true);
-
-				// Log permission denial
 				if (userId) {
 					logPermissionDenied(userId);
 				}
@@ -170,6 +190,7 @@ export function AdaptiveInput({
 						questionId={questionId}
 						userId={userId}
 						onRecordingComplete={onAudioComplete}
+						onError={(err: Error) => _handleAudioError(err.message)}
 					/>
 				</div>
 			)}
