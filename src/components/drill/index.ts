@@ -16,3 +16,5 @@ export type {
 export { ResponseSubmission } from "./ResponseSubmission";
 export type { TextResponseInputProps } from "./TextResponseInput";
 export { TextResponseInput } from "./TextResponseInput";
+export type { UploadProgressProps } from "./UploadProgress";
+export { UploadProgress } from "./UploadProgress";

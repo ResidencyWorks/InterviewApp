@@ -116,6 +116,8 @@ export function ResponseSubmission({
 							onRecordingComplete={handleAudioRecordingComplete}
 							onError={handleAudioError}
 							disabled={disabled || isSubmitting}
+							sessionId={""}
+							questionId={""}
 						/>
 
 						{audioBlob && (

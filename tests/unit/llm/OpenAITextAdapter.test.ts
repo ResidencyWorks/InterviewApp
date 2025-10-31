@@ -11,24 +11,29 @@ import type { TextAdapterConfig } from "@/lib/llm/domain/interfaces/ITextAdapter
 import { OpenAITextAdapter } from "@/lib/llm/infrastructure/openai/OpenAITextAdapter";
 
 // Mock OpenAI
+const mockCreate = vi.fn();
+const mockListModels = vi.fn();
+
 vi.mock("openai", () => {
 	return {
-		default: vi.fn().mockImplementation(() => ({
-			chat: {
+		default: class MockOpenAI {
+			chat = {
 				completions: {
-					create: vi.fn(),
+					create: mockCreate,
 				},
-			},
-		})),
+			};
+			models = {
+				list: mockListModels,
+			};
+		},
 	};
 });
 
 describe("OpenAITextAdapter", () => {
 	let adapter: OpenAITextAdapter;
 	let mockConfig: TextAdapterConfig;
-	let mockOpenAI: any;
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		mockConfig = {
 			apiKey: "test-api-key",
 			model: "gpt-4",
@@ -36,23 +41,8 @@ describe("OpenAITextAdapter", () => {
 			maxRetries: 3,
 		};
 
-		// Mock OpenAI client
-		mockOpenAI = {
-			chat: {
-				completions: {
-					create: vi.fn(),
-				},
-			},
-			models: {
-				list: vi.fn(),
-			},
-		};
-
-		// Mock the OpenAI constructor
-		const { default: OpenAI } = await import("openai");
-		vi.mocked(OpenAI).mockImplementation(() => mockOpenAI);
-
 		adapter = new OpenAITextAdapter(mockConfig);
+		vi.clearAllMocks();
 	});
 
 	describe("analyze", () => {
@@ -77,7 +67,7 @@ describe("OpenAITextAdapter", () => {
 				},
 			};
 
-			mockOpenAI.chat.completions.create.mockResolvedValue(mockResponse);
+			mockCreate.mockResolvedValue(mockResponse);
 
 			const result = await adapter.analyze("Test interview response");
 
@@ -101,9 +91,7 @@ describe("OpenAITextAdapter", () => {
 		});
 
 		it("should handle OpenAI API errors", async () => {
-			mockOpenAI.chat.completions.create.mockRejectedValue(
-				new Error("OpenAI API error"),
-			);
+			mockCreate.mockRejectedValue(new Error("OpenAI API error"));
 
 			await expect(adapter.analyze("Test text")).rejects.toThrow(
 				LLMServiceError,
@@ -121,7 +109,7 @@ describe("OpenAITextAdapter", () => {
 				],
 			};
 
-			mockOpenAI.chat.completions.create.mockResolvedValue(mockResponse);
+			mockCreate.mockResolvedValue(mockResponse);
 
 			await expect(adapter.analyze("Test text")).rejects.toThrow(
 				LLMServiceError,
@@ -151,7 +139,7 @@ describe("OpenAITextAdapter", () => {
 				},
 			};
 
-			mockOpenAI.chat.completions.create.mockResolvedValue(mockResponse);
+			mockCreate.mockResolvedValue(mockResponse);
 
 			const texts = ["Text 1", "Text 2", "Text 3"];
 			const results = await adapter.analyzeBatch(texts);
@@ -169,9 +157,7 @@ describe("OpenAITextAdapter", () => {
 		});
 
 		it("should handle batch processing errors", async () => {
-			mockOpenAI.chat.completions.create.mockRejectedValue(
-				new Error("Batch processing error"),
-			);
+			mockCreate.mockRejectedValue(new Error("Batch processing error"));
 
 			const texts = ["Text 1", "Text 2"];
 			await expect(adapter.analyzeBatch(texts)).rejects.toThrow(
@@ -202,12 +188,12 @@ describe("OpenAITextAdapter", () => {
 				},
 			};
 
-			mockOpenAI.chat.completions.create.mockResolvedValue(mockResponse);
+			mockCreate.mockResolvedValue(mockResponse);
 
 			const result = await adapter.analyzeOptimized("Test text");
 
 			expect(result.score).toBe(85);
-			expect(mockOpenAI.chat.completions.create).toHaveBeenCalled();
+			expect(mockCreate).toHaveBeenCalled();
 		});
 	});
 
@@ -240,7 +226,7 @@ describe("OpenAITextAdapter", () => {
 	describe("isAvailable", () => {
 		it("should check if adapter is available", async () => {
 			// Mock a successful API call
-			mockOpenAI.chat.completions.create.mockResolvedValue({
+			mockCreate.mockResolvedValue({
 				choices: [{ message: { content: "test" } }],
 			});
 
@@ -250,7 +236,7 @@ describe("OpenAITextAdapter", () => {
 
 		it("should return false when adapter is not available", async () => {
 			// Mock a failed API call
-			mockOpenAI.models.list.mockRejectedValue(new Error("API not available"));
+			mockListModels.mockRejectedValue(new Error("API not available"));
 
 			const isAvailable = await adapter.isAvailable();
 			expect(isAvailable).toBe(false);

@@ -1,148 +1,354 @@
+/**
+ * AudioRecorder Component
+ * Wrapper around MediaRecorder API for recording audio responses with upload capability
+ *
+ * @file src/components/drill/AudioRecorder.tsx
+ */
+
 "use client";
 
-import * as React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+	logRecordingStarted,
+	logRecordingStopped,
+} from "@/lib/upload/analytics";
 
+/**
+ * Props for AudioRecorder component
+ */
 export interface AudioRecorderProps {
-	onRecordingComplete: (audioBlob: Blob) => void;
+	/** Session ID for the drill session */
+	sessionId?: string;
+	/** Question ID being answered */
+	questionId?: string;
+	/** User ID */
+	userId?: string;
+	/** Callback when recording completes */
+	onRecordingComplete: (blob: Blob, duration: number) => void;
+	/** Callback when recording error occurs */
 	onError?: (error: Error) => void;
-	className?: string;
+	/** Maximum recording duration in seconds (default: 90) */
+	maxDuration?: number;
+	/** Whether recording is disabled */
 	disabled?: boolean;
 }
 
 /**
- * AudioRecorder component for recording user responses
- * @param onRecordingComplete - Callback when recording is complete
- * @param onError - Callback for recording errors
- * @param className - Additional CSS classes
- * @param disabled - Whether the recorder is disabled
+ * AudioRecorder component
+ * Provides audio recording functionality with MediaRecorder API
  */
 export function AudioRecorder({
+	sessionId: _sessionId,
+	questionId: _questionId,
+	userId: _userId,
 	onRecordingComplete,
 	onError,
-	className,
-	disabled = false,
+	maxDuration = 90,
 }: AudioRecorderProps) {
-	const [isRecording, setIsRecording] = React.useState(false);
-	const [recordingTime, setRecordingTime] = React.useState(0);
-	const [mediaRecorder, setMediaRecorder] =
-		React.useState<MediaRecorder | null>(null);
-	const [_audioChunks, setAudioChunks] = React.useState<Blob[]>([]);
-	const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
+	const [isRecording, setIsRecording] = useState(false);
+	const [duration, setDuration] = useState(0);
+	const [error, setError] = useState<string | null>(null);
 
-	const startRecording = async () => {
+	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+	const audioChunksRef = useRef<Blob[]>([]);
+	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const stopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const streamRef = useRef<MediaStream | null>(null);
+	const recordingIdRef = useRef<string | null>(null);
+	const durationRef = useRef<number>(0);
+
+	/**
+	 * Stop recording
+	 */
+	const stopRecording = useCallback(() => {
+		const mediaRecorder = mediaRecorderRef.current;
+		if (mediaRecorder && mediaRecorder.state !== "inactive") {
+			mediaRecorder.stop();
+		}
+		setIsRecording(false);
+
+		// Log recording stopped with the latest duration
+		if (recordingIdRef.current) {
+			logRecordingStopped(recordingIdRef.current, durationRef.current);
+		}
+
+		// Clear timer
+		if (timerRef.current) {
+			clearInterval(timerRef.current);
+			timerRef.current = null;
+		}
+
+		if (stopTimeoutRef.current) {
+			clearTimeout(stopTimeoutRef.current);
+			stopTimeoutRef.current = null;
+		}
+	}, []);
+
+	/**
+	 * Resolve a microphone stream with environment and permission checks
+	 */
+	const getMicrophoneStream = useCallback(async (): Promise<MediaStream> => {
+		if (typeof window === "undefined") {
+			throw new Error("Microphone is only available in the browser.");
+		}
+
+		if (!window.isSecureContext) {
+			throw new Error(
+				"Microphone requires a secure context. Use HTTPS or http://localhost.",
+			);
+		}
+
+		if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+			throw new Error("This browser does not support audio recording.");
+		}
+
 		try {
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-			const recorder = new MediaRecorder(stream);
-			const chunks: Blob[] = [];
+			// Best-effort: check current permission state without prompting (not supported in all browsers)
+			const permissions = (
+				navigator as unknown as { permissions?: Permissions }
+			).permissions;
+			if (permissions?.query) {
+				try {
+					const status = await permissions.query({
+						name: "microphone" as unknown as PermissionName,
+					});
+					if (status.state === "denied") {
+						throw new Error(
+							"Microphone permission is blocked. Enable it in site settings.",
+						);
+					}
+					// If "prompt" or "granted", proceed to request
+				} catch {
+					// Ignore and fall back to direct getUserMedia
+				}
+			}
 
-			recorder.ondataavailable = (event) => {
+			return await navigator.mediaDevices.getUserMedia({
+				audio: {
+					channelCount: 1,
+					echoCancellation: true,
+					noiseSuppression: true,
+					autoGainControl: true,
+				},
+			});
+		} catch (e) {
+			const err = e as DOMException & { name?: string; message?: string };
+			// Map common errors to actionable messages
+			if (err?.name) {
+				switch (err.name) {
+					case "NotAllowedError":
+						throw new Error(
+							"Microphone permission denied. Click the camera/mic icon in the address bar to allow.",
+						);
+					case "NotFoundError":
+						throw new Error(
+							"No microphone found. Please connect a mic or check OS input settings.",
+						);
+					case "NotReadableError":
+						throw new Error(
+							"Microphone is in use by another app. Close it and try again.",
+						);
+					case "SecurityError":
+						throw new Error(
+							"Access blocked by browser security policy. Ensure HTTPS or localhost.",
+						);
+					default:
+						throw new Error(err.message || "Unable to access microphone.");
+				}
+			}
+
+			throw new Error("Unable to access microphone.");
+		}
+	}, []);
+
+	/**
+	 * Start recording audio
+	 */
+	const startRecording = useCallback(async () => {
+		try {
+			setError(null);
+			audioChunksRef.current = [];
+
+			// Request microphone access with checks
+			const stream = await getMicrophoneStream();
+
+			streamRef.current = stream;
+
+			// Create MediaRecorder
+			const mediaRecorder = new MediaRecorder(stream, {
+				mimeType: "audio/webm;codecs=opus",
+			});
+
+			mediaRecorderRef.current = mediaRecorder;
+
+			// Handle data available
+			mediaRecorder.ondataavailable = (event) => {
 				if (event.data.size > 0) {
-					chunks.push(event.data);
+					audioChunksRef.current.push(event.data);
 				}
 			};
 
-			recorder.onstop = () => {
-				const audioBlob = new Blob(chunks, { type: "audio/wav" });
-				onRecordingComplete(audioBlob);
-				stream.getTracks().forEach((track) => {
-					track.stop();
+			// Handle recording stop
+			mediaRecorder.onstop = () => {
+				const blob = new Blob(audioChunksRef.current, {
+					type: "audio/webm;codecs=opus",
 				});
+
+				onRecordingComplete(blob, duration);
+				audioChunksRef.current = [];
+
+				// Stop all tracks
+				if (streamRef.current) {
+					streamRef.current.getTracks().forEach((track) => {
+						track.stop();
+					});
+					streamRef.current = null;
+				}
 			};
 
-			recorder.start();
-			setMediaRecorder(recorder);
-			setAudioChunks(chunks);
+			// Start recording
+			mediaRecorder.start(100); // Collect data every 100ms
+
+			// Generate recording ID
+			recordingIdRef.current = crypto.randomUUID();
+
+			// Log recording started
+			if (recordingIdRef.current) {
+				logRecordingStarted(recordingIdRef.current);
+			}
+
 			setIsRecording(true);
-			setRecordingTime(0);
+			setDuration(0);
+			durationRef.current = 0;
 
 			// Start timer
-			intervalRef.current = setInterval(() => {
-				setRecordingTime((prev) => prev + 1);
+			timerRef.current = setInterval(() => {
+				setDuration((prev) => {
+					const newDuration = prev + 1;
+					durationRef.current = newDuration;
+					// Auto-stop at max duration
+					if (newDuration >= maxDuration) {
+						stopRecording();
+					}
+					return newDuration;
+				});
 			}, 1000);
-		} catch (error) {
-			onError?.(error as Error);
-		}
-	};
 
-	const stopRecording = () => {
-		if (mediaRecorder && isRecording) {
+			// Hard cutoff to ensure exact stop at maxDuration seconds
+			stopTimeoutRef.current = setTimeout(() => {
+				stopRecording();
+			}, maxDuration * 1000);
+		} catch (err) {
+			console.error("Failed to start recording:", err);
+			const message =
+				(err as Error)?.message ||
+				"Failed to access microphone. Please grant permission.";
+			setError(message);
+			// Bubble error to parent if provided
+			onError?.(new Error(message));
+		}
+	}, [
+		maxDuration,
+		onRecordingComplete,
+		duration,
+		stopRecording,
+		onError,
+		getMicrophoneStream,
+	]);
+
+	/**
+	 * Cancel recording
+	 */
+	const cancelRecording = useCallback(() => {
+		const mediaRecorder = mediaRecorderRef.current;
+		if (mediaRecorder && mediaRecorder.state !== "inactive") {
 			mediaRecorder.stop();
-			setIsRecording(false);
-			if (intervalRef.current) {
-				clearInterval(intervalRef.current);
-			}
 		}
-	};
+		setIsRecording(false);
+		audioChunksRef.current = [];
 
-	const formatTime = (seconds: number) => {
-		const mins = Math.floor(seconds / 60);
-		const secs = seconds % 60;
-		return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-	};
+		// Stop all tracks
+		if (streamRef.current) {
+			streamRef.current.getTracks().forEach((track) => {
+				track.stop();
+			});
+			streamRef.current = null;
+		}
 
-	React.useEffect(() => {
+		// Clear timer
+		if (timerRef.current) {
+			clearInterval(timerRef.current);
+			timerRef.current = null;
+		}
+
+		if (stopTimeoutRef.current) {
+			clearTimeout(stopTimeoutRef.current);
+			stopTimeoutRef.current = null;
+		}
+
+		setDuration(0);
+		durationRef.current = 0;
+	}, []);
+
+	// Cleanup on unmount
+	useEffect(() => {
 		return () => {
-			if (intervalRef.current) {
-				clearInterval(intervalRef.current);
+			if (timerRef.current) {
+				clearInterval(timerRef.current);
+			}
+			if (stopTimeoutRef.current) {
+				clearTimeout(stopTimeoutRef.current);
+			}
+			if (streamRef.current) {
+				streamRef.current.getTracks().forEach((track) => {
+					track.stop();
+				});
 			}
 		};
 	}, []);
 
+	// Format duration as MM:SS
+	const formatDuration = (seconds: number) => {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins}:${secs.toString().padStart(2, "0")}`;
+	};
+
 	return (
-		<div className={cn("flex flex-col items-center space-y-4", className)}>
-			<div className="text-center">
-				<h3 className="text-lg font-semibold mb-2">Record Your Response</h3>
-				<p className="text-sm text-muted-foreground mb-4">
-					Click the microphone to start recording your answer
-				</p>
+		<div className="flex flex-col items-center gap-4">
+			<div className="text-sm font-medium">
+				Duration: {formatDuration(duration)} / {formatDuration(maxDuration)}
 			</div>
 
-			<div className="flex flex-col items-center space-y-4">
-				<Button
-					onClick={isRecording ? stopRecording : startRecording}
-					disabled={disabled}
-					variant={isRecording ? "destructive" : "default"}
-					size="lg"
-					className={cn(
-						"w-16 h-16 rounded-full",
-						isRecording && "animate-pulse",
-					)}
-					aria-label={isRecording ? "Stop recording" : "Start recording"}
-				>
-					{isRecording ? (
-						<svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-							<title>Stop recording</title>
-							<rect x="6" y="6" width="12" height="12" rx="2" />
-						</svg>
-					) : (
-						<svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-							<title>Start recording</title>
-							<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-							<path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-							<line x1="12" y1="19" x2="12" y2="23" />
-							<line x1="8" y1="23" x2="16" y2="23" />
-						</svg>
-					)}
-				</Button>
+			{error && (
+				<div className="text-sm text-destructive" role="alert">
+					{error}
+				</div>
+			)}
 
-				{isRecording && (
-					<div className="text-center">
-						<div className="text-2xl font-mono font-bold text-red-600">
-							{formatTime(recordingTime)}
-						</div>
-						<p className="text-sm text-muted-foreground">
-							Recording in progress...
-						</p>
-					</div>
+			<div className="flex gap-4">
+				{!isRecording ? (
+					<Button onClick={startRecording} size="lg">
+						Start Recording
+					</Button>
+				) : (
+					<>
+						<Button onClick={stopRecording} variant="default" size="lg">
+							Stop
+						</Button>
+						<Button onClick={cancelRecording} variant="outline" size="lg">
+							Cancel
+						</Button>
+					</>
 				)}
 			</div>
 
-			{!isRecording && recordingTime === 0 && (
-				<p className="text-xs text-muted-foreground text-center">
-					Make sure your microphone is working and you're in a quiet environment
-				</p>
+			{isRecording && (
+				<div className="flex items-center gap-2 text-red-600">
+					<div className="h-3 w-3 rounded-full bg-red-600 animate-pulse" />
+					<span className="text-sm font-medium">Recording...</span>
+				</div>
 			)}
 		</div>
 	);
