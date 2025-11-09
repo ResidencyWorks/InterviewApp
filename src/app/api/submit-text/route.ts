@@ -8,9 +8,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
+import { validateUploadPermission } from "@/features/auth/application/entitlements/upload-permissions";
 import { validateTextSubmissionRequest } from "@/features/booking/application/upload/schemas";
 import { createRecording } from "@/models/recording";
-import { validateUploadPermission } from "@/services/entitlement";
 
 /**
  * Create Supabase client for database operations

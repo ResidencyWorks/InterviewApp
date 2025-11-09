@@ -78,7 +78,7 @@ export interface ValidationOptions {
 export interface ValidationRule {
 	name: string;
 	description: string;
-	validate: (data: any) => ValidationRuleResult;
+	validate: (data: unknown) => ValidationRuleResult;
 }
 
 export interface ValidationRuleResult {

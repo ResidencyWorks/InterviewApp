@@ -10,7 +10,7 @@
 export interface ContentPackData {
 	// Structure depends on schema version
 	// This is the validated JSON content from the uploaded file
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 export interface ContentPackMetadata {
@@ -23,7 +23,7 @@ export interface ContentPackMetadata {
 		maxVersion?: string;
 		features?: string[];
 	};
-	customFields?: Record<string, any>; // Additional custom metadata
+	customFields?: Record<string, unknown>; // Additional custom metadata
 }
 
 export enum ContentPackStatus {

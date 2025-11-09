@@ -8,8 +8,8 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/upload/route";
+import { validateUploadPermission } from "@/features/auth/application/entitlements/upload-permissions";
 import { uploadFile } from "@/features/booking/infrastructure/storage/supabase-storage";
-import { validateUploadPermission } from "@/services/entitlement";
 
 // Set test timeout
 vi.setConfig({ testTimeout: 10000 });
@@ -40,7 +40,7 @@ vi.mock("@/features/booking/infrastructure/storage/supabase-storage", () => ({
 	uploadFile: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
-vi.mock("@/services/entitlement", () => ({
+vi.mock("@/features/auth/application/entitlements/upload-permissions", () => ({
 	validateUploadPermission: vi.fn(() => Promise.resolve()),
 }));
 

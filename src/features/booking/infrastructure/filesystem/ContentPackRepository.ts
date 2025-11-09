@@ -26,8 +26,8 @@ interface FilesystemContentPack {
 	name: string;
 	description?: string;
 	schemaVersion: string; // camelCase for filesystem
-	content: any;
-	metadata?: any;
+	content: ContentPack["content"];
+	metadata?: ContentPack["metadata"];
 	status: string;
 	createdAt: string; // camelCase for filesystem
 	updatedAt: string; // camelCase for filesystem
@@ -439,7 +439,7 @@ export class FilesystemContentPackRepository implements IContentPackRepository {
 			description: data.description,
 			schemaVersion: data.schemaVersion,
 			content: data.content,
-			metadata: data.metadata,
+			metadata: data.metadata ?? {},
 			status: data.status as ContentPackStatus,
 			createdAt: new Date(data.createdAt),
 			updatedAt: new Date(data.updatedAt),

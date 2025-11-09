@@ -25,6 +25,16 @@ import type {
 	ValidationRule,
 } from "../interfaces/IContentPackValidator";
 
+type ContentPackLike = {
+	id?: string;
+	metadata?: unknown;
+	content?: {
+		evaluations?: Array<{
+			description?: string;
+		}>;
+	};
+};
+
 export class ContentPackValidator implements IContentPackValidator {
 	private readonly maxFileSize: number;
 	private readonly allowedFileTypes: string[];
@@ -262,16 +272,17 @@ export class ContentPackValidator implements IContentPackValidator {
 	 * Extracts warnings from content pack data
 	 */
 	private extractWarnings(
-		data: any,
+		data: unknown,
 		_schemaVersion: string,
 	): ValidationWarning[] {
 		const warnings: ValidationWarning[] = [];
 
 		// Check for potential issues that don't break validation
 		if (data && typeof data === "object") {
+			const pack = data as ContentPackLike;
 			// Check for empty descriptions
-			if (data.content?.evaluations) {
-				data.content.evaluations.forEach((evaluation: any, index: number) => {
+			if (pack.content?.evaluations) {
+				pack.content.evaluations.forEach((evaluation, index) => {
 					if (!evaluation.description || evaluation.description.trim() === "") {
 						warnings.push({
 							path: `content.evaluations[${index}].description`,
@@ -285,7 +296,7 @@ export class ContentPackValidator implements IContentPackValidator {
 			}
 
 			// Check for missing metadata
-			if (!data.metadata) {
+			if (!pack.metadata) {
 				warnings.push({
 					path: "metadata",
 					message: "No metadata provided",
@@ -302,7 +313,7 @@ export class ContentPackValidator implements IContentPackValidator {
 	/**
 	 * Applies custom validation rules
 	 */
-	private async applyCustomRules(data: any): Promise<{
+	private async applyCustomRules(data: unknown): Promise<{
 		errors: ValidationError[];
 		warnings: ValidationWarning[];
 	}> {
@@ -338,9 +349,12 @@ export class ContentPackValidator implements IContentPackValidator {
 	/**
 	 * Extracts content pack ID from data for validation result
 	 */
-	private extractContentPackId(data: any): string | null {
-		if (data && typeof data === "object" && data.id) {
-			return data.id;
+	private extractContentPackId(data: unknown): string | null {
+		if (data && typeof data === "object") {
+			const pack = data as ContentPackLike;
+			if (typeof pack.id === "string") {
+				return pack.id;
+			}
 		}
 		return null;
 	}

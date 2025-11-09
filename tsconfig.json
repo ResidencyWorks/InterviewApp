@@ -15,8 +15,10 @@
 			"@/*": ["./src/*"],
 			"@/app/*": ["./src/app/*"],
 			"@/components/*": ["./src/components/*"],
+			"@app/*": ["./src/application/*"],
 			"@domain/*": ["./src/domain/*"],
 			"@features/*": ["./src/features/*"],
+			"@infra/*": ["./src/infrastructure/*"],
 			"@infrastructure/*": ["./src/infrastructure/*"],
 			"@presentation/*": ["./src/presentation/*"],
 			"@shared/*": ["./src/shared/*"]

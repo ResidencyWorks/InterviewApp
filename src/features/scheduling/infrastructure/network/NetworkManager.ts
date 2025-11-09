@@ -17,8 +17,16 @@ export class NetworkManager {
 				rtt: null,
 			};
 		}
-		const anyNav = navigator as Navigator & { connection?: any };
-		const c = anyNav.connection;
+		type ConnectionInfo = {
+			effectiveType?: string;
+			saveData?: boolean;
+			downlink?: number;
+			rtt?: number;
+		};
+		const navigatorWithConnection = navigator as Navigator & {
+			connection?: ConnectionInfo;
+		};
+		const c = navigatorWithConnection.connection;
 		return {
 			effectiveType: (c?.effectiveType as EffectiveType) ?? "unknown",
 			saveData: Boolean(c?.saveData),

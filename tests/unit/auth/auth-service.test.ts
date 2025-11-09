@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+type MockFn = ReturnType<typeof vi.fn>;
+type AuthMock = {
+	getUser: MockFn;
+	signInWithOtp: MockFn;
+	signOut: MockFn;
+	updateUser: MockFn;
+};
+
 // Mock the entire Supabase client module
 vi.mock("@/infrastructure/supabase/client", () => {
 	const mockAuth = {
@@ -45,7 +53,7 @@ import { AuthService } from "@/features/auth/application/services/auth-service";
 
 describe("AuthService", () => {
 	let authService: AuthService;
-	let mockAuth: any;
+	let mockAuth: AuthMock;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
@@ -54,7 +62,7 @@ describe("AuthService", () => {
 		// Get the mocked auth methods
 		const { createClient } = await import("@/infrastructure/supabase/client");
 		const client = createClient();
-		mockAuth = client.auth;
+		mockAuth = client.auth as unknown as AuthMock;
 	});
 
 	describe("signInWithMagicLink", () => {

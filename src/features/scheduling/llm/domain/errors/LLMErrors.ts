@@ -244,7 +244,7 @@ export function isLLMError(error: unknown): error is LLMError {
  */
 export function isLLMErrorOfType<T extends LLMError>(
 	error: unknown,
-	errorType: new (...args: any[]) => T,
+	errorType: new (...args: unknown[]) => T,
 ): error is T {
 	return error instanceof errorType;
 }

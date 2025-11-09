@@ -249,16 +249,16 @@ export class DefaultContentPackLoader {
 
 		// Check content structure
 		if (contentPack.content) {
-			if (
-				!contentPack.content.evaluations ||
-				contentPack.content.evaluations.length === 0
-			) {
+			const evaluations = Array.isArray(contentPack.content.evaluations)
+				? contentPack.content.evaluations
+				: null;
+			if (!evaluations || evaluations.length === 0) {
 				errors.push("At least one evaluation is required");
 			}
-			if (
-				!contentPack.content.categories ||
-				contentPack.content.categories.length === 0
-			) {
+			const categories = Array.isArray(contentPack.content.categories)
+				? contentPack.content.categories
+				: null;
+			if (!categories || categories.length === 0) {
 				warnings.push(
 					"No categories defined - consider adding categories for better organization",
 				);

@@ -2,7 +2,7 @@
  * User Entitlement Validation Service
  * Provides user permission checks for audio upload feature
  *
- * @file src/services/entitlement.ts
+ * @file src/features/auth/application/entitlements/upload-permissions.ts
  */
 
 import { entitlementsService } from "@/features/auth/domain/entitlements/EntitlementsService";

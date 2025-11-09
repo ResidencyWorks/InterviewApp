@@ -288,9 +288,9 @@ export class SentryMonitoring {
 			questionId?: string;
 			model?: string;
 		},
-	): any | null {
+	): void {
 		if (!this.isInitialized) {
-			return null;
+			return;
 		}
 
 		// Set tags and user context
@@ -313,7 +313,7 @@ export class SentryMonitoring {
 			Sentry.setTag("model", data.model);
 		}
 
-		return null;
+		return;
 	}
 
 	/**

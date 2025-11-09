@@ -6,7 +6,7 @@ import {
 } from "@/features/scheduling/infrastructure/monitoring/performance";
 import { contentPackCache, userEntitlementCache } from "@/infrastructure/redis";
 import type { UserEntitlementLevel } from "@/types/user";
-import type { ContentPackData } from "../../src/types";
+import type { ContentPackData } from "../../../src/types";
 
 /**
  * Performance benchmark tests for success criteria validation

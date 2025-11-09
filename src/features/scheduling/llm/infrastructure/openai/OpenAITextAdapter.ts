@@ -3,6 +3,7 @@
  */
 
 import OpenAI from "openai";
+import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat/completions";
 import {
 	LLMServiceError,
 	ValidationError,
@@ -107,7 +108,7 @@ export class OpenAITextAdapter implements ITextAdapter {
 			});
 
 			// Prepare request parameters
-			const requestParams: any = {
+			const requestParams: ChatCompletionCreateParamsNonStreaming = {
 				model: this.config.model ?? "gpt-4",
 				messages: [
 					{

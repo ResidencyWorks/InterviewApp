@@ -386,28 +386,40 @@ export const errorHandler = ErrorHandler.getInstance();
 export const handleError = (error: Error, context?: ErrorContext) =>
 	errorHandler.handleError(error, context);
 
-export const handleApiError = (error: Error, requestContext?: any) =>
-	errorHandler.handleApiError(error, requestContext);
+export const handleApiError = (
+	error: Error,
+	requestContext?: Record<string, unknown>,
+) => errorHandler.handleApiError(error, requestContext);
 
 export const handleContentPackError = (
 	error: Error,
-	contentPackContext?: any,
+	contentPackContext?: Record<string, unknown>,
 ) => errorHandler.handleContentPackError(error, contentPackContext);
 
-export const handleAuthError = (error: Error, authContext?: any) =>
-	errorHandler.handleAuthError(error, authContext);
+export const handleAuthError = (
+	error: Error,
+	authContext?: Record<string, unknown>,
+) => errorHandler.handleAuthError(error, authContext);
 
-export const handleValidationError = (error: Error, validationContext?: any) =>
-	errorHandler.handleValidationError(error, validationContext);
+export const handleValidationError = (
+	error: Error,
+	validationContext?: Record<string, unknown>,
+) => errorHandler.handleValidationError(error, validationContext);
 
-export const handleDatabaseError = (error: Error, databaseContext?: any) =>
-	errorHandler.handleDatabaseError(error, databaseContext);
+export const handleDatabaseError = (
+	error: Error,
+	databaseContext?: Record<string, unknown>,
+) => errorHandler.handleDatabaseError(error, databaseContext);
 
-export const handleFallbackError = (error: Error, fallbackContext?: any) =>
-	errorHandler.handleFallbackError(error, fallbackContext);
+export const handleFallbackError = (
+	error: Error,
+	fallbackContext?: Record<string, unknown>,
+) => errorHandler.handleFallbackError(error, fallbackContext);
 
-export const handleSystemStatusError = (error: Error, systemContext?: any) =>
-	errorHandler.handleSystemStatusError(error, systemContext);
+export const handleSystemStatusError = (
+	error: Error,
+	systemContext?: Record<string, unknown>,
+) => errorHandler.handleSystemStatusError(error, systemContext);
 
 export const wrapAsync = <T extends unknown[], R>(
 	fn: (...args: T) => Promise<R>,

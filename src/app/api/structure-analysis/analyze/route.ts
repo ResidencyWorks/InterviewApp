@@ -35,13 +35,14 @@ export async function POST(request: Request) {
 				},
 			},
 		});
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : "Analysis failed";
 		return NextResponse.json(
 			{
 				success: false,
 				error: {
 					code: "ANALYSIS_FAILED",
-					message: error?.message ?? "Analysis failed",
+					message,
 				},
 			},
 			{ status: 500 },
