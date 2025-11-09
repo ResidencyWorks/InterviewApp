@@ -6,38 +6,38 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { uploadFile } from "@/lib/storage/supabase-storage";
 import {
 	logUploadCompleted,
 	logUploadFailed,
 	logUploadProgress,
 	logUploadStarted,
-} from "@/lib/upload/analytics";
-import { captureUploadError } from "@/lib/upload/errors";
-import { retryWithBackoff } from "@/lib/upload/retry-logic";
-import type { UploadOptions } from "@/lib/upload/upload-service";
+} from "@/features/booking/application/upload/analytics";
+import { captureUploadError } from "@/features/booking/application/upload/errors";
+import { retryWithBackoff } from "@/features/booking/application/upload/retry-logic";
+import type { UploadOptions } from "@/features/booking/application/upload/upload-service";
 import {
 	uploadFileWithFetchProgress,
 	uploadWithProgress,
-} from "@/lib/upload/upload-service";
+} from "@/features/booking/application/upload/upload-service";
+import { uploadFile } from "@/features/booking/infrastructure/storage/supabase-storage";
 
 // Mock dependencies
-vi.mock("@/lib/storage/supabase-storage", () => ({
+vi.mock("@/features/booking/infrastructure/storage/supabase-storage", () => ({
 	uploadFile: vi.fn(),
 }));
 
-vi.mock("@/lib/upload/retry-logic", () => ({
+vi.mock("@/features/booking/application/upload/retry-logic", () => ({
 	retryWithBackoff: vi.fn(),
 }));
 
-vi.mock("@/lib/upload/analytics", () => ({
+vi.mock("@/features/booking/application/upload/analytics", () => ({
 	logUploadStarted: vi.fn(),
 	logUploadProgress: vi.fn(),
 	logUploadCompleted: vi.fn(),
 	logUploadFailed: vi.fn(),
 }));
 
-vi.mock("@/lib/upload/errors", () => ({
+vi.mock("@/features/booking/application/upload/errors", () => ({
 	captureUploadError: vi.fn(),
 }));
 

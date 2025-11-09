@@ -15,7 +15,7 @@ import {
 	logUploadFailed,
 	logUploadProgress,
 	logUploadRetry,
-} from "@/lib/upload/analytics";
+} from "@/features/booking/application/upload/analytics";
 
 /**
  * Upload status for progress display

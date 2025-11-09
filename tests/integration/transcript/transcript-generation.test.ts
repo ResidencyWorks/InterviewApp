@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FakeASRService } from "@/lib/asr/FakeASRService";
-import { TranscriptService } from "@/lib/transcript/TranscriptService";
+import { FakeASRService } from "@/features/scheduling/asr/FakeASRService";
+import { TranscriptService } from "@/features/scheduling/transcript/TranscriptService";
 
 describe("Transcript generation", () => {
 	it("returns a transcript under timeout", async () => {

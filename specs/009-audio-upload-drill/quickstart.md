@@ -130,7 +130,7 @@ NEXT_PUBLIC_POSTHOG_KEY=your-posthog-key
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from "uuid";
-import { UploadRequestSchema } from "@/lib/upload/schemas";
+import { UploadRequestSchema } from "@/features/booking/application/upload/schemas";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

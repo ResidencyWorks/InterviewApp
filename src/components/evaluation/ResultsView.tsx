@@ -1,5 +1,5 @@
 "use client";
-import type { IEvaluationResult } from "@/lib/evaluation/evaluation-schema";
+import type { IEvaluationResult } from "@/domain/evaluation/evaluation-schema";
 
 interface Props {
 	result: IEvaluationResult;

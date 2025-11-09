@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { idempotencyStore } from "../src/lib/webhooks/IdempotencyStore";
+import { idempotencyStore } from "@/infrastructure/webhooks/IdempotencyStore";
 
 describe("webhook idempotency store", () => {
 	it("prevents duplicate processing within TTL", async () => {

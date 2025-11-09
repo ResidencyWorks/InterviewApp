@@ -11,8 +11,8 @@ import {
 	getNextRetryTime,
 	retryWithBackoff,
 	waitForRetry,
-} from "@/lib/upload/retry-logic";
-import type { RetryConfig } from "@/lib/upload/types";
+} from "@/features/booking/application/upload/retry-logic";
+import type { RetryConfig } from "@/features/booking/application/upload/types";
 
 describe("Upload Retry Logic", () => {
 	describe("calculateRetryDelay", () => {

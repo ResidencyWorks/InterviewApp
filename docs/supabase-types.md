@@ -77,7 +77,7 @@ npx supabase gen types typescript --project-id "YOUR_PROJECT_ID" > src/types/dat
 All Supabase clients are already configured with types. You can use them directly:
 
 ```typescript
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/infrastructure/supabase/client'
 
 const supabase = createClient()
 
@@ -108,7 +108,7 @@ type UserUpdate = TablesUpdate<'users'>
 ### Example Usage
 
 ```typescript
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/infrastructure/supabase/client'
 import type { Tables, TablesInsert } from '@/types/database.types'
 
 const supabase = createClient()

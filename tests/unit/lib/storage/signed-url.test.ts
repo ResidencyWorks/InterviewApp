@@ -9,11 +9,11 @@ import {
 	generateSignedUrl,
 	getTimeRemaining,
 	isSignedUrlValid,
-} from "@/lib/storage/signed-url";
-import * as supabaseStorage from "@/lib/storage/supabase-storage";
+} from "@/features/booking/infrastructure/storage/signed-url";
+import * as supabaseStorage from "@/features/booking/infrastructure/storage/supabase-storage";
 
 // Mock the supabase storage module
-vi.mock("@/lib/storage/supabase-storage", () => ({
+vi.mock("@/features/booking/infrastructure/storage/supabase-storage", () => ({
 	getSignedUrl: vi.fn(),
 }));
 

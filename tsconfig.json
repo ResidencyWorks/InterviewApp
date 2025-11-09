@@ -13,9 +13,13 @@
 		"noEmit": true,
 		"paths": {
 			"@/*": ["./src/*"],
-			"@/app/*": ["./app/*"],
+			"@/app/*": ["./src/app/*"],
 			"@/components/*": ["./src/components/*"],
-			"@/lib/*": ["./src/lib/*"]
+			"@domain/*": ["./src/domain/*"],
+			"@features/*": ["./src/features/*"],
+			"@infrastructure/*": ["./src/infrastructure/*"],
+			"@presentation/*": ["./src/presentation/*"],
+			"@shared/*": ["./src/shared/*"]
 		},
 		"plugins": [
 			{

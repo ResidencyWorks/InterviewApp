@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { evaluateTranscript } from "../src/lib/evaluation/evaluation-engine";
-import { validateEvaluationResult } from "../src/lib/evaluation/evaluation-schema";
+import { evaluateTranscript } from "@/domain/evaluation/evaluation-engine";
+import {
+	type ICategoryChip,
+	validateEvaluationResult,
+} from "@/domain/evaluation/evaluation-schema";
 
 describe("evaluation schema happy path", () => {
 	it("validates an evaluation result from engine", async () => {
@@ -18,7 +21,7 @@ describe("evaluation schema happy path", () => {
 		expect(typeof validated.practice_rule).toBe("string");
 
 		// Verify each category chip has required fields
-		validated.category_chips.forEach((chip) => {
+		validated.category_chips.forEach((chip: ICategoryChip) => {
 			expect(chip.id).toBeDefined();
 			expect(chip.name).toBeDefined();
 			expect(["PASS", "FLAG"]).toContain(chip.passFlag);

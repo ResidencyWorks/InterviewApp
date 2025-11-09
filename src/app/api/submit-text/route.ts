@@ -8,7 +8,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { validateTextSubmissionRequest } from "@/lib/upload/schemas";
+import { validateTextSubmissionRequest } from "@/features/booking/application/upload/schemas";
 import { createRecording } from "@/models/recording";
 import { validateUploadPermission } from "@/services/entitlement";
 

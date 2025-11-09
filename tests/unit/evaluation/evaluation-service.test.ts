@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { analytics } from "@/lib/analytics";
-import { databaseService } from "@/lib/db";
-import { EvaluationService } from "@/lib/evaluation/evaluation-service";
-import { cacheKeys, redisCache } from "@/lib/redis";
+import { EvaluationService } from "@/domain/evaluation/evaluation-service";
+import { analytics } from "@/features/notifications/application/analytics";
+import { databaseService } from "@/infrastructure/db";
+import { cacheKeys, redisCache } from "@/infrastructure/redis";
 import type { EvaluationRequest, EvaluationResult } from "@/types/evaluation";
 
 // Mock dependencies
-vi.mock("@/lib/db");
-vi.mock("@/lib/redis");
-vi.mock("@/lib/analytics");
-vi.mock("@/lib/evaluation/evaluation-engine");
+vi.mock("@/infrastructure/db");
+vi.mock("@/infrastructure/redis");
+vi.mock("@/features/notifications/application/analytics");
+vi.mock("@/domain/evaluation/evaluation-engine");
 
 describe("EvaluationService", () => {
 	let evaluationService: EvaluationService;

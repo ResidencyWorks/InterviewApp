@@ -101,7 +101,7 @@ pnpm build         # Build verification
 ```typescript
 // tests/unit/llm/FeedbackService.test.ts
 import { describe, it, expect, vi } from 'vitest';
-import { FeedbackService } from '@/lib/llm/domain/services/FeedbackService';
+import { FeedbackService } from '@/features/scheduling/llm/domain/services/FeedbackService';
 
 describe('FeedbackService', () => {
   it('should generate feedback for valid input', async () => {
@@ -122,7 +122,7 @@ describe('FeedbackService', () => {
 ```typescript
 // tests/integration/llm/evaluation.test.ts
 import { describe, it, expect } from 'vitest';
-import { EvaluateSubmissionUseCase } from '@/lib/llm/application/use-cases/EvaluateSubmissionUseCase';
+import { EvaluateSubmissionUseCase } from '@/features/scheduling/llm/application/use-cases/EvaluateSubmissionUseCase';
 
 describe('Evaluation Integration', () => {
   it('should complete full evaluation flow', async () => {
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
 ```typescript
 // src/app/api/evaluate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { EvaluateSubmissionUseCase } from '@/lib/llm/application/use-cases/EvaluateSubmissionUseCase';
+import { EvaluateSubmissionUseCase } from '@/features/scheduling/llm/application/use-cases/EvaluateSubmissionUseCase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -389,7 +389,7 @@ describe('FeedbackService', () => {
 
 ```typescript
 // Mock OpenAI API
-vi.mock('@/lib/llm/infrastructure/openai/OpenAITextAdapter', () => ({
+vi.mock('@/features/scheduling/llm/infrastructure/openai/OpenAITextAdapter', () => ({
   OpenAITextAdapter: vi.fn().mockImplementation(() => ({
     generateFeedback: vi.fn().mockResolvedValue({
       score: 85,
@@ -435,7 +435,7 @@ pnpm test --inspect
 
 ```typescript
 // Use structured logging
-import { logger } from '@/lib/logger';
+import { logger } from '@/infrastructure/logging/logger';
 
 logger.info('Evaluation started', {
   submissionId,

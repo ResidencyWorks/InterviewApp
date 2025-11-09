@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluationResultSchema } from "../src/lib/evaluation/evaluation-schema";
+import { evaluationResultSchema } from "@/domain/evaluation/evaluation-schema";
 
 describe("evaluation schema failure path", () => {
 	it("rejects invalid overall_score (> 100)", () => {

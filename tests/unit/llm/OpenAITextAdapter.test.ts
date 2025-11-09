@@ -6,9 +6,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	LLMServiceError,
 	ValidationError,
-} from "@/lib/llm/domain/errors/LLMErrors";
-import type { TextAdapterConfig } from "@/lib/llm/domain/interfaces/ITextAdapter";
-import { OpenAITextAdapter } from "@/lib/llm/infrastructure/openai/OpenAITextAdapter";
+} from "@/features/scheduling/llm/domain/errors/LLMErrors";
+import type { TextAdapterConfig } from "@/features/scheduling/llm/domain/interfaces/ITextAdapter";
+import { OpenAITextAdapter } from "@/features/scheduling/llm/infrastructure/openai/OpenAITextAdapter";
 
 // Mock OpenAI
 const mockCreate = vi.fn();

@@ -3,7 +3,7 @@ import {
 	PERFORMANCE_TARGETS,
 	performanceMonitor,
 	timeOperation,
-} from "@/lib/monitoring/performance";
+} from "@/features/scheduling/infrastructure/monitoring/performance";
 
 /**
  * Performance monitoring system tests

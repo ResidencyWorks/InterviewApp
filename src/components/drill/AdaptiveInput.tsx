@@ -8,7 +8,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { logPermissionDenied } from "@/lib/upload/analytics";
+import { logPermissionDenied } from "@/features/booking/application/upload/analytics";
 import { AudioRecorder } from "./AudioRecorder";
 import { TextFallback } from "./TextFallback";
 

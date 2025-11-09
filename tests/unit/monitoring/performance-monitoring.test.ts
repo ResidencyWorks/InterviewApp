@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PerformanceTrends } from "@/lib/analytics/PerformanceTrends";
+import { PerformanceTrends } from "@/features/notifications/application/analytics/PerformanceTrends";
 
 describe("Performance monitoring", () => {
 	it("computes moving average", () => {

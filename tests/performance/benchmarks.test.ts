@@ -1,13 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { contentPackValidationService } from "@/features/booking/application/services/content-pack-validation";
 import {
 	PERFORMANCE_TARGETS,
 	performanceMonitor,
-} from "@/lib/monitoring/performance";
-import { contentPackValidationService } from "@/lib/services/content-pack-validation";
-import {
-	contentPackCache,
-	userEntitlementCache,
-} from "../../src/lib/redis/index";
+} from "@/features/scheduling/infrastructure/monitoring/performance";
+import { contentPackCache, userEntitlementCache } from "@/infrastructure/redis";
+import type { UserEntitlementLevel } from "@/types/user";
 import type { ContentPackData } from "../../src/types";
 
 /**
@@ -141,7 +139,7 @@ describe("Performance Benchmarks", () => {
 					acc[id] = "PRO";
 					return acc;
 				},
-				{} as Record<string, string>,
+				{} as Record<string, UserEntitlementLevel>,
 			);
 
 			const start = performance.now();

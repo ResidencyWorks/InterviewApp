@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contentPackValidationService } from "@/lib/services/content-pack-validation";
+import { contentPackValidationService } from "@/features/booking/application/services/content-pack-validation";
 import type { ContentPackData } from "../../../src/types";
 
 function makeValidPack() {

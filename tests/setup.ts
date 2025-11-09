@@ -90,12 +90,12 @@ vi.mock("@upstash/redis", () => ({
 }));
 
 // Mock Redis cache classes
-vi.mock("../../src/lib/redis/index", () => ({
+vi.mock("../../src/infrastructure/redis/index", () => ({
 	userEntitlementCache: {
 		getEntitlement: vi.fn().mockImplementation(async (userId) => {
 			// Import performance monitor to track metrics
 			const { performanceMonitor } = await import(
-				"@/lib/monitoring/performance"
+				"@/features/scheduling/infrastructure/monitoring/performance"
 			);
 			const operationId = performanceMonitor.start("redis.lookup", { userId });
 			const result = "PRO";
@@ -175,62 +175,65 @@ vi.mock("openai", () => ({
 }));
 
 // Mock content pack validation service
-vi.mock("@/lib/services/content-pack-validation", () => ({
-	contentPackValidationService: {
-		validateContentPack: vi.fn().mockImplementation(async (contentPack) => {
-			// Import performance monitor to track metrics
-			const { performanceMonitor } = await import(
-				"@/lib/monitoring/performance"
-			);
-			const operationId = performanceMonitor.start("content.validation", {
-				contentSize: JSON.stringify(contentPack).length,
-			});
+vi.mock(
+	"@/features/booking/application/services/content-pack-validation",
+	() => ({
+		contentPackValidationService: {
+			validateContentPack: vi.fn().mockImplementation(async (contentPack) => {
+				// Import performance monitor to track metrics
+				const { performanceMonitor } = await import(
+					"@/features/scheduling/infrastructure/monitoring/performance"
+				);
+				const operationId = performanceMonitor.start("content.validation", {
+					contentSize: JSON.stringify(contentPack).length,
+				});
 
-			// Check for script-like content
-			const hasScript = JSON.stringify(contentPack).includes("<script>");
-			if (hasScript) {
+				// Check for script-like content
+				const hasScript = JSON.stringify(contentPack).includes("<script>");
+				if (hasScript) {
+					const result = {
+						valid: false,
+						errors: ["Content contains script-like patterns"],
+						warnings: [],
+						performance: { targetMet: true },
+						metadata: { questionCount: 50 },
+					};
+					performanceMonitor.end(operationId, true, result);
+					return result;
+				}
+
+				// Check for excessive questions
+				const questionCount = contentPack?.questions?.length || 50;
+				const warnings = [];
+				if (questionCount > 2000) {
+					warnings.push(`Too many questions: ${questionCount}`);
+				}
+
 				const result = {
-					valid: false,
-					errors: ["Content contains script-like patterns"],
-					warnings: [],
+					valid: true,
+					errors: [],
+					warnings,
 					performance: { targetMet: true },
-					metadata: { questionCount: 50 },
+					metadata: { questionCount },
 				};
 				performanceMonitor.end(operationId, true, result);
 				return result;
-			}
-
-			// Check for excessive questions
-			const questionCount = contentPack?.questions?.length || 50;
-			const warnings = [];
-			if (questionCount > 2000) {
-				warnings.push(`Too many questions: ${questionCount}`);
-			}
-
-			const result = {
+			}),
+			validateContentPackStructure: vi
+				.fn()
+				.mockResolvedValue({ valid: true, errors: [] }),
+			validateContentPackData: vi
+				.fn()
+				.mockResolvedValue({ valid: true, errors: [] }),
+			validateForHotSwap: vi.fn().mockResolvedValue({
 				valid: true,
 				errors: [],
-				warnings,
 				performance: { targetMet: true },
-				metadata: { questionCount },
-			};
-			performanceMonitor.end(operationId, true, result);
-			return result;
-		}),
-		validateContentPackStructure: vi
-			.fn()
-			.mockResolvedValue({ valid: true, errors: [] }),
-		validateContentPackData: vi
-			.fn()
-			.mockResolvedValue({ valid: true, errors: [] }),
-		validateForHotSwap: vi.fn().mockResolvedValue({
-			valid: true,
-			errors: [],
-			performance: { targetMet: true },
-			metadata: { questionCount: 50 },
-		}),
-	},
-}));
+				metadata: { questionCount: 50 },
+			}),
+		},
+	}),
+);
 
 // Mock window.location
 Object.defineProperty(window, "location", {

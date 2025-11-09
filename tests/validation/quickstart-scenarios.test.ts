@@ -4,12 +4,12 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LLMFeedbackService } from "@/lib/llm/application/services/LLMFeedbackService";
-import type { EvaluationRequestInput } from "@/lib/llm/application/use-cases/EvaluateSubmissionUseCase";
+import { LLMFeedbackService } from "@/features/scheduling/llm/application/services/LLMFeedbackService";
+import type { EvaluationRequestInput } from "@/features/scheduling/llm/application/use-cases/EvaluateSubmissionUseCase";
 
 // Mock OpenAI adapters
-vi.mock("@/lib/llm/infrastructure/openai/OpenAISpeechAdapter");
-vi.mock("@/lib/llm/infrastructure/openai/OpenAITextAdapter");
+vi.mock("@/features/scheduling/llm/infrastructure/openai/OpenAISpeechAdapter");
+vi.mock("@/features/scheduling/llm/infrastructure/openai/OpenAITextAdapter");
 
 describe("Quickstart Validation Scenarios", () => {
 	let feedbackService: LLMFeedbackService;

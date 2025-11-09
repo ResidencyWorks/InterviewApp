@@ -10,7 +10,7 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { logFallbackUsed } from "@/lib/upload/analytics";
+import { logFallbackUsed } from "@/features/booking/application/upload/analytics";
 
 /**
  * Props for TextFallback component

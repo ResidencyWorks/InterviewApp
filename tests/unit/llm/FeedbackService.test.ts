@@ -3,9 +3,9 @@
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
-import type { Submission } from "@/lib/llm/domain/entities/Submission";
-import { ValidationError } from "@/lib/llm/domain/errors/LLMErrors";
-import { FeedbackService } from "@/lib/llm/domain/services/FeedbackService";
+import type { Submission } from "@/features/scheduling/llm/domain/entities/Submission";
+import { ValidationError } from "@/features/scheduling/llm/domain/errors/LLMErrors";
+import { FeedbackService } from "@/features/scheduling/llm/domain/services/FeedbackService";
 
 describe("FeedbackService", () => {
 	let feedbackService: FeedbackService;

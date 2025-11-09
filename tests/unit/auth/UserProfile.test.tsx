@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserProfile } from "@/components/auth/UserProfile";
+import { authService } from "@/features/auth/application/services/auth-service";
 import { useAuth } from "@/hooks/useAuth";
-import { authService } from "@/lib/auth/auth-service";
 import { Constants } from "@/types/database";
 
 // Mock useAuth hook
@@ -29,7 +29,7 @@ vi.mock("@/hooks/useAuth", () => ({
 }));
 
 // Mock auth service
-vi.mock("@/lib/auth/auth-service", () => ({
+vi.mock("@/features/auth/application/services/auth-service", () => ({
 	authService: {
 		updateProfile: vi.fn(),
 	},

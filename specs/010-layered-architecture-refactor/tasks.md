@@ -18,8 +18,8 @@
 
 **Purpose**: Capture current state before restructuring begins.
 
-- [ ] T001 Document current `lib/` inventory in `/workspaces/InterviewApp/docs/architecture/lib-inventory.md`
-- [ ] T002 Outline migration approach and rollback plan in `/workspaces/InterviewApp/docs/architecture/layered-refactor-plan.md`
+- [x] T001 Document current `lib/` inventory in `/workspaces/InterviewApp/docs/architecture/lib-inventory.md`
+- [x] T002 Outline migration approach and rollback plan in `/workspaces/InterviewApp/docs/architecture/layered-refactor-plan.md`
 
 ---
 
@@ -28,9 +28,9 @@
 **Purpose**: Establish baseline directories and guidance before moving code.
 **⚠️ CRITICAL**: Complete this phase before touching user stories.
 
-- [ ] T003 Create canonical layer folders at `/workspaces/InterviewApp/src/{domain,application,infrastructure,presentation,shared,features}` with `.gitkeep`
-- [ ] T004 Author responsibility guides in `/workspaces/InterviewApp/src/*/README.md` describing allowed dependencies
-- [ ] T005 Write feature module overview in `/workspaces/InterviewApp/src/features/README.md` including naming and test strategy
+- [x] T003 Create canonical layer folders at `/workspaces/InterviewApp/src/{domain,application,infrastructure,presentation,shared,features}` with `.gitkeep`
+- [x] T004 Author responsibility guides in `/workspaces/InterviewApp/src/*/README.md` describing allowed dependencies
+- [x] T005 Write feature module overview in `/workspaces/InterviewApp/src/features/README.md` including naming and test strategy
 
 **Checkpoint**: Layer skeleton and documentation ready for migration.
 
@@ -43,13 +43,13 @@
 
 ### Implementation
 
-- [ ] T006 [US1] Move domain logic from `/workspaces/InterviewApp/lib/{domain,entitlements,evaluation,session,structure-analysis}` into `/workspaces/InterviewApp/src/domain/**`
-- [ ] T007 [US1] Relocate application orchestrators from `/workspaces/InterviewApp/lib/{validation,validations,services,optimization}` into `/workspaces/InterviewApp/src/application/**`
-- [ ] T008 [US1] Transfer infrastructure adapters from `/workspaces/InterviewApp/lib/{supabase,redis,posthog,rate-limit,retry,circuit-breaker,logging,webhooks}` into `/workspaces/InterviewApp/src/infrastructure/**`
-- [ ] T009 [US1] Align Next.js App Router routes under `/workspaces/InterviewApp/src/app/**` with updated imports from layered modules
-- [ ] T010 [P] [US1] Consolidate shared primitives and logger contracts into `/workspaces/InterviewApp/src/shared/**`
-- [ ] T011 [US1] Update layer READMEs in `/workspaces/InterviewApp/src/*/README.md` with migrated module listings and dependency rules
-- [ ] T012 [US1] Clean up obsolete `/workspaces/InterviewApp/lib/` imports and remove the directory
+- [x] T006 [US1] Move domain logic from `/workspaces/InterviewApp/lib/{domain,entitlements,evaluation,session,structure-analysis}` into `/workspaces/InterviewApp/src/domain/**`
+- [x] T007 [US1] Relocate application orchestrators from `/workspaces/InterviewApp/lib/{validation,validations,services,optimization}` into `/workspaces/InterviewApp/src/application/**`
+- [x] T008 [US1] Transfer infrastructure adapters from `/workspaces/InterviewApp/lib/{supabase,redis,posthog,rate-limit,retry,circuit-breaker,logging,webhooks}` into `/workspaces/InterviewApp/src/infrastructure/**`
+- [x] T009 [US1] Align Next.js App Router routes under `/workspaces/InterviewApp/src/app/**` with updated imports from layered modules
+- [x] T010 [P] [US1] Consolidate shared primitives and logger contracts into `/workspaces/InterviewApp/src/shared/**`
+- [x] T011 [US1] Update layer READMEs in `/workspaces/InterviewApp/src/*/README.md` with migrated module listings and dependency rules
+- [x] T012 [US1] Clean up obsolete `/workspaces/InterviewApp/lib/` imports and remove the directory
 
 **Checkpoint**: Layered structure in place; MVP delivered.
 
@@ -62,13 +62,13 @@
 
 ### Implementation
 
-- [ ] T013 [US2] Scaffold `/workspaces/InterviewApp/src/features/{booking,scheduling,auth,billing,notifications}/{domain,application,infrastructure,presentation}`
-- [ ] T014 [P] [US2] Migrate booking-specific assets into `/workspaces/InterviewApp/src/features/booking/**` wiring to shared layers
-- [ ] T015 [P] [US2] Migrate scheduling-specific assets into `/workspaces/InterviewApp/src/features/scheduling/**`
-- [ ] T016 [P] [US2] Migrate auth-specific assets into `/workspaces/InterviewApp/src/features/auth/**`
-- [ ] T017 [P] [US2] Migrate billing-specific assets into `/workspaces/InterviewApp/src/features/billing/**`
-- [ ] T018 [P] [US2] Migrate notifications-specific assets into `/workspaces/InterviewApp/src/features/notifications/**`
-- [ ] T019 [US2] Update `/workspaces/InterviewApp/src/features/README.md` with ownership, dependency, and testing guidance
+- [x] T013 [US2] Scaffold `/workspaces/InterviewApp/src/features/{booking,scheduling,auth,billing,notifications}/{domain,application,infrastructure,presentation}`
+- [x] T014 [P] [US2] Migrate booking-specific assets into `/workspaces/InterviewApp/src/features/booking/**` wiring to shared layers
+- [x] T015 [P] [US2] Migrate scheduling-specific assets into `/workspaces/InterviewApp/src/features/scheduling/**`
+- [x] T016 [P] [US2] Migrate auth-specific assets into `/workspaces/InterviewApp/src/features/auth/**`
+- [x] T017 [P] [US2] Migrate billing-specific assets into `/workspaces/InterviewApp/src/features/billing/**`
+- [x] T018 [P] [US2] Migrate notifications-specific assets into `/workspaces/InterviewApp/src/features/notifications/**`
+- [x] T019 [US2] Update `/workspaces/InterviewApp/src/features/README.md` with ownership, dependency, and testing guidance
 - [ ] T020 [US2] Refactor `/workspaces/InterviewApp/src/app/**` and `/workspaces/InterviewApp/src/presentation/**` to import from feature modules instead of shared services
 
 **Checkpoint**: Feature boundaries in place; teams can iterate autonomously.

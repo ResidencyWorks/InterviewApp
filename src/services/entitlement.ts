@@ -5,7 +5,7 @@
  * @file src/services/entitlement.ts
  */
 
-import { entitlementsService } from "@/lib/entitlements/EntitlementsService";
+import { entitlementsService } from "@/features/auth/domain/entitlements/EntitlementsService";
 
 /**
  * Check if user has permission to record and upload audio

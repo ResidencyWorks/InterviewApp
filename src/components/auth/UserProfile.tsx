@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authService } from "@/features/auth/application/services/auth-service";
 import { useAuth } from "@/hooks";
-import { authService } from "@/lib/auth/auth-service";
 
 interface UserProfileProps {
 	className?: string;

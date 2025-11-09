@@ -4,10 +4,10 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { LLMFeedbackService } from "@/lib/llm/application/services/LLMFeedbackService";
-import type { EvaluationRequestInput } from "@/lib/llm/application/use-cases/EvaluateSubmissionUseCase";
-import { OpenAISpeechAdapter } from "@/lib/llm/infrastructure/openai/OpenAISpeechAdapter";
-import { OpenAITextAdapter } from "@/lib/llm/infrastructure/openai/OpenAITextAdapter";
+import { LLMFeedbackService } from "@/features/scheduling/llm/application/services/LLMFeedbackService";
+import type { EvaluationRequestInput } from "@/features/scheduling/llm/application/use-cases/EvaluateSubmissionUseCase";
+import { OpenAISpeechAdapter } from "@/features/scheduling/llm/infrastructure/openai/OpenAISpeechAdapter";
+import { OpenAITextAdapter } from "@/features/scheduling/llm/infrastructure/openai/OpenAITextAdapter";
 
 describe("LLM Feedback Service Integration Tests", () => {
 	let feedbackService: LLMFeedbackService;

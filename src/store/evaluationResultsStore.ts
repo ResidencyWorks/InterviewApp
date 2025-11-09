@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { IEvaluationResult } from "../lib/evaluation/evaluation-schema";
+import type { IEvaluationResult } from "@/domain/evaluation/evaluation-schema";
 
 export interface IEvaluationState {
 	result?: IEvaluationResult;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ProjectStructureAnalyzer } from "../../../src/lib/structure-analysis/services/ProjectStructureAnalyzer.js";
+import { ProjectStructureAnalyzer } from "@/domain/structure-analysis/services/ProjectStructureAnalyzer";
 
 describe("ProjectStructureAnalyzer", () => {
 	it("runs analysis and returns completed status", async () => {

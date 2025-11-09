@@ -2,7 +2,7 @@
 
 import type { AuthUser } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/infrastructure/supabase/client";
 import type { Tables } from "@/types/database";
 import type { UserEntitlementLevel } from "@/types/user";
 

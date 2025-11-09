@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RecommendationGeneratorService } from "../../../src/lib/structure-analysis/services/RecommendationGenerator.js";
+import { RecommendationGeneratorService } from "@/domain/structure-analysis/services/RecommendationGenerator";
 
 describe("RecommendationGeneratorService", () => {
 	it("generates recommendations for duplications with sufficient score", () => {
