@@ -13,7 +13,7 @@ pre-commit:
       pass_text: "✅ Linting passed"
 
     typecheck:
-      run: pnpm tsc --noEmit
+      run: pnpm tsc --noEmit --project tsconfig.json
       glob: "*.{ts,tsx}"
       fail_text: "❌ Type checking failed. Please fix the type errors above."
       pass_text: "✅ Type checking passed"

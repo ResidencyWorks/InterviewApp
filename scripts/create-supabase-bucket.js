@@ -22,14 +22,11 @@ async function createBucket() {
 	try {
 		console.log("Creating drill-recordings bucket...");
 
-		const { data, error } = await supabase.storage.createBucket(
-			"drill-recordings",
-			{
-				public: false,
-				allowedMimeTypes: ["audio/webm", "audio/ogg", "audio/mp4"],
-				fileSizeLimit: 10485760, // 10MB
-			},
-		);
+		const { error } = await supabase.storage.createBucket("drill-recordings", {
+			public: false,
+			allowedMimeTypes: ["audio/webm", "audio/ogg", "audio/mp4"],
+			fileSizeLimit: 10485760, // 10MB
+		});
 
 		if (error) {
 			if (error.message.includes("already exists")) {

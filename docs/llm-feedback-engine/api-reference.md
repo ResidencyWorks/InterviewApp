@@ -224,7 +224,7 @@ interface WebhookPayload {
 ### JavaScript/TypeScript
 
 ```typescript
-import { LLMFeedbackClient } from '@/lib/llm/client';
+import { LLMFeedbackClient } from '@/features/scheduling/llm/client';
 
 const client = new LLMFeedbackClient();
 

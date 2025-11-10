@@ -1,8 +1,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { isProtectedPath, isPublicPath } from "@/lib/auth/auth-helpers";
-import { defaultContentPackLoader } from "@/lib/infrastructure/default/DefaultContentPack";
-import { createClient } from "@/lib/supabase/middleware";
+import {
+	isProtectedPath,
+	isPublicPath,
+} from "@/features/auth/application/auth-helpers";
+import { defaultContentPackLoader } from "@/features/booking/infrastructure/default/DefaultContentPack";
+import { createClient } from "@/infrastructure/supabase/middleware";
 
 /**
  * Protected routes configuration

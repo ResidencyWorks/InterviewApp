@@ -3,8 +3,8 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { RetryService } from "@/lib/llm/infrastructure/retry/RetryService";
-import type { RetryConfig } from "@/lib/llm/types/config";
+import { RetryService } from "@/features/scheduling/llm/infrastructure/retry/RetryService";
+import type { RetryConfig } from "@/features/scheduling/llm/types/config";
 
 describe("RetryService", () => {
 	let retryService: RetryService;

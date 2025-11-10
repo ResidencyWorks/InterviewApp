@@ -10,6 +10,10 @@ export default defineConfig({
 		},
 	},
 	test: {
+		include: [
+			"tests/unit/**/*.{test,spec}.{ts,tsx,js}",
+			"tests/integration/**/*.{test,spec}.{ts,tsx,js}",
+		],
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "json", "html", "lcov"],
@@ -49,10 +53,7 @@ export default defineConfig({
 			"**/cypress/**",
 			"**/.{idea,git,cache,output,temp}/**",
 			"**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
-			"**/tests/e2e/**",
-			"**/tests/integration/auth/api-routes.test.ts",
-			"**/tests/integration/content/upload-activate.test.ts",
-			"**/tests/integration/evaluation/evaluation-api.test.ts",
+			"tests/e2e/**",
 		],
 	},
 });

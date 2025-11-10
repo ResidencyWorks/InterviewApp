@@ -11,15 +11,15 @@ afterEach(() => {
 	cleanup();
 });
 
-// Mock environment variables
-beforeAll(() => {
-	process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
-	process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key";
-	process.env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
-	process.env.UPSTASH_REDIS_REST_URL = "https://test-redis.upstash.io";
-	process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
-	process.env.OPENAI_API_KEY = "test-openai-key";
-});
+process.env.NEXT_PUBLIC_SUPABASE_URL ??= "https://test.supabase.co";
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-key";
+process.env.SUPABASE_URL ??= "https://service.supabase.co";
+process.env.SUPABASE_SERVICE_ROLE_KEY ??= "service-role-key";
+process.env.SUPABASE_ANON_KEY ??= "anon-key";
+process.env.NEXT_PUBLIC_SITE_URL ??= "http://localhost:3000";
+process.env.UPSTASH_REDIS_REST_URL ??= "https://test-redis.upstash.io";
+process.env.UPSTASH_REDIS_REST_TOKEN ??= "test-token";
+process.env.OPENAI_API_KEY ??= "test-openai-key";
 
 // Mock Supabase client
 vi.mock("@supabase/supabase-js", () => ({
@@ -71,8 +71,8 @@ vi.mock("@supabase/ssr", () => ({
 }));
 
 // Mock Redis client
-vi.mock("@upstash/redis", () => ({
-	Redis: vi.fn().mockImplementation(() => ({
+const RedisMock = vi.fn().mockImplementation(function RedisMockImpl() {
+	return {
 		get: vi.fn().mockResolvedValue(null),
 		set: vi.fn().mockResolvedValue("OK"),
 		setex: vi.fn().mockResolvedValue("OK"),
@@ -86,16 +86,20 @@ vi.mock("@upstash/redis", () => ({
 			del: vi.fn(),
 			exec: vi.fn().mockResolvedValue([]),
 		}),
-	})),
+	};
+});
+
+vi.mock("@upstash/redis", () => ({
+	Redis: RedisMock,
 }));
 
 // Mock Redis cache classes
-vi.mock("../../src/lib/redis/index", () => ({
+vi.mock("../../src/infrastructure/redis/index", () => ({
 	userEntitlementCache: {
 		getEntitlement: vi.fn().mockImplementation(async (userId) => {
 			// Import performance monitor to track metrics
 			const { performanceMonitor } = await import(
-				"@/lib/monitoring/performance"
+				"@/features/scheduling/infrastructure/monitoring/performance"
 			);
 			const operationId = performanceMonitor.start("redis.lookup", { userId });
 			const result = "PRO";
@@ -175,62 +179,65 @@ vi.mock("openai", () => ({
 }));
 
 // Mock content pack validation service
-vi.mock("@/lib/services/content-pack-validation", () => ({
-	contentPackValidationService: {
-		validateContentPack: vi.fn().mockImplementation(async (contentPack) => {
-			// Import performance monitor to track metrics
-			const { performanceMonitor } = await import(
-				"@/lib/monitoring/performance"
-			);
-			const operationId = performanceMonitor.start("content.validation", {
-				contentSize: JSON.stringify(contentPack).length,
-			});
+vi.mock(
+	"@/features/booking/application/services/content-pack-validation",
+	() => ({
+		contentPackValidationService: {
+			validateContentPack: vi.fn().mockImplementation(async (contentPack) => {
+				// Import performance monitor to track metrics
+				const { performanceMonitor } = await import(
+					"@/features/scheduling/infrastructure/monitoring/performance"
+				);
+				const operationId = performanceMonitor.start("content.validation", {
+					contentSize: JSON.stringify(contentPack).length,
+				});
 
-			// Check for script-like content
-			const hasScript = JSON.stringify(contentPack).includes("<script>");
-			if (hasScript) {
+				// Check for script-like content
+				const hasScript = JSON.stringify(contentPack).includes("<script>");
+				if (hasScript) {
+					const result = {
+						valid: false,
+						errors: ["Content contains script-like patterns"],
+						warnings: [],
+						performance: { targetMet: true },
+						metadata: { questionCount: 50 },
+					};
+					performanceMonitor.end(operationId, true, result);
+					return result;
+				}
+
+				// Check for excessive questions
+				const questionCount = contentPack?.questions?.length || 50;
+				const warnings = [];
+				if (questionCount > 2000) {
+					warnings.push(`Too many questions: ${questionCount}`);
+				}
+
 				const result = {
-					valid: false,
-					errors: ["Content contains script-like patterns"],
-					warnings: [],
+					valid: true,
+					errors: [],
+					warnings,
 					performance: { targetMet: true },
-					metadata: { questionCount: 50 },
+					metadata: { questionCount },
 				};
 				performanceMonitor.end(operationId, true, result);
 				return result;
-			}
-
-			// Check for excessive questions
-			const questionCount = contentPack?.questions?.length || 50;
-			const warnings = [];
-			if (questionCount > 2000) {
-				warnings.push(`Too many questions: ${questionCount}`);
-			}
-
-			const result = {
+			}),
+			validateContentPackStructure: vi
+				.fn()
+				.mockResolvedValue({ valid: true, errors: [] }),
+			validateContentPackData: vi
+				.fn()
+				.mockResolvedValue({ valid: true, errors: [] }),
+			validateForHotSwap: vi.fn().mockResolvedValue({
 				valid: true,
 				errors: [],
-				warnings,
 				performance: { targetMet: true },
-				metadata: { questionCount },
-			};
-			performanceMonitor.end(operationId, true, result);
-			return result;
-		}),
-		validateContentPackStructure: vi
-			.fn()
-			.mockResolvedValue({ valid: true, errors: [] }),
-		validateContentPackData: vi
-			.fn()
-			.mockResolvedValue({ valid: true, errors: [] }),
-		validateForHotSwap: vi.fn().mockResolvedValue({
-			valid: true,
-			errors: [],
-			performance: { targetMet: true },
-			metadata: { questionCount: 50 },
-		}),
-	},
-}));
+				metadata: { questionCount: 50 },
+			}),
+		},
+	}),
+);
 
 // Mock window.location
 Object.defineProperty(window, "location", {

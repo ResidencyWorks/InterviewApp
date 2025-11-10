@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 import { Badge } from "./badge";
 
 export interface ScoreChipProps {

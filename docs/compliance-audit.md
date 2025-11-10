@@ -247,7 +247,7 @@ This document outlines the compliance and audit logging framework for the Interv
 
 #### Basic Usage
 ```typescript
-import { auditService } from '@/lib/compliance/audit-service';
+import { auditService } from '@/infrastructure/compliance/audit-service';
 
 // Log an audit event
 await auditService.logAuditEvent({

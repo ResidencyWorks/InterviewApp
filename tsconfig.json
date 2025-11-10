@@ -13,9 +13,15 @@
 		"noEmit": true,
 		"paths": {
 			"@/*": ["./src/*"],
-			"@/app/*": ["./app/*"],
+			"@/app/*": ["./src/app/*"],
 			"@/components/*": ["./src/components/*"],
-			"@/lib/*": ["./src/lib/*"]
+			"@app/*": ["./src/application/*"],
+			"@domain/*": ["./src/domain/*"],
+			"@features/*": ["./src/features/*"],
+			"@infra/*": ["./src/infrastructure/*"],
+			"@infrastructure/*": ["./src/infrastructure/*"],
+			"@presentation/*": ["./src/presentation/*"],
+			"@shared/*": ["./src/shared/*"]
 		},
 		"plugins": [
 			{

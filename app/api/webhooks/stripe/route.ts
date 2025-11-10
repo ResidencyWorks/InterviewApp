@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { serverDatabaseService } from "@/lib/db/database-service";
-import { entitlementsService } from "@/lib/entitlements/EntitlementsService";
-import { userEntitlementCache } from "@/lib/redis";
-import { idempotencyStore } from "@/lib/webhooks/IdempotencyStore";
+import { entitlementsService } from "@/features/auth/domain/entitlements/EntitlementsService";
+import { serverDatabaseService } from "@/infrastructure/db/database-service";
+import { userEntitlementCache } from "@/infrastructure/redis";
+import { idempotencyStore } from "@/infrastructure/webhooks/IdempotencyStore";
 import type { UserEntitlementLevel } from "@/types";
 
 /**

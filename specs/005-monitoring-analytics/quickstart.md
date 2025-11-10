@@ -219,7 +219,7 @@ Create `src/hooks/useAnalytics.ts`:
 
 ```typescript
 import { useCallback } from 'react';
-import { AnalyticsService, AnalyticsEvent } from '@/lib/analytics/analytics-service';
+import { AnalyticsService, AnalyticsEvent } from '@/features/notifications/application/analytics';
 
 export function useAnalytics() {
   const trackEvent = useCallback((event: Omit<AnalyticsEvent, 'sessionId'>) => {
@@ -304,7 +304,7 @@ function DrillComponent() {
 #### Capture Errors
 
 ```typescript
-import { ErrorService } from '@/lib/monitoring/error-service';
+import { ErrorService } from '@/features/scheduling/infrastructure/monitoring/error-service';
 
 function ApiService() {
   const handleApiCall = async () => {
@@ -341,7 +341,7 @@ Create `src/components/ErrorBoundary.tsx`:
 'use client';
 
 import React from 'react';
-import { ErrorService } from '@/lib/monitoring/error-service';
+import { ErrorService } from '@/features/scheduling/infrastructure/monitoring/error-service';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -479,7 +479,7 @@ import { render, screen } from '@testing-library/react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 // Mock analytics service
-vi.mock('@/lib/analytics/analytics-service', () => ({
+vi.mock('@/features/notifications/application/analytics', () => ({
   AnalyticsService: {
     track: vi.fn(),
     identify: vi.fn(),
@@ -546,7 +546,7 @@ function validateEvent(event: unknown) {
 ```typescript
 // Load analytics only when needed
 const loadAnalytics = async () => {
-  const { AnalyticsService } = await import('@/lib/analytics/analytics-service');
+  const { AnalyticsService } = await import('@/features/notifications/application/analytics');
   return AnalyticsService;
 };
 ```

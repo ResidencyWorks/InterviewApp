@@ -63,7 +63,7 @@ Visit `http://localhost:3000/practice`
 You'll see:
 - **Overall Score**: 0–100 (higher is better)
 - **Duration, Words, WPM**: Metrics about your response
-- **7 Category Chips**: 
+- **7 Category Chips**:
   - Communication
   - Problem Solving
   - Leadership
@@ -186,39 +186,47 @@ See [docs/owner-runbook.md](docs/owner-runbook.md) for:
 
 ## Architecture
 
-- **Frontend**: Next.js 16 with React 19, Tailwind CSS
-- **Backend**: Next.js API Routes
-- **State**: React Context + `useSyncExternalStore` (no external dependencies)
-- **Validation**: Zod schemas
-- **Analytics**: PostHog integration (console fallback)
-- **Auth**: Simple bearer token + in-memory stores
+- **Layered Core**: `src/domain`, `src/application`, `src/infrastructure`, `src/presentation`, `src/shared`
+- **Feature Modules**: Vertical slices under `src/features/<feature>/{domain,application,infrastructure,presentation}`
+- **Composition Root**: `src/infrastructure/config/{environment.ts,clients.ts,container.ts}` wires validated configuration and external clients
+- **Path Aliases**: `@domain/*`, `@app/*`, `@infra/*`, `@presentation/*`, `@shared/*`, `@features/*`
+- **Boundary Enforcement**: Biome `noRestrictedImports` overrides (`pnpm lint:boundaries`)
+- **Testing Tiers**: Vitest suites under `tests/unit` and `tests/integration`; Playwright specs under `tests/e2e`
 
 ## Project Structure
 
 ```
-/app
-  /(dashboard)/practice/page.tsx          # Main practice UI
-  /api/evaluate/route.ts                  # Evaluation endpoint
-  /api/webhooks/stripe/route.ts           # Stripe webhook
-  /admin/content-packs/page.tsx           # Content pack admin
+src/
+  app/                                    # Next.js App Router (presentation layer)
+  application/                            # Use-cases, DTO mappers, validation schemas
+  domain/                                 # Entities, value objects, domain services
+  infrastructure/
+    config/                               # Environment, shared clients, DI container
+    redis/                                # Redis cache services
+    supabase/                             # Supabase adapters
+    ...                                   # Additional adapters (logging, compliance, etc.)
+  presentation/                           # Presentation helpers (API middleware, guards)
+  shared/                                 # Cross-cutting primitives (errors, logging, utilities)
+  features/
+    booking/
+      domain/                             # Booking-specific entities
+      application/                        # Booking orchestration and validation
+      infrastructure/                     # Booking adapters (storage, analytics)
+      presentation/                       # Booking controllers / UI entry points
+    scheduling/
+    auth/
+    billing/
+    notifications/
 
-/src/lib
-  /evaluation                             # Evaluation engine & schema
-  /analytics                              # PostHog + analytics
-  /content-pack                           # Pack loading & validation
-  /entitlements                           # Access control
-  /auth                                   # Authentication helpers
-  /error                                  # Error tracking
+tests/
+  unit/                                   # Layer + feature unit specs (Vitest)
+  integration/                            # Integration/performance/load specs (Vitest & k6)
+  e2e/                                    # Playwright end-to-end scenarios
 
-/src/components
-  /evaluation                             # Results display
-  /content-pack                           # Pack UI
-
-/src/store                                # Client-side state
-
-/tests                                    # Unit & integration tests
-
-/sample-data                              # Sample content pack
+docs/
+  architecture/
+    adr-layered-dependency-rules.md       # Decision record for dependency guardrails
+    migration-report.md                   # Validation summary for the refactor
 ```
 
 ## Development Notes

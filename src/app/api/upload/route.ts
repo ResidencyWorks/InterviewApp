@@ -7,11 +7,11 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { uploadFile } from "@/lib/storage/supabase-storage";
-import { captureUploadError } from "@/lib/upload/errors";
-import { validateUploadRequest } from "@/lib/upload/schemas";
+import { validateUploadPermission } from "@/features/auth/application/entitlements/upload-permissions";
+import { captureUploadError } from "@/features/booking/application/upload/errors";
+import { validateUploadRequest } from "@/features/booking/application/upload/schemas";
+import { uploadFile } from "@/features/booking/infrastructure/storage/supabase-storage";
 import { createRecording } from "@/models/recording";
-import { validateUploadPermission } from "@/services/entitlement";
 
 /**
  * POST handler for audio upload

@@ -7,7 +7,7 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { cleanupExpiredRecordings } from "@/lib/storage/lifecycle";
+import { cleanupExpiredRecordings } from "@/features/booking/infrastructure/storage/lifecycle";
 
 /**
  * POST handler for triggering cleanup

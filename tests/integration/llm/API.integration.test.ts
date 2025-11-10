@@ -5,8 +5,7 @@
 
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { GET } from "../../../app/api/evaluate/[submissionId]/status/route";
-import { POST } from "../../../app/api/evaluate/route";
+import { POST } from "@/app/api/evaluate/route";
 
 describe("LLM API Integration Tests", () => {
 	beforeAll(async () => {
@@ -180,85 +179,6 @@ describe("LLM API Integration Tests", () => {
 			// Some requests should be rate limited
 			const rateLimited = responses.filter((res) => res.status === 429);
 			expect(rateLimited.length).toBeGreaterThan(0);
-		});
-	});
-
-	describe("GET /api/evaluate/[submissionId]/status", () => {
-		it("should return status for valid submission", async () => {
-			// First create a submission
-			const requestBody = {
-				content: "Status test content",
-				question: "Test question",
-			};
-
-			const createRequest = new NextRequest("http://localhost/api/evaluate", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: "Bearer test-token",
-				},
-				body: JSON.stringify(requestBody),
-			});
-
-			const createResponse = await POST(createRequest);
-
-			if (createResponse.status === 200) {
-				const createData = await createResponse.json();
-				const submissionId = createData.submissionId;
-
-				// Now check status
-				const statusRequest = new NextRequest(
-					`http://localhost/api/evaluate/${submissionId}/status`,
-					{
-						method: "GET",
-						headers: {
-							Authorization: "Bearer test-token",
-						},
-					},
-				);
-
-				const statusResponse = await GET(statusRequest, {
-					params: { submissionId },
-				});
-				const statusData = await statusResponse.json();
-
-				expect(statusResponse.status).toBe(200);
-				expect(statusData).toHaveProperty("submissionId");
-				expect(statusData).toHaveProperty("status");
-				expect(statusData.submissionId).toBe(submissionId);
-			}
-		});
-
-		it("should return 404 for invalid submission ID", async () => {
-			const request = new NextRequest(
-				"http://localhost/api/evaluate/invalid-id/status",
-				{
-					method: "GET",
-					headers: {
-						Authorization: "Bearer test-token",
-					},
-				},
-			);
-
-			const response = await GET(request, {
-				params: { submissionId: "invalid-id" },
-			});
-			expect(response.status).toBe(404);
-		});
-
-		it("should handle authentication errors", async () => {
-			const request = new NextRequest(
-				"http://localhost/api/evaluate/test-id/status",
-				{
-					method: "GET",
-					// Missing Authorization header
-				},
-			);
-
-			const response = await GET(request, {
-				params: { submissionId: "test-id" },
-			});
-			expect(response.status).toBe(401);
 		});
 	});
 

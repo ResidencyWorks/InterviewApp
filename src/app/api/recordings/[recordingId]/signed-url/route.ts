@@ -7,7 +7,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
-import { generateSignedUrl } from "@/lib/storage/signed-url";
+import { generateSignedUrl } from "@/features/booking/infrastructure/storage/signed-url";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

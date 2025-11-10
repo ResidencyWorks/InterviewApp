@@ -242,7 +242,7 @@ This guide helps you resolve common issues when developing or deploying the Inte
 
 2. **Use environment validation**
    ```typescript
-   import { env } from '@/lib/env'
+   import { env } from '@/infrastructure/config/environment'
    // This will throw if env vars are missing
    ```
 

@@ -7,8 +7,8 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { captureUploadError } from "@/lib/upload/errors";
-import { validateUploadPermission } from "@/services/entitlement";
+import { validateUploadPermission } from "@/features/auth/application/entitlements/upload-permissions";
+import { captureUploadError } from "@/features/booking/application/upload/errors";
 
 /**
  * POST handler for text submission

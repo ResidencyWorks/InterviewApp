@@ -7,6 +7,8 @@
 
 import { expect, test } from "@playwright/test";
 
+type MockBlobEvent = { data: Blob };
+
 test.describe("Audio Upload Flow E2E", () => {
 	test.beforeEach(async ({ page }) => {
 		// Navigate to a test page with the upload component
@@ -21,7 +23,7 @@ test.describe("Audio Upload Flow E2E", () => {
 			// Mock MediaRecorder
 			class MockMediaRecorder {
 				state = "inactive";
-				ondataavailable: ((event: any) => void) | null = null;
+				ondataavailable: ((event: MockBlobEvent) => void) | null = null;
 				onstop: (() => void) | null = null;
 
 				start() {
@@ -155,7 +157,7 @@ test.describe("Audio Upload Flow E2E", () => {
 		await page.addInitScript(() => {
 			class MockMediaRecorder {
 				state = "inactive";
-				ondataavailable: ((event: any) => void) | null = null;
+				ondataavailable: ((event: MockBlobEvent) => void) | null = null;
 				onstop: (() => void) | null = null;
 
 				start() {
@@ -233,7 +235,7 @@ test.describe("Audio Upload Flow E2E", () => {
 		await page.addInitScript(() => {
 			class MockMediaRecorder {
 				state = "inactive";
-				ondataavailable: ((event: any) => void) | null = null;
+				ondataavailable: ((event: MockBlobEvent) => void) | null = null;
 				onstop: (() => void) | null = null;
 
 				start() {
@@ -301,7 +303,7 @@ test.describe("Audio Upload Flow E2E", () => {
 		await page.addInitScript(() => {
 			class MockMediaRecorder {
 				state = "inactive";
-				ondataavailable: ((event: any) => void) | null = null;
+				ondataavailable: ((event: MockBlobEvent) => void) | null = null;
 				onstop: (() => void) | null = null;
 
 				start() {

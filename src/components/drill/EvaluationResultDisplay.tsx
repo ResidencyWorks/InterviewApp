@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScorePopover } from "@/components/ui/score-popover";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 import type {
 	EvaluationCategories,
 	EvaluationResult,

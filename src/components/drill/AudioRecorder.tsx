@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
 	logRecordingStarted,
 	logRecordingStopped,
-} from "@/lib/upload/analytics";
+} from "@/features/booking/application/upload/analytics";
 
 /**
  * Props for AudioRecorder component

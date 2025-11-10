@@ -1,7 +1,7 @@
 "use client";
 
 import type * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 import type { EvaluationCategories } from "@/types/evaluation";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { ScoreChip } from "./score-chip";

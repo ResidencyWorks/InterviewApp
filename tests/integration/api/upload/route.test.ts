@@ -7,9 +7,9 @@
 
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { uploadFile } from "@/lib/storage/supabase-storage";
-import { validateUploadPermission } from "@/services/entitlement";
-import { POST } from "../../../../src/app/api/upload/route";
+import { POST } from "@/app/api/upload/route";
+import { validateUploadPermission } from "@/features/auth/application/entitlements/upload-permissions";
+import { uploadFile } from "@/features/booking/infrastructure/storage/supabase-storage";
 
 // Set test timeout
 vi.setConfig({ testTimeout: 10000 });
@@ -36,11 +36,11 @@ const mockSupabaseClient = {
 };
 
 // Mock dependencies
-vi.mock("@/lib/storage/supabase-storage", () => ({
+vi.mock("@/features/booking/infrastructure/storage/supabase-storage", () => ({
 	uploadFile: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
-vi.mock("@/services/entitlement", () => ({
+vi.mock("@/features/auth/application/entitlements/upload-permissions", () => ({
 	validateUploadPermission: vi.fn(() => Promise.resolve()),
 }));
 

@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+type MockFn = ReturnType<typeof vi.fn>;
+type AuthMock = {
+	getUser: MockFn;
+	signInWithOtp: MockFn;
+	signOut: MockFn;
+	updateUser: MockFn;
+};
+
 // Mock the entire Supabase client module
-vi.mock("@/lib/supabase/client", () => {
+vi.mock("@/infrastructure/supabase/client", () => {
 	const mockAuth = {
 		getUser: vi.fn(),
 		signInWithOtp: vi.fn(),
@@ -17,7 +25,7 @@ vi.mock("@/lib/supabase/client", () => {
 });
 
 // Mock the server client module
-vi.mock("@/lib/supabase/server", () => {
+vi.mock("@/infrastructure/supabase/server", () => {
 	const mockAuth = {
 		getUser: vi.fn(),
 		signInWithOtp: vi.fn(),
@@ -41,20 +49,20 @@ vi.mock("next/headers", () => ({
 }));
 
 // Import after mocking
-import { AuthService } from "@/lib/auth/auth-service";
+import { AuthService } from "@/features/auth/application/services/auth-service";
 
 describe("AuthService", () => {
 	let authService: AuthService;
-	let mockAuth: any;
+	let mockAuth: AuthMock;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
 		authService = new AuthService();
 
 		// Get the mocked auth methods
-		const { createClient } = await import("@/lib/supabase/client");
+		const { createClient } = await import("@/infrastructure/supabase/client");
 		const client = createClient();
-		mockAuth = client.auth;
+		mockAuth = client.auth as unknown as AuthMock;
 	});
 
 	describe("signInWithMagicLink", () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useReportWebVitals } from "next/web-vitals";
-import { reportWebVitals } from "../lib/analytics/web-vitals";
+import { reportWebVitals } from "@/features/notifications/application/analytics/web-vitals";
 
 export function WebVitals() {
 	useReportWebVitals((metric) => {

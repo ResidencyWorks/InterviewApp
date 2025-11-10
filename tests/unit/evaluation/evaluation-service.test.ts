@@ -1,27 +1,47 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { analytics } from "@/lib/analytics";
-import { databaseService } from "@/lib/db";
-import { EvaluationService } from "@/lib/evaluation/evaluation-service";
-import { cacheKeys, redisCache } from "@/lib/redis";
+import { EvaluationService } from "@/domain/evaluation/evaluation-service";
+import { analytics } from "@/features/notifications/application/analytics";
+import { databaseService } from "@/infrastructure/db";
+import { cacheKeys, redisCache } from "@/infrastructure/redis";
 import type { EvaluationRequest, EvaluationResult } from "@/types/evaluation";
 
 // Mock dependencies
-vi.mock("@/lib/db");
-vi.mock("@/lib/redis");
-vi.mock("@/lib/analytics");
-vi.mock("@/lib/evaluation/evaluation-engine");
+vi.mock("@/infrastructure/db");
+vi.mock("@/infrastructure/redis");
+vi.mock("@/features/notifications/application/analytics");
+vi.mock("@/domain/evaluation/evaluation-engine");
+
+type MockFn = ReturnType<typeof vi.fn>;
+
+type DatabaseServiceMock = {
+	insert: MockFn;
+	update: MockFn;
+	findById: MockFn;
+	paginate: MockFn;
+};
+
+type RedisCacheMock = {
+	get: MockFn;
+	set: MockFn;
+	delete: MockFn;
+};
+
+type AnalyticsMock = {
+	trackEvaluationStarted: MockFn;
+	trackEvaluationCompleted: MockFn;
+	trackEvaluationFailed: MockFn;
+};
 
 describe("EvaluationService", () => {
 	let evaluationService: EvaluationService;
-	let mockDatabaseService: any;
-	let mockRedisCache: any;
-	let mockAnalytics: any;
+	let mockDatabaseService: DatabaseServiceMock;
+	let mockRedisCache: RedisCacheMock;
+	let mockAnalytics: AnalyticsMock;
 
 	beforeEach(() => {
 		// Reset all mocks
 		vi.clearAllMocks();
 
-		// Setup mock implementations
 		mockDatabaseService = {
 			insert: vi.fn(),
 			update: vi.fn(),
@@ -41,27 +61,28 @@ describe("EvaluationService", () => {
 			trackEvaluationFailed: vi.fn(),
 		};
 
-		// Apply mocks
-		vi.mocked(databaseService).insert = mockDatabaseService.insert;
-		vi.mocked(databaseService).update = mockDatabaseService.update;
-		vi.mocked(databaseService).findById = mockDatabaseService.findById;
-		vi.mocked(databaseService).paginate = mockDatabaseService.paginate;
+		const databaseServiceMock =
+			databaseService as unknown as DatabaseServiceMock;
+		databaseServiceMock.insert = mockDatabaseService.insert;
+		databaseServiceMock.update = mockDatabaseService.update;
+		databaseServiceMock.findById = mockDatabaseService.findById;
+		databaseServiceMock.paginate = mockDatabaseService.paginate;
 
-		vi.mocked(redisCache).get = mockRedisCache.get;
-		vi.mocked(redisCache).set = mockRedisCache.set;
-		vi.mocked(redisCache).delete = mockRedisCache.delete;
+		const redisCacheMock = redisCache as unknown as RedisCacheMock;
+		redisCacheMock.get = mockRedisCache.get;
+		redisCacheMock.set = mockRedisCache.set;
+		redisCacheMock.delete = mockRedisCache.delete;
+
+		const analyticsMock = analytics as unknown as AnalyticsMock;
+		analyticsMock.trackEvaluationStarted = mockAnalytics.trackEvaluationStarted;
+		analyticsMock.trackEvaluationCompleted =
+			mockAnalytics.trackEvaluationCompleted;
+		analyticsMock.trackEvaluationFailed = mockAnalytics.trackEvaluationFailed;
 
 		// Mock cacheKeys - use vi.spyOn to mock the function
 		vi.spyOn(cacheKeys, "evaluationResult").mockImplementation(
 			(id: string) => `evaluation:${id}`,
 		);
-
-		vi.mocked(analytics).trackEvaluationStarted =
-			mockAnalytics.trackEvaluationStarted;
-		vi.mocked(analytics).trackEvaluationCompleted =
-			mockAnalytics.trackEvaluationCompleted;
-		vi.mocked(analytics).trackEvaluationFailed =
-			mockAnalytics.trackEvaluationFailed;
 
 		evaluationService = new EvaluationService();
 	});

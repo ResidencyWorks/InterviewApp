@@ -4,14 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/evaluate/route";
 
 // Mock the evaluation service
-vi.mock("@/lib/evaluation/evaluation-service", () => ({
+vi.mock("@/domain/evaluation/evaluation-service", () => ({
 	evaluationService: {
 		evaluate: vi.fn(),
 	},
 }));
 
 // Mock performance monitoring
-vi.mock("@/lib/monitoring/performance", () => ({
+vi.mock("@/features/scheduling/infrastructure/monitoring/performance", () => ({
 	timeOperation: vi
 		.fn()
 		.mockImplementation(async (operation: string, fn: () => Promise<any>) => {
@@ -61,7 +61,7 @@ describe("/api/evaluate", () => {
 
 		// Mock the evaluation service
 		const { evaluationService } = await import(
-			"@/lib/evaluation/evaluation-service"
+			"@/domain/evaluation/evaluation-service"
 		);
 		vi.mocked(evaluationService.evaluate).mockResolvedValue(
 			mockEvaluationResult,
@@ -121,7 +121,7 @@ describe("/api/evaluate", () => {
 
 		// Mock the evaluation service
 		const { evaluationService } = await import(
-			"@/lib/evaluation/evaluation-service"
+			"@/domain/evaluation/evaluation-service"
 		);
 		vi.mocked(evaluationService.evaluate).mockResolvedValue(
 			mockEvaluationResult,
@@ -190,7 +190,7 @@ describe("/api/evaluate", () => {
 	it("should handle evaluation service errors", async () => {
 		// Mock the evaluation service to throw an error
 		const { evaluationService } = await import(
-			"@/lib/evaluation/evaluation-service"
+			"@/domain/evaluation/evaluation-service"
 		);
 		vi.mocked(evaluationService.evaluate).mockRejectedValue(
 			new Error("OpenAI API error"),
@@ -251,7 +251,7 @@ describe("/api/evaluate", () => {
 
 		// Mock the evaluation service
 		const { evaluationService } = await import(
-			"@/lib/evaluation/evaluation-service"
+			"@/domain/evaluation/evaluation-service"
 		);
 		vi.mocked(evaluationService.evaluate).mockResolvedValue(
 			mockEvaluationResult,
@@ -281,7 +281,9 @@ describe("/api/evaluate", () => {
 
 	it("should handle performance target exceeded", async () => {
 		// Mock performance monitoring to return slow response
-		const { timeOperation } = await import("@/lib/monitoring/performance");
+		const { timeOperation } = await import(
+			"@/features/scheduling/infrastructure/monitoring/performance"
+		);
 		vi.mocked(timeOperation).mockImplementation(
 			async (operation: string, fn: () => Promise<any>) => {
 				const startTime = Date.now();
@@ -319,7 +321,7 @@ describe("/api/evaluate", () => {
 
 		// Mock the evaluation service
 		const { evaluationService } = await import(
-			"@/lib/evaluation/evaluation-service"
+			"@/domain/evaluation/evaluation-service"
 		);
 		vi.mocked(evaluationService.evaluate).mockResolvedValue(
 			mockEvaluationResult,
