@@ -301,13 +301,13 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-### 2. Middleware Integration
+### 2. Proxy Integration
 
 ```typescript
-// src/middleware.ts
+// src/proxy.ts
 import { NextRequest, NextResponse } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Authentication check
   if (request.nextUrl.pathname.startsWith('/api/evaluate')) {
     const session = getSession(request);

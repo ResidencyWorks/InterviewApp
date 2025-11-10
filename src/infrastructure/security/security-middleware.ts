@@ -2,7 +2,7 @@ import type { NextRequest, NextResponse } from "next/server";
 import { getAppUrl } from "@/infrastructure/config/environment";
 
 /**
- * Security middleware for enhanced protection
+ * Security proxy for enhanced protection
  */
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 

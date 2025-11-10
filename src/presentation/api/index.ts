@@ -1,8 +1,8 @@
 /**
- * API utilities and middleware
+ * API utilities and proxy
  * Centralized API handling for the Interview App
  */
 
 export * from "./api-helpers";
-export * from "./api-middleware";
+export * from "./api-proxy";
 export * from "./api-types";

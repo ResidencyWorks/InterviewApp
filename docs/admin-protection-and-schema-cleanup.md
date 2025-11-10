@@ -4,7 +4,7 @@
 
 ### **1. Admin Route Protection**
 
-#### **Updated Middleware (`middleware.ts`)**
+#### **Updated Proxy (`proxy.ts`)**
 - ✅ **Added role-based access control** for admin routes
 - ✅ **Server-side protection** - cannot be bypassed by client-side manipulation
 - ✅ **Automatic redirection** of non-admin users to dashboard with error message
@@ -66,7 +66,7 @@ user.user_metadata.role = "admin" | "user" (default)
 ### **Access Control Flow:**
 1. **User signs up** → Gets default role "user"
 2. **Admin manually sets role** → Updates `user_metadata.role = "admin"`
-3. **User tries to access `/admin`** → Middleware checks role
+3. **User tries to access `/admin`** → Proxy checks role
 4. **If not admin** → Redirected to dashboard with error message
 5. **If admin** → Access granted to admin routes
 
@@ -87,7 +87,7 @@ WHERE email = 'admin@example.com';
 - ❌ Duplicate tables caused schema conflicts
 
 ### **After:**
-- ✅ **Server-side role checking** in middleware
+- ✅ **Server-side role checking** in proxy
 - ✅ **Automatic redirection** for unauthorized access
 - ✅ **Clean database schema** with no duplicates
 - ✅ **Proper foreign key relationships**

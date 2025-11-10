@@ -68,7 +68,7 @@ Examples of foundational tasks (adjust based on your project):
 
 - [ ] T009 Setup database schema and migrations framework (Supabase)
 - [ ] T010 [P] Implement authentication/authorization framework (Supabase Auth)
-- [ ] T011 [P] Setup API routing and middleware structure
+- [ ] T011 [P] Setup API routing and proxy structure
 - [ ] T012 Create base models/entities that all stories depend on
 - [ ] T013 Configure error handling and logging infrastructure (Sentry)
 - [ ] T014 Setup environment configuration management (.env.example)

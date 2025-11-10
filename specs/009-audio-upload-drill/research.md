@@ -75,7 +75,7 @@ This document captures research decisions for implementing client-side audio rec
 
 **Alternatives Considered**:
 - **JWT-based URLs**: Requires custom signing logic and token validation
-- **Public URLs with time-based auth parameters**: Less secure, requires custom middleware
+- **Public URLs with time-based auth parameters**: Less secure, requires custom proxy
 - **Long-lived URLs**: Security risk if URLs are leaked or intercepted
 - **Pre-signed URLs (S3-style)**: Supabase doesn't support this pattern natively
 

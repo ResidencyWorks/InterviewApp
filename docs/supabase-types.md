@@ -16,7 +16,7 @@ src/
     └── supabase/
         ├── client.ts              # Browser/client-side Supabase client
         ├── server.ts              # Server-side Supabase client
-        └── middleware.ts          # Middleware Supabase client (Edge Runtime)
+        └── proxy.ts          # Proxy Supabase client (Edge Runtime)
 ```
 
 ## Generating Types
@@ -153,7 +153,7 @@ All Supabase clients are configured with the `Database` type:
 
 - **Client-side** (`src/lib/supabase/client.ts`): Uses `createBrowserClient<Database>`
 - **Server-side** (`src/lib/supabase/server.ts`): Uses `createServerClient<Database>`
-- **Middleware** (`src/lib/supabase/middleware.ts`): Uses `createServerClient<Database>`
+- **Proxy** (`src/lib/supabase/proxy.ts`): Uses `createServerClient<Database>`
 
 ## Best Practices
 

@@ -77,7 +77,7 @@ description: "Task list for Monitoring & Analytics feature implementation"
 - [ ] T025 [US1] Implement SentryErrorAdapter in src/lib/analytics/infrastructure/sentry/SentryErrorAdapter.ts
 - [ ] T026 [US1] Create CaptureError use case in src/lib/analytics/application/use-cases/CaptureError.ts
 - [ ] T027 [US1] Create error boundary component in src/components/analytics/ErrorBoundary.tsx
-- [ ] T028 [US1] Add Sentry middleware for API routes in src/app/api/middleware/sentry.ts
+- [ ] T028 [US1] Add Sentry proxy for API routes in src/app/api/proxy/sentry.ts
 - [ ] T029 [US1] Implement error severity classification in ErrorService
 - [ ] T030 [US1] Add error filtering for sensitive data in src/lib/analytics/infrastructure/sentry/data-scrubber.ts
 - [ ] T031 [US1] Create error context gathering utilities in src/lib/monitoring/utils/context-gatherer.ts

@@ -175,7 +175,7 @@
 
 ### Application Integration
 
-- [x] T045 [US3] Create content pack loader middleware in src/middleware.ts ✅ **COMPLETED**
+- [x] T045 [US3] Create content pack loader proxy in src/proxy.ts ✅ **COMPLETED**
 - [x] T046 [US3] Create application startup content pack loader in src/lib/startup/ContentPackLoader.ts ✅ **COMPLETED**
 
 ### Database Schema
@@ -188,7 +188,7 @@
 
 ### Security & Auth
 
-- [x] T048 [P] Implement auth middleware for admin routes in src/middleware.ts ✅ **COMPLETED**
+- [x] T048 [P] Implement auth proxy for admin routes in src/proxy.ts ✅ **COMPLETED**
 - [x] T049 [P] Create admin role verification service in src/lib/domain/services/AdminAuthService.ts ✅ **COMPLETED**
 
 ### Error Handling & Monitoring
@@ -229,7 +229,7 @@ T042, T043 can run in parallel
 ### Phase 6 (Polish) - Parallel Tasks
 ```
 T048, T049, T050 can run in parallel
-- T048: Implement auth middleware (security)
+- T048: Implement auth proxy (security)
 - T049: Create admin auth service (security)
 - T050: Setup error tracking (monitoring)
 ```
@@ -290,7 +290,7 @@ The following foundational components are already implemented and ready for use:
 ### **Supabase Integration** ✅
 - Browser client: `src/lib/supabase/client.ts`
 - Server client: `src/lib/supabase/server.ts`
-- Middleware: `src/lib/supabase/middleware.ts`
+- Proxy: `src/lib/supabase/proxy.ts`
 
 ### **Error Monitoring & Sentry** ✅
 - Comprehensive error monitoring: `src/lib/error-monitoring.ts`

@@ -39,7 +39,7 @@ description: "Task list for M0 Core Loop – Interview Drills feature implementa
 - [x] T008 [P] Install and configure Tailwind CSS
 - [x] T009 [P] Create environment variable configuration files
 - [x] T010 [P] Setup TypeScript configuration for Next.js
-- [x] T011 [P] Configure Next.js with required middleware and API routes
+- [x] T011 [P] Configure Next.js with required proxy and API routes
 - [x] T012 [P] Setup database schema and migrations for Supabase
 - [x] T013 [P] Create shared type definitions in src/types/
 - [x] T014 [P] Setup Zod validation schemas in src/lib/validations/
@@ -68,8 +68,8 @@ description: "Task list for M0 Core Loop – Interview Drills feature implementa
 - [x] T025 [P] Implement analytics utilities in src/lib/analytics/
 - [x] T026 [P] Implement monitoring utilities in src/lib/monitoring/
 - [x] T027 [P] Create core domain models and interfaces
-- [x] T028 [P] Setup API route structure and middleware
-- [x] T029 [P] Configure authentication middleware for protected routes
+- [x] T028 [P] Setup API route structure and proxy
+- [x] T029 [P] Configure authentication proxy for protected routes
 - [x] T030 [P] Setup error handling and logging infrastructure
 - [x] T031 [P] Configure content pack validation and loading system
 - [x] T032 [P] Setup evaluation API infrastructure
@@ -95,7 +95,7 @@ description: "Task list for M0 Core Loop – Interview Drills feature implementa
 - [x] T035 [US1] Create auth callback handler in src/app/(auth)/callback/route.ts
 - [x] T036 [US1] Implement authentication components in src/components/auth/
 - [x] T037 [US1] Create protected route wrapper component
-- [x] T038 [US1] Implement route protection middleware
+- [x] T038 [US1] Implement route protection proxy
 - [x] T039 [US1] Create Stripe webhook handler in src/app/api/webhooks/stripe/route.ts
 - [x] T040 [US1] Implement entitlement caching in Redis
 - [x] T041 [US1] Create user authentication service

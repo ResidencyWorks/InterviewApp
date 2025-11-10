@@ -1,5 +1,5 @@
 /**
- * Security middleware for LLM API endpoints
+ * Security proxy for LLM API endpoints
  */
 
 import { type NextRequest, NextResponse } from "next/server";
@@ -19,9 +19,9 @@ import {
 const rateLimitStore = new Map<string, number[]>();
 
 /**
- * Security middleware configuration
+ * Security proxy configuration
  */
-export interface SecurityMiddlewareConfig {
+export interface SecurityProxyConfig {
 	enableRateLimit: boolean;
 	maxRequestsPerMinute: number;
 	enableInputValidation: boolean;
@@ -33,7 +33,7 @@ export interface SecurityMiddlewareConfig {
 /**
  * Default security configuration
  */
-const DEFAULT_CONFIG: SecurityMiddlewareConfig = {
+const DEFAULT_CONFIG: SecurityProxyConfig = {
 	enableRateLimit: true,
 	maxRequestsPerMinute: 10,
 	enableInputValidation: true,
@@ -43,17 +43,17 @@ const DEFAULT_CONFIG: SecurityMiddlewareConfig = {
 };
 
 /**
- * Security middleware class
+ * Security proxy class
  */
-export class SecurityMiddleware {
-	private config: SecurityMiddlewareConfig;
+export class SecurityProxy {
+	private config: SecurityProxyConfig;
 
-	constructor(config: Partial<SecurityMiddlewareConfig> = {}) {
+	constructor(config: Partial<SecurityProxyConfig> = {}) {
 		this.config = { ...DEFAULT_CONFIG, ...config };
 	}
 
 	/**
-	 * Apply security middleware to request
+	 * Apply security proxy to request
 	 */
 	async applySecurity(request: NextRequest): Promise<NextResponse | null> {
 		try {
@@ -326,23 +326,23 @@ export class SecurityMiddleware {
 	/**
 	 * Update configuration
 	 */
-	updateConfig(config: Partial<SecurityMiddlewareConfig>): void {
+	updateConfig(config: Partial<SecurityProxyConfig>): void {
 		this.config = { ...this.config, ...config };
 	}
 
 	/**
 	 * Get current configuration
 	 */
-	getConfig(): SecurityMiddlewareConfig {
+	getConfig(): SecurityProxyConfig {
 		return { ...this.config };
 	}
 }
 
 /**
- * Create security middleware instance
+ * Create security proxy instance
  */
-export function createSecurityMiddleware(
-	config: Partial<SecurityMiddlewareConfig> = {},
-): SecurityMiddleware {
-	return new SecurityMiddleware(config);
+export function createSecurityProxy(
+	config: Partial<SecurityProxyConfig> = {},
+): SecurityProxy {
+	return new SecurityProxy(config);
 }

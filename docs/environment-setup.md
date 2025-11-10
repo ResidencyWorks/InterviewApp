@@ -66,12 +66,12 @@ Magic links will redirect to the URL determined by the priority above. Make sure
 ### Development
 - Uses `http://localhost:3000` as fallback
 - Supabase config allows localhost redirects
-- All localhost URLs are whitelisted in security middleware
+- All localhost URLs are whitelisted in security proxy
 
 ### Production
 - Must set `NEXT_PUBLIC_APP_URL` to your production domain
 - Supabase config uses environment variable substitution
-- Security middleware validates against production domain
+- Security proxy validates against production domain
 
 ## Troubleshooting
 

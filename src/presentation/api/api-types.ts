@@ -9,9 +9,9 @@ export type ApiRouteHandler = (
 ) => Promise<NextResponse>;
 
 /**
- * API middleware function type
+ * API proxy function type
  */
-export type ApiMiddleware = (
+export type ApiProxy = (
 	request: NextRequest,
 	next: () => Promise<NextResponse>,
 ) => Promise<NextResponse>;
@@ -62,7 +62,7 @@ export interface RouteConfig {
 	method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 	path: string;
 	handler: ApiRouteHandler;
-	middleware?: ApiMiddleware[];
+	proxy?: ApiProxy[];
 	auth?: AuthConfig;
 	rateLimit?: RateLimitConfig;
 	validation?: ApiValidator;

@@ -97,7 +97,7 @@ export default function DashboardPage() {
 		}
 	}, [user]);
 
-	// Note: Profile completion routing is now handled by middleware
+	// Note: Profile completion routing is now handled by proxy
 	// No client-side redirects needed
 
 	// Helper function to format time ago
@@ -120,7 +120,7 @@ export default function DashboardPage() {
 		}
 	}
 
-	// Note: Authentication and profile completion routing is handled by middleware
+	// Note: Authentication and profile completion routing is handled by proxy
 	// No client-side checks needed
 
 	return (

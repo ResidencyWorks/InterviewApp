@@ -39,7 +39,7 @@ export interface ApplicationInfo {
 	gitCommit: string;
 	dependencies: Record<string, string>;
 	routes: string[];
-	middleware: string[];
+	proxy: string[];
 }
 
 export interface DatabaseInfo {
@@ -204,7 +204,7 @@ export class DiagnosticService {
 			gitCommit: process.env.GIT_COMMIT || "unknown",
 			dependencies: packageJson.dependencies || {},
 			routes: this.getApplicationRoutes(),
-			middleware: this.getApplicationMiddleware(),
+			proxy: this.getApplicationProxy(),
 		};
 	}
 
@@ -400,10 +400,10 @@ export class DiagnosticService {
 	}
 
 	/**
-	 * Get application middleware
+	 * Get application proxy
 	 */
-	private getApplicationMiddleware(): string[] {
-		// This would need to be implemented based on your middleware system
+	private getApplicationProxy(): string[] {
+		// This would need to be implemented based on your proxy system
 		return [
 			"cors",
 			"helmet",
@@ -466,7 +466,7 @@ export class DiagnosticService {
 		report += `- Build Time: ${info.application.buildTime}\n`;
 		report += `- Git Commit: ${info.application.gitCommit}\n`;
 		report += `- Routes: ${info.application.routes.length}\n`;
-		report += `- Middleware: ${info.application.middleware.length}\n\n`;
+		report += `- Proxy: ${info.application.proxy.length}\n\n`;
 
 		// Database Information
 		report += `## Database Information\n`;

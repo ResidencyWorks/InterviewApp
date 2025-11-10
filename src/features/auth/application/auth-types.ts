@@ -65,9 +65,9 @@ export interface ProtectedRouteConfig {
 }
 
 /**
- * Authentication middleware options
+ * Authentication proxy options
  */
-export interface AuthMiddlewareOptions {
+export interface AuthProxyOptions {
 	protectedPaths: string[];
 	publicPaths: string[];
 	redirectTo: string;

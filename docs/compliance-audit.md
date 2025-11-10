@@ -265,9 +265,9 @@ await auditService.logAuditEvent({
 });
 ```
 
-#### Middleware Integration
+#### Proxy Integration
 ```typescript
-// Express middleware for automatic audit logging
+// Express proxy for automatic audit logging
 app.use((req, res, next) => {
   const originalSend = res.send;
 

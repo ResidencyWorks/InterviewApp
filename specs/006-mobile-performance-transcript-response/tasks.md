@@ -54,7 +54,7 @@
 - [x] T008 [P] Install and configure Tailwind CSS ✅ **COMPLETED**
 - [x] T009 [P] Create environment variable configuration files ✅ **COMPLETED**
 - [x] T010 [P] Setup TypeScript configuration for Next.js ✅ **COMPLETED**
-- [x] T011 [P] Configure Next.js with required middleware and API routes ✅ **COMPLETED**
+- [x] T011 [P] Configure Next.js with required proxy and API routes ✅ **COMPLETED**
 - [x] T012 [P] Setup database schema and migrations for Supabase ✅ **COMPLETED**
 - [x] T013 [P] Create shared type definitions in src/types/ ✅ **COMPLETED**
 - [x] T014 [P] Setup Zod validation schemas in src/lib/validations/ ✅ **COMPLETED**
@@ -78,8 +78,8 @@
 - [x] T025 [P] Implement analytics utilities in src/lib/analytics/ ✅ **COMPLETED**
 - [x] T026 [P] Implement monitoring utilities in src/lib/monitoring/ ✅ **COMPLETED**
 - [x] T027 [P] Create core domain models and interfaces ✅ **COMPLETED**
-- [x] T028 [P] Setup API route structure and middleware ✅ **COMPLETED**
-- [x] T029 [P] Configure authentication middleware for protected routes ✅ **COMPLETED**
+- [x] T028 [P] Setup API route structure and proxy ✅ **COMPLETED**
+- [x] T029 [P] Configure authentication proxy for protected routes ✅ **COMPLETED**
 - [x] T030 [P] Setup error handling and logging infrastructure ✅ **COMPLETED**
 - [x] T031 [P] Configure content pack validation and loading system ✅ **COMPLETED**
 - [x] T032 [P] Setup evaluation API infrastructure ✅ **COMPLETED**
@@ -269,7 +269,7 @@ The following foundational components are already implemented and ready for use:
 
 ### **Authentication & Authorization** ✅
 - Supabase magic link authentication
-- Protected routes with middleware
+- Protected routes with proxy
 - Role-based access control (admin/user)
 - Entitlement caching with Redis TTL
 

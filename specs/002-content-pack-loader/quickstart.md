@@ -154,19 +154,19 @@ export async function POST(
 }
 ```
 
-### 5. Auth-Only Route Protection (`src/middleware.ts`)
+### 5. Auth-Only Route Protection (`src/proxy.ts`)
 
-Next.js middleware for route protection:
+Next.js proxy for route protection:
 
 ```typescript
-// src/middleware.ts
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+// src/proxy.ts
+import { createProxyClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  const supabase = createProxyClient({ req, res })
 
   // Check if user is authenticated
   const {

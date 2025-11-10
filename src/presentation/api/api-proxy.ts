@@ -5,17 +5,17 @@ import {
 	createRateLimitResponse,
 	createUnauthorizedResponse,
 } from "./api-helpers";
-import type { ApiMiddleware, AuthConfig, RateLimitConfig } from "./api-types";
+import type { ApiProxy, AuthConfig, RateLimitConfig } from "./api-types";
 
 // In-memory rate limit store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 /**
- * Authentication middleware
+ * Authentication proxy
  * @param config - Authentication configuration
- * @returns Middleware function
+ * @returns Proxy function
  */
-export function createAuthMiddleware(config: AuthConfig): ApiMiddleware {
+export function createAuthProxy(config: AuthConfig): ApiProxy {
 	return async (request: NextRequest, next: () => Promise<NextResponse>) => {
 		if (!config.required) {
 			return next();
@@ -40,20 +40,18 @@ export function createAuthMiddleware(config: AuthConfig): ApiMiddleware {
 
 			return next();
 		} catch (error) {
-			console.error("Auth middleware error:", error);
+			console.error("Auth proxy error:", error);
 			return createUnauthorizedResponse("Authentication failed");
 		}
 	};
 }
 
 /**
- * Rate limiting middleware
+ * Rate limiting proxy
  * @param config - Rate limit configuration
- * @returns Middleware function
+ * @returns Proxy function
  */
-export function createRateLimitMiddleware(
-	config: RateLimitConfig,
-): ApiMiddleware {
+export function createRateLimitProxy(config: RateLimitConfig): ApiProxy {
 	return async (request: NextRequest, next: () => Promise<NextResponse>) => {
 		const key = config.keyGenerator
 			? config.keyGenerator(request)
@@ -90,13 +88,11 @@ export function createRateLimitMiddleware(
 }
 
 /**
- * CORS middleware
+ * CORS proxy
  * @param allowedOrigins - Allowed origins
- * @returns Middleware function
+ * @returns Proxy function
  */
-export function createCORSMiddleware(
-	allowedOrigins: string[] = ["*"],
-): ApiMiddleware {
+export function createCORSProxy(allowedOrigins: string[] = ["*"]): ApiProxy {
 	return async (request: NextRequest, next: () => Promise<NextResponse>) => {
 		const origin = request.headers.get("origin");
 		const isAllowed =
@@ -127,10 +123,10 @@ export function createCORSMiddleware(
 }
 
 /**
- * Request logging middleware
- * @returns Middleware function
+ * Request logging proxy
+ * @returns Proxy function
  */
-export function createLoggingMiddleware(): ApiMiddleware {
+export function createLoggingProxy(): ApiProxy {
 	return async (request: NextRequest, next: () => Promise<NextResponse>) => {
 		const startTime = Date.now();
 		const method = request.method;
@@ -159,10 +155,10 @@ export function createLoggingMiddleware(): ApiMiddleware {
 }
 
 /**
- * Error handling middleware
- * @returns Middleware function
+ * Error handling proxy
+ * @returns Proxy function
  */
-export function createErrorHandlingMiddleware(): ApiMiddleware {
+export function createErrorHandlingProxy(): ApiProxy {
 	return async (_request: NextRequest, next: () => Promise<NextResponse>) => {
 		try {
 			return await next();
@@ -191,13 +187,13 @@ export function createErrorHandlingMiddleware(): ApiMiddleware {
 }
 
 /**
- * Request validation middleware
+ * Request validation proxy
  * @param validator - Validation function
- * @returns Middleware function
+ * @returns Proxy function
  */
-export function createValidationMiddleware<T>(
+export function createValidationProxy<T>(
 	validator: (data: unknown) => { success: boolean; data?: T; error?: string },
-): ApiMiddleware {
+): ApiProxy {
 	return async (request: NextRequest, next: () => Promise<NextResponse>) => {
 		if (request.method === "GET") {
 			return next();
@@ -229,10 +225,10 @@ export function createValidationMiddleware<T>(
 }
 
 /**
- * Security headers middleware
- * @returns Middleware function
+ * Security headers proxy
+ * @returns Proxy function
  */
-export function createSecurityMiddleware(): ApiMiddleware {
+export function createSecurityProxy(): ApiProxy {
 	return async (_request: NextRequest, next: () => Promise<NextResponse>) => {
 		const response = await next();
 
@@ -251,10 +247,10 @@ export function createSecurityMiddleware(): ApiMiddleware {
 }
 
 /**
- * Performance monitoring middleware
- * @returns Middleware function
+ * Performance monitoring proxy
+ * @returns Proxy function
  */
-export function createPerformanceMiddleware(): ApiMiddleware {
+export function createPerformanceProxy(): ApiProxy {
 	return async (request: NextRequest, next: () => Promise<NextResponse>) => {
 		const startTime = Date.now();
 		const startMemory = process.memoryUsage();
@@ -296,15 +292,15 @@ function getDefaultRateLimitKey(request: NextRequest): string {
 }
 
 /**
- * Compose multiple middleware functions
- * @param middlewares - Array of middleware functions
- * @returns Composed middleware function
+ * Compose multiple proxy functions
+ * @param proxys - Array of proxy functions
+ * @returns Composed proxy function
  */
-export function composeMiddleware(middlewares: ApiMiddleware[]): ApiMiddleware {
-	return middlewares.reduceRight(
-		(_next, middleware) =>
+export function composeProxy(proxys: ApiProxy[]): ApiProxy {
+	return proxys.reduceRight(
+		(_next, proxy) =>
 			(request: NextRequest, nextFn: () => Promise<NextResponse>) =>
-				middleware(request, nextFn),
+				proxy(request, nextFn),
 		async (_request: NextRequest, _next: () => Promise<NextResponse>) =>
 			new NextResponse(),
 	);

@@ -56,7 +56,7 @@
 
 - Use `@sentry/nextjs` package with automatic instrumentation
 - Implement custom error boundaries for React components
-- Add Sentry middleware for API routes
+- Add Sentry proxy for API routes
 - Configure performance monitoring and transaction tracking
 - Implement error filtering and sensitive data scrubbing
 

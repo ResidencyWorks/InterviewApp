@@ -16,7 +16,7 @@ export default function DashboardLayout({
 	const _pathname = usePathname();
 	const isAdmin = user?.user_metadata?.role === "admin";
 
-	// Note: Authentication routing is now handled by middleware
+	// Note: Authentication routing is now handled by proxy
 	// No client-side redirects needed
 
 	// Show loading state while checking authentication
@@ -31,7 +31,7 @@ export default function DashboardLayout({
 		);
 	}
 
-	// Don't render dashboard if no user (middleware will handle redirects)
+	// Don't render dashboard if no user (proxy will handle redirects)
 	if (!user) {
 		return null;
 	}

@@ -3,7 +3,7 @@ import type { NextRequest, NextResponse } from "next/server";
 import type { Database } from "../../types/database";
 
 /**
- * Creates a Supabase client for middleware usage (Edge Runtime compatible)
+ * Creates a Supabase client for proxy usage (Edge Runtime compatible)
  * @param request - The Next.js request object
  * @param response - The Next.js response object
  * @returns Supabase server client instance

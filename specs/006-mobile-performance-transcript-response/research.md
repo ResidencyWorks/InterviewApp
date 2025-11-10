@@ -24,7 +24,7 @@
 **Implementation approach**:
 - Use `@supabase/ssr` for server-side auth handling
 - Implement Redis cache layer with Upstash for entitlement lookups
-- Route protection middleware for gated content
+- Route protection proxy for gated content
 
 ### 2. Fake ASR Implementation
 

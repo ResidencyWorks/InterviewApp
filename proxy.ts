@@ -5,7 +5,7 @@ import {
 	isPublicPath,
 } from "@/features/auth/application/auth-helpers";
 import { defaultContentPackLoader } from "@/features/booking/infrastructure/default/DefaultContentPack";
-import { createClient } from "@/infrastructure/supabase/middleware";
+import { createClient } from "./src/infrastructure/supabase/proxy";
 
 /**
  * Protected routes configuration
@@ -36,13 +36,13 @@ const PUBLIC_ROUTES = [
 ];
 
 /**
- * Authentication and content pack loading middleware
+ * Authentication and content pack loading proxy
  */
 export async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;
-	console.log("Middleware - Processing request for:", pathname);
+	console.log("Proxy - Processing request for:", pathname);
 
-	// Skip middleware for static files, analytics, and API routes that don't need auth
+	// Skip proxy for static files, analytics, and API routes that don't need auth
 	if (
 		pathname.startsWith("/_next") ||
 		pathname.startsWith("/static") ||
@@ -63,10 +63,10 @@ export async function proxy(request: NextRequest) {
 	}
 
 	const isPublic = isPublicPath(pathname, PUBLIC_ROUTES);
-	console.log("Middleware - Is public route:", isPublic);
+	console.log("Proxy - Is public route:", isPublic);
 
 	if (isPublic) {
-		console.log("Middleware - Allowing public route:", pathname);
+		console.log("Proxy - Allowing public route:", pathname);
 		return NextResponse.next();
 	}
 
@@ -77,7 +77,7 @@ export async function proxy(request: NextRequest) {
 			const supabase = createClient(request, response);
 
 			console.log(
-				"Middleware - Checking authentication for protected route:",
+				"Proxy - Checking authentication for protected route:",
 				pathname,
 			);
 
@@ -87,7 +87,7 @@ export async function proxy(request: NextRequest) {
 				cookie.name.startsWith("sb-"),
 			);
 			console.log(
-				"Middleware - Supabase cookies:",
+				"Proxy - Supabase cookies:",
 				supabaseCookies.map((c) => ({ name: c.name, hasValue: !!c.value })),
 			);
 
@@ -97,7 +97,7 @@ export async function proxy(request: NextRequest) {
 				error: sessionError,
 			} = await supabase.auth.getSession();
 
-			console.log("Middleware - Session check:", {
+			console.log("Proxy - Session check:", {
 				session: session ? "present" : "missing",
 				error: sessionError ? sessionError.message : null,
 			});
@@ -109,15 +109,13 @@ export async function proxy(request: NextRequest) {
 					error: userError,
 				} = await supabase.auth.getUser();
 
-				console.log("Middleware - User check (no session):", {
+				console.log("Proxy - User check (no session):", {
 					user: user ? { id: user.id, email: user.email } : null,
 					error: userError ? userError.message : null,
 				});
 
 				if (userError || !user) {
-					console.log(
-						"Middleware - No valid session or user, redirecting to login",
-					);
+					console.log("Proxy - No valid session or user, redirecting to login");
 					// Redirect to login page
 					const loginUrl = new URL("/login", request.url);
 					loginUrl.searchParams.set("redirectTo", pathname);
@@ -131,13 +129,13 @@ export async function proxy(request: NextRequest) {
 				error: userError,
 			} = await supabase.auth.getUser();
 
-			console.log("Middleware - Final user check:", {
+			console.log("Proxy - Final user check:", {
 				user: user ? { id: user.id, email: user.email } : null,
 				error: userError ? userError.message : null,
 			});
 
 			if (userError || !user) {
-				console.log("Middleware - Failed to get user, redirecting to login");
+				console.log("Proxy - Failed to get user, redirecting to login");
 				const loginUrl = new URL("/login", request.url);
 				loginUrl.searchParams.set("redirectTo", pathname);
 				return NextResponse.redirect(loginUrl);
@@ -159,7 +157,7 @@ export async function proxy(request: NextRequest) {
 			const hasFullName = !!fullName?.trim();
 			const isProfileComplete = hasFullName;
 
-			console.log("Middleware - Profile completion check:", {
+			console.log("Proxy - Profile completion check:", {
 				userId: user.id,
 				userEmail: user.email,
 				fullName,
@@ -172,7 +170,7 @@ export async function proxy(request: NextRequest) {
 			// If profile is incomplete and user is trying to access dashboard or other protected routes
 			if (!isProfileComplete && pathname !== "/complete-profile") {
 				console.log(
-					"Middleware - Profile incomplete, redirecting to complete-profile",
+					"Proxy - Profile incomplete, redirecting to complete-profile",
 				);
 				const completeProfileUrl = new URL("/complete-profile", request.url);
 				return NextResponse.redirect(completeProfileUrl);
@@ -180,7 +178,7 @@ export async function proxy(request: NextRequest) {
 
 			// If profile is complete and user is on complete-profile page, redirect to dashboard
 			if (isProfileComplete && pathname === "/complete-profile") {
-				console.log("Middleware - Profile complete, redirecting to dashboard");
+				console.log("Proxy - Profile complete, redirecting to dashboard");
 				const dashboardUrl = new URL("/dashboard", request.url);
 				return NextResponse.redirect(dashboardUrl);
 			}
@@ -202,17 +200,14 @@ export async function proxy(request: NextRequest) {
 					systemStatus.hasDefaultContentPack ? "true" : "false",
 				);
 			} catch (error) {
-				console.error(
-					"Failed to get content pack status in middleware:",
-					error,
-				);
+				console.error("Failed to get content pack status in proxy:", error);
 				response.headers.set("x-content-pack-status", "error");
 				response.headers.set("x-fallback-active", "true");
 			}
 
 			return response;
 		} catch (error) {
-			console.error("Auth middleware error:", error);
+			console.error("Auth proxy error:", error);
 
 			// Redirect to login page on error
 			const loginUrl = new URL("/login", request.url);
@@ -225,7 +220,7 @@ export async function proxy(request: NextRequest) {
 }
 
 /**
- * Configure which routes the middleware should run on
+ * Configure which routes the proxy should run on
  */
 export const config = {
 	matcher: [

@@ -28,7 +28,7 @@ export default function CompleteProfilePage() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
 
-	// Note: Authentication and profile completion routing is now handled by middleware
+	// Note: Authentication and profile completion routing is now handled by proxy
 	// No client-side redirects needed
 
 	const handleInputChange = (field: string, value: string) => {
@@ -61,8 +61,8 @@ export default function CompleteProfilePage() {
 
 			setSuccess(true);
 
-			// Force a full page reload to trigger middleware re-evaluation
-			// The middleware will redirect to dashboard if profile is now complete
+			// Force a full page reload to trigger proxy re-evaluation
+			// The proxy will redirect to dashboard if profile is now complete
 			setTimeout(() => {
 				window.location.reload();
 			}, 1500);
@@ -76,7 +76,7 @@ export default function CompleteProfilePage() {
 		}
 	};
 
-	// Note: Authentication and profile completion routing is handled by middleware
+	// Note: Authentication and profile completion routing is handled by proxy
 	// No client-side loading checks needed
 
 	if (success) {

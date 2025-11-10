@@ -205,7 +205,7 @@ src/
     redis/                                # Redis cache services
     supabase/                             # Supabase adapters
     ...                                   # Additional adapters (logging, compliance, etc.)
-  presentation/                           # Presentation helpers (API middleware, guards)
+  presentation/                           # Presentation helpers (API proxy, guards)
   shared/                                 # Cross-cutting primitives (errors, logging, utilities)
   features/
     booking/

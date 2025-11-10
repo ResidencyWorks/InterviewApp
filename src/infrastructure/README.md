@@ -32,7 +32,7 @@ Provides concrete implementations for external concerns: database clients, cache
 - `supabase/` — client factories, repositories, storage helpers
 - `redis/` — cache clients, cache key utilities, cache TTLs
 - `posthog/` — analytics client configuration and helpers
-- `rate-limit/` — rate limiter middleware implementations
+- `rate-limit/` — rate limiter proxy implementations
 - `retry/` — retry utilities for external calls
 - `circuit-breaker/` — protective wrappers for unreliable integrations
 - `logging/` — structured logger implementation using Sentry

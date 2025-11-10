@@ -33,7 +33,7 @@ export default function LoginPage() {
 		setEmailId(`email-${Math.random().toString(36).substr(2, 9)}`);
 	}, []);
 
-	// Redirect authenticated users to dashboard (middleware will handle profile completion routing)
+	// Redirect authenticated users to dashboard (proxy will handle profile completion routing)
 	useEffect(() => {
 		if (user && !authLoading) {
 			console.log("Login page - User authenticated, redirecting to dashboard");
