@@ -61,7 +61,7 @@ export default function DrillInterfacePage() {
 
 	if (!question) {
 		return (
-			<div className="min-h-screen bg-gray-50 p-6">
+			<div className="min-h-screen bg-background p-6">
 				<div className="max-w-2xl mx-auto">
 					<Card>
 						<CardContent className="p-6 text-center">
@@ -387,7 +387,7 @@ export default function DrillInterfacePage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-50 p-6">
+		<div className="min-h-screen bg-background p-6">
 			<div className="max-w-4xl mx-auto space-y-6">
 				{/* Header */}
 				<div className="flex items-center gap-4">
@@ -395,13 +395,14 @@ export default function DrillInterfacePage() {
 						variant="outline"
 						size="sm"
 						onClick={() => router.push("/drill")}
-						className="text-black hover:text-black"
 					>
 						<ArrowLeft className="w-4 h-4 mr-2" />
 						Back to Drills
 					</Button>
 					<div className="flex-1">
-						<h1 className="text-2xl font-bold text-black">{question.title}</h1>
+						<h1 className="text-2xl font-bold text-foreground">
+							{question.title}
+						</h1>
 						<div className="flex items-center gap-4 mt-2">
 							<Badge className={getDifficultyColor(question.difficulty)}>
 								{question.difficulty}
@@ -427,9 +428,11 @@ export default function DrillInterfacePage() {
 						<p className="text-lg leading-relaxed mb-4">{question.question}</p>
 
 						{question.tips && question.tips.length > 0 && (
-							<div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-								<h4 className="font-semibold text-blue-900 mb-2">Tips:</h4>
-								<ul className="list-disc list-inside space-y-1 text-sm text-blue-800">
+							<div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+								<h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+									Tips:
+								</h4>
+								<ul className="list-disc list-inside space-y-1 text-sm text-blue-800 dark:text-blue-200">
 									{question.tips.map((tip) => (
 										<li key={tip}>{tip}</li>
 									))}
@@ -441,9 +444,9 @@ export default function DrillInterfacePage() {
 
 				{/* Error Display */}
 				{error && (
-					<Card className="border-red-200">
+					<Card className="border-destructive">
 						<CardContent className="p-4">
-							<div className="text-red-800">
+							<div className="text-destructive">
 								<strong>Error:</strong> {error}
 							</div>
 						</CardContent>

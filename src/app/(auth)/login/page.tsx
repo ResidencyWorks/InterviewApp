@@ -44,10 +44,10 @@ export default function LoginPage() {
 	// Show loading state while checking authentication
 	if (user && authLoading) {
 		return (
-			<div className="min-h-screen flex items-center justify-center bg-gray-50">
+			<div className="min-h-screen flex items-center justify-center bg-background">
 				<div className="text-center">
-					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-					<p className="mt-2 text-gray-600">Redirecting...</p>
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+					<p className="mt-2 text-muted-foreground">Redirecting...</p>
 				</div>
 			</div>
 		);
@@ -72,11 +72,13 @@ export default function LoginPage() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+		<div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-md w-full space-y-8">
 				<div className="text-center">
-					<h1 className="text-3xl font-bold text-gray-900">Interview Drills</h1>
-					<p className="mt-2 text-sm text-gray-600">
+					<h1 className="text-3xl font-bold text-foreground">
+						Interview Drills
+					</h1>
+					<p className="mt-2 text-sm text-muted-foreground">
 						Practice your interview skills with AI-powered feedback
 					</p>
 				</div>
@@ -118,9 +120,9 @@ export default function LoginPage() {
 						</form>
 
 						<div className="mt-6 text-center">
-							<p className="text-sm text-gray-600">
+							<p className="text-sm text-muted-foreground">
 								New to Interview Drills?{" "}
-								<span className="text-blue-600">
+								<span className="text-primary">
 									Just enter your email to get started
 								</span>
 							</p>
@@ -129,7 +131,7 @@ export default function LoginPage() {
 				</Card>
 
 				<div className="text-center">
-					<p className="text-xs text-gray-500">
+					<p className="text-xs text-muted-foreground">
 						By signing in, you agree to our Terms of Service and Privacy Policy
 					</p>
 				</div>

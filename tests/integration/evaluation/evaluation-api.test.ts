@@ -1,34 +1,10 @@
-import type { NextRequest } from "next/server";
-import { createMocks } from "node-mocks-http";
+import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/evaluate/route";
 
-// Mock the evaluation service
-vi.mock("@/domain/evaluation/evaluation-service", () => ({
-	evaluationService: {
-		evaluate: vi.fn(),
-	},
-}));
-
-// Mock performance monitoring
-vi.mock("@/features/scheduling/infrastructure/monitoring/performance", () => ({
-	timeOperation: vi
-		.fn()
-		.mockImplementation(async (operation: string, fn: () => Promise<any>) => {
-			const startTime = Date.now();
-			const result = await fn();
-			const endTime = Date.now();
-			return {
-				result,
-				metrics: {
-					duration: 150,
-					operation,
-					startTime,
-					endTime,
-					success: true,
-				},
-			};
-		}),
+// Mock evaluateTranscript function
+vi.mock("@/domain/evaluation/evaluation-engine", () => ({
+	evaluateTranscript: vi.fn(),
 }));
 
 describe("/api/evaluate", () => {
@@ -38,177 +14,220 @@ describe("/api/evaluate", () => {
 
 	it("should evaluate text response successfully", async () => {
 		const mockEvaluationResult = {
-			id: "test-eval-1",
-			user_id: "test-user",
-			content_pack_id: "test-pack",
-			response_text: "This is a test response for evaluation",
-			response_type: "text" as const,
-			duration_seconds: 1.5,
-			word_count: 12,
+			overall_score: 86,
+			duration_s: 1.5,
+			words: 12,
 			wpm: 480,
-			categories: {
-				clarity: 85,
-				content: 90,
-				delivery: 80,
-				structure: 88,
-			},
-			score: 86,
-			feedback: "Good response with clear structure and relevant content.",
-			status: "COMPLETED" as const,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString(),
+			category_chips: [
+				{
+					id: "communication" as const,
+					name: "Communication",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of communication",
+				},
+				{
+					id: "problem_solving" as const,
+					name: "Problem Solving",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of problem solving",
+				},
+				{
+					id: "leadership" as const,
+					name: "Leadership",
+					passFlag: "FLAG" as const,
+					note: "Limited demonstration of leadership",
+				},
+				{
+					id: "collaboration" as const,
+					name: "Collaboration",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of collaboration",
+				},
+				{
+					id: "adaptability" as const,
+					name: "Adaptability",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of adaptability",
+				},
+				{
+					id: "ownership" as const,
+					name: "Ownership",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of ownership",
+				},
+				{
+					id: "curiosity" as const,
+					name: "Curiosity",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of curiosity",
+				},
+			],
+			what_changed: ["Add specific examples to support claims"],
+			practice_rule: "Expand your answer with specific examples and metrics",
 		};
 
-		// Mock the evaluation service
-		const { evaluationService } = await import(
-			"@/domain/evaluation/evaluation-service"
+		// Mock evaluateTranscript
+		const { evaluateTranscript } = await import(
+			"@/domain/evaluation/evaluation-engine"
 		);
-		vi.mocked(evaluationService.evaluate).mockResolvedValue(
-			mockEvaluationResult,
-		);
+		vi.mocked(evaluateTranscript).mockResolvedValue(mockEvaluationResult);
 
-		const { req } = createMocks<NextRequest>({
+		const request = new NextRequest("http://localhost/api/evaluate", {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
 			},
 			body: JSON.stringify({
-				response: "This is a test response for evaluation",
-				type: "text",
-				content_pack_id: "test-pack",
-			}) as any,
+				transcript: "This is a test response for evaluation",
+			}),
 		});
 
-		const response = await POST(req);
+		const response = await POST(request);
 		const data = await response.json();
 
 		expect(response.status).toBe(200);
 		expect(data).toMatchObject({
-			categories: mockEvaluationResult.categories,
-			score: mockEvaluationResult.score,
-			feedback: mockEvaluationResult.feedback,
-			performance: {
-				duration: 150,
-				operation: "api.evaluate",
-				target: 250,
-				targetMet: true,
-			},
+			overall_score: mockEvaluationResult.overall_score,
+			duration_s: mockEvaluationResult.duration_s,
+			words: mockEvaluationResult.words,
+			wpm: mockEvaluationResult.wpm,
 		});
 	});
 
 	it("should evaluate audio response successfully", async () => {
 		const mockEvaluationResult = {
-			id: "test-eval-2",
-			user_id: "test-user",
-			content_pack_id: "test-pack",
-			response_audio_url: "https://example.com/audio.wav",
-			response_type: "audio" as const,
-			duration_seconds: 2.1,
-			word_count: 15,
+			overall_score: 89,
+			duration_s: 2.1,
+			words: 15,
 			wpm: 428,
-			categories: {
-				clarity: 88,
-				content: 92,
-				delivery: 85,
-				structure: 90,
-			},
-			score: 89,
-			feedback: "Excellent audio response with good pacing and clarity.",
-			status: "COMPLETED" as const,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString(),
+			category_chips: [
+				{
+					id: "communication" as const,
+					name: "Communication",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of communication",
+				},
+				{
+					id: "problem_solving" as const,
+					name: "Problem Solving",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of problem solving",
+				},
+				{
+					id: "leadership" as const,
+					name: "Leadership",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of leadership",
+				},
+				{
+					id: "collaboration" as const,
+					name: "Collaboration",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of collaboration",
+				},
+				{
+					id: "adaptability" as const,
+					name: "Adaptability",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of adaptability",
+				},
+				{
+					id: "ownership" as const,
+					name: "Ownership",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of ownership",
+				},
+				{
+					id: "curiosity" as const,
+					name: "Curiosity",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of curiosity",
+				},
+			],
+			what_changed: [],
+			practice_rule:
+				"Keep answers concise: aim for 2 minutes max (200-300 words)",
 		};
 
-		// Mock the evaluation service
-		const { evaluationService } = await import(
-			"@/domain/evaluation/evaluation-service"
+		// Mock evaluateTranscript
+		const { evaluateTranscript } = await import(
+			"@/domain/evaluation/evaluation-engine"
 		);
-		vi.mocked(evaluationService.evaluate).mockResolvedValue(
-			mockEvaluationResult,
-		);
+		vi.mocked(evaluateTranscript).mockResolvedValue(mockEvaluationResult);
 
-		const { req } = createMocks<NextRequest>({
+		const request = new NextRequest("http://localhost/api/evaluate", {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
 			},
 			body: JSON.stringify({
-				response: "Audio response content",
-				type: "audio",
-				audio_url: "https://example.com/audio.wav",
-				content_pack_id: "test-pack",
-			}) as any,
+				transcript: "Audio response content transcribed text",
+			}),
 		});
 
-		const response = await POST(req);
+		const response = await POST(request);
 		const data = await response.json();
 
 		expect(response.status).toBe(200);
-		expect(data.score).toBe(89);
-		expect(data.categories).toEqual(mockEvaluationResult.categories);
+		expect(data.overall_score).toBe(89);
+		expect(data.category_chips).toHaveLength(7);
 	});
 
-	it("should return 400 for missing response", async () => {
-		const { req } = createMocks<NextRequest>({
+	it("should return 400 for missing transcript", async () => {
+		const request = new NextRequest("http://localhost/api/evaluate", {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+			},
+			body: JSON.stringify({}),
+		});
+
+		const response = await POST(request);
+		const data = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(data.error).toBe("Validation failed");
+	});
+
+	it("should return 400 for empty transcript", async () => {
+		const request = new NextRequest("http://localhost/api/evaluate", {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
 			},
 			body: JSON.stringify({
-				type: "text",
-				content_pack_id: "test-pack",
-			}) as any,
+				transcript: "",
+			}),
 		});
 
-		const response = await POST(req);
+		const response = await POST(request);
 		const data = await response.json();
 
 		expect(response.status).toBe(400);
-		expect(data.error).toBe("Response is required");
-	});
-
-	it("should return 400 for empty response", async () => {
-		const { req } = createMocks<NextRequest>({
-			method: "POST",
-			headers: {
-				"content-type": "application/json",
-			},
-			body: JSON.stringify({
-				response: "",
-				type: "text",
-				content_pack_id: "test-pack",
-			}) as any,
-		});
-
-		const response = await POST(req);
-		const data = await response.json();
-
-		expect(response.status).toBe(400);
-		expect(data.error).toBe("Response is required");
+		// Empty transcript doesn't match the transcript fallback path, so it goes through validation
+		expect(data.error).toBe("Validation failed");
 	});
 
 	it("should handle evaluation service errors", async () => {
-		// Mock the evaluation service to throw an error
-		const { evaluationService } = await import(
-			"@/domain/evaluation/evaluation-service"
+		// Mock evaluateTranscript to throw an error
+		const { evaluateTranscript } = await import(
+			"@/domain/evaluation/evaluation-engine"
 		);
-		vi.mocked(evaluationService.evaluate).mockRejectedValue(
-			new Error("OpenAI API error"),
+		vi.mocked(evaluateTranscript).mockRejectedValue(
+			new Error("Evaluation error"),
 		);
 
-		const { req } = createMocks<NextRequest>({
+		const request = new NextRequest("http://localhost/api/evaluate", {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
 			},
 			body: JSON.stringify({
-				response: "This is a test response",
-				type: "text",
-				content_pack_id: "test-pack",
-			}) as any,
+				transcript: "This is a test response",
+			}),
 		});
 
-		const response = await POST(req);
+		const response = await POST(request);
 		const data = await response.json();
 
 		expect(response.status).toBe(500);
@@ -216,133 +235,180 @@ describe("/api/evaluate", () => {
 	});
 
 	it("should handle malformed JSON", async () => {
-		const { req } = createMocks<NextRequest>({
+		const request = new NextRequest("http://localhost/api/evaluate", {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
 			},
-			body: "invalid json" as any,
+			body: "invalid json",
 		});
 
-		const response = await POST(req);
+		const response = await POST(request);
 		const data = await response.json();
 
-		expect(response.status).toBe(500);
-		expect(data.error).toBe("Internal server error");
+		expect(response.status).toBe(400);
+		expect(data.error).toBe("Invalid request body");
 	});
 
-	it("should include performance metrics in response", async () => {
+	it("should return evaluation result with all fields", async () => {
 		const mockEvaluationResult = {
-			id: "test-eval-3",
-			user_id: "test-user",
-			content_pack_id: "test-pack",
-			response_text: "Test response",
-			response_type: "text" as const,
-			duration_seconds: 1.2,
-			word_count: 8,
+			overall_score: 81,
+			duration_s: 1.2,
+			words: 8,
 			wpm: 400,
-			categories: { clarity: 80, content: 85, delivery: 75, structure: 82 },
-			score: 81,
-			feedback: "Good response",
-			status: "COMPLETED" as const,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString(),
+			category_chips: [
+				{
+					id: "communication" as const,
+					name: "Communication",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of communication",
+				},
+				{
+					id: "problem_solving" as const,
+					name: "Problem Solving",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of problem solving",
+				},
+				{
+					id: "leadership" as const,
+					name: "Leadership",
+					passFlag: "FLAG" as const,
+					note: "Limited demonstration of leadership",
+				},
+				{
+					id: "collaboration" as const,
+					name: "Collaboration",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of collaboration",
+				},
+				{
+					id: "adaptability" as const,
+					name: "Adaptability",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of adaptability",
+				},
+				{
+					id: "ownership" as const,
+					name: "Ownership",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of ownership",
+				},
+				{
+					id: "curiosity" as const,
+					name: "Curiosity",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of curiosity",
+				},
+			],
+			what_changed: ["Add specific examples to support claims"],
+			practice_rule: "Expand your answer with specific examples and metrics",
 		};
 
-		// Mock the evaluation service
-		const { evaluationService } = await import(
-			"@/domain/evaluation/evaluation-service"
+		// Mock evaluateTranscript
+		const { evaluateTranscript } = await import(
+			"@/domain/evaluation/evaluation-engine"
 		);
-		vi.mocked(evaluationService.evaluate).mockResolvedValue(
-			mockEvaluationResult,
-		);
+		vi.mocked(evaluateTranscript).mockResolvedValue(mockEvaluationResult);
 
-		const { req } = createMocks<NextRequest>({
+		const request = new NextRequest("http://localhost/api/evaluate", {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
 			},
 			body: JSON.stringify({
-				response: "Test response",
-				type: "text",
-				content_pack_id: "test-pack",
-			}) as any,
+				transcript: "Test response",
+			}),
 		});
 
-		const response = await POST(req);
+		const response = await POST(request);
 		const data = await response.json();
 
-		expect(data.performance).toBeDefined();
-		expect(data.performance.duration).toBe(150);
-		expect(data.performance.operation).toBe("api.evaluate");
-		expect(data.performance.target).toBe(250);
-		expect(data.performance.targetMet).toBe(true);
+		expect(data.overall_score).toBe(81);
+		expect(data.duration_s).toBe(1.2);
+		expect(data.words).toBe(8);
+		expect(data.wpm).toBe(400);
+		expect(data.category_chips).toHaveLength(7);
+		expect(data.what_changed).toBeDefined();
+		expect(data.practice_rule).toBeDefined();
 	});
 
-	it("should handle performance target exceeded", async () => {
-		// Mock performance monitoring to return slow response
-		const { timeOperation } = await import(
-			"@/features/scheduling/infrastructure/monitoring/performance"
-		);
-		vi.mocked(timeOperation).mockImplementation(
-			async (operation: string, fn: () => Promise<any>) => {
-				const startTime = Date.now();
-				const result = await fn();
-				const endTime = Date.now();
-				return {
-					result,
-					metrics: {
-						duration: 300, // Exceeds 250ms target
-						operation,
-						startTime,
-						endTime,
-						success: true,
-					},
-				};
-			},
-		);
-
+	it("should handle long transcript evaluation", async () => {
 		const mockEvaluationResult = {
-			id: "test-eval-4",
-			user_id: "test-user",
-			content_pack_id: "test-pack",
-			response_text: "Test response",
-			response_type: "text" as const,
-			duration_seconds: 1.2,
-			word_count: 8,
-			wpm: 400,
-			categories: { clarity: 80, content: 85, delivery: 75, structure: 82 },
-			score: 81,
-			feedback: "Good response",
-			status: "COMPLETED" as const,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString(),
+			overall_score: 85,
+			duration_s: 3.5,
+			words: 500,
+			wpm: 857,
+			category_chips: [
+				{
+					id: "communication" as const,
+					name: "Communication",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of communication",
+				},
+				{
+					id: "problem_solving" as const,
+					name: "Problem Solving",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of problem solving",
+				},
+				{
+					id: "leadership" as const,
+					name: "Leadership",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of leadership",
+				},
+				{
+					id: "collaboration" as const,
+					name: "Collaboration",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of collaboration",
+				},
+				{
+					id: "adaptability" as const,
+					name: "Adaptability",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of adaptability",
+				},
+				{
+					id: "ownership" as const,
+					name: "Ownership",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of ownership",
+				},
+				{
+					id: "curiosity" as const,
+					name: "Curiosity",
+					passFlag: "PASS" as const,
+					note: "Strong evidence of curiosity",
+				},
+			],
+			what_changed: [],
+			practice_rule:
+				"Keep answers concise: aim for 2 minutes max (200-300 words)",
 		};
 
-		// Mock the evaluation service
-		const { evaluationService } = await import(
-			"@/domain/evaluation/evaluation-service"
+		// Mock evaluateTranscript
+		const { evaluateTranscript } = await import(
+			"@/domain/evaluation/evaluation-engine"
 		);
-		vi.mocked(evaluationService.evaluate).mockResolvedValue(
-			mockEvaluationResult,
-		);
+		vi.mocked(evaluateTranscript).mockResolvedValue(mockEvaluationResult);
 
-		const { req } = createMocks<NextRequest>({
+		const longTranscript = "This is a very long transcript. ".repeat(20);
+		const request = new NextRequest("http://localhost/api/evaluate", {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
 			},
 			body: JSON.stringify({
-				response: "Test response",
-				type: "text",
-				content_pack_id: "test-pack",
-			}) as any,
+				transcript: longTranscript,
+			}),
 		});
 
-		const response = await POST(req);
+		const response = await POST(request);
 		const data = await response.json();
 
-		expect(data.performance.targetMet).toBe(false);
-		expect(data.performance.duration).toBe(300);
+		expect(response.status).toBe(200);
+		expect(data.overall_score).toBe(85);
+		expect(data.words).toBeGreaterThan(100);
 	});
 });

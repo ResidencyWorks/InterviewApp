@@ -56,7 +56,7 @@ describe("Auth API Routes Integration", () => {
 			expect(mockSupabaseClient.auth.signInWithOtp).toHaveBeenCalledWith({
 				email,
 				options: {
-					emailRedirectTo: "http://localhost:3000/callback",
+					emailRedirectTo: "http://localhost:3000/auth/callback",
 				},
 			});
 		});

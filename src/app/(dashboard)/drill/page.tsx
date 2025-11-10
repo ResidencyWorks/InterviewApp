@@ -67,15 +67,15 @@ export default function DrillPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-50 p-6">
+		<div className="min-h-screen bg-background p-6">
 			<div className="max-w-6xl mx-auto space-y-6">
 				{/* Header */}
 				<div className="flex items-center justify-between">
 					<div>
-						<h1 className="text-3xl font-bold text-gray-900">
+						<h1 className="text-3xl font-bold text-foreground">
 							Interview Drills
 						</h1>
-						<p className="text-gray-600">
+						<p className="text-muted-foreground">
 							Practice with our comprehensive collection of interview questions.
 						</p>
 					</div>
@@ -102,10 +102,10 @@ export default function DrillPage() {
 								</div>
 							</CardHeader>
 							<CardContent className="space-y-4">
-								<div className="flex items-center justify-between text-sm text-gray-600">
+								<div className="flex items-center justify-between text-sm text-muted-foreground">
 									<span>Duration: {drill.duration}</span>
 									{drill.completed && drill.score && (
-										<span className="font-medium text-green-600">
+										<span className="font-medium text-green-600 dark:text-green-400">
 											Score: {drill.score}%
 										</span>
 									)}
@@ -141,16 +141,24 @@ export default function DrillPage() {
 					<CardContent>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 							<div className="text-center">
-								<div className="text-2xl font-bold text-blue-600">2</div>
-								<div className="text-sm text-gray-600">Completed</div>
+								<div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+									2
+								</div>
+								<div className="text-sm text-muted-foreground">Completed</div>
 							</div>
 							<div className="text-center">
-								<div className="text-2xl font-bold text-yellow-600">2</div>
-								<div className="text-sm text-gray-600">In Progress</div>
+								<div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+									2
+								</div>
+								<div className="text-sm text-muted-foreground">In Progress</div>
 							</div>
 							<div className="text-center">
-								<div className="text-2xl font-bold text-green-600">89%</div>
-								<div className="text-sm text-gray-600">Average Score</div>
+								<div className="text-2xl font-bold text-green-600 dark:text-green-400">
+									89%
+								</div>
+								<div className="text-sm text-muted-foreground">
+									Average Score
+								</div>
 							</div>
 						</div>
 					</CardContent>

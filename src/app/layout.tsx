@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PostHogProvider } from "@/components/PostHogProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { LayoutShiftPrevention } from "@/components/ui/LayoutShiftPrevention";
 import { WebVitals } from "@/components/WebVitals";
 
@@ -61,13 +62,20 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<body>
-				<PostHogProvider>
-					<LayoutShiftPrevention />
-					<WebVitals />
-					<ErrorBoundary>{children}</ErrorBoundary>
-				</PostHogProvider>
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="system"
+					enableSystem
+					disableTransitionOnChange
+				>
+					<PostHogProvider>
+						<LayoutShiftPrevention />
+						<WebVitals />
+						<ErrorBoundary>{children}</ErrorBoundary>
+					</PostHogProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);

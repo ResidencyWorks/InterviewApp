@@ -40,12 +40,16 @@ export async function POST(request: NextRequest) {
 				? window.location.origin
 				: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"; // set this in Vercel
 
-		await supabase.auth.signInWithOtp({
+		const { error } = await supabase.auth.signInWithOtp({
 			email,
 			options: {
 				emailRedirectTo: `${origin}/auth/callback`, // your handler/page
 			},
 		});
+
+		if (error) {
+			return NextResponse.json({ error: error.message }, { status: 400 });
+		}
 
 		return NextResponse.json({
 			message: "Magic link sent successfully",

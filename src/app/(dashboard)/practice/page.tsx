@@ -64,14 +64,14 @@ export default function PracticePage(): React.ReactElement {
 	}
 
 	return (
-		<div className="mx-auto max-w-3xl p-6">
-			<h1 className="text-2xl font-semibold mb-4">Practice</h1>
+		<div className="mx-auto max-w-3xl p-6 bg-background min-h-screen">
+			<h1 className="text-2xl font-semibold mb-4 text-foreground">Practice</h1>
 			{/* Simple entitlement check for M0 */}
 			{(() => {
 				const demoUserId = process.env.NEXT_PUBLIC_DEMO_USER_ID ?? "demo";
 				const ent = entitlementsService.get(demoUserId);
 				return !ent.practiceAccess ? (
-					<div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded">
+					<div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 rounded">
 						Access restricted. Complete checkout to unlock practice.
 					</div>
 				) : null;
@@ -80,7 +80,7 @@ export default function PracticePage(): React.ReactElement {
 				<div className="space-y-2">
 					<label
 						htmlFor="transcript"
-						className="block text-sm font-medium text-gray-700"
+						className="block text-sm font-medium text-foreground"
 					>
 						Your Response
 					</label>
@@ -90,9 +90,9 @@ export default function PracticePage(): React.ReactElement {
 						onChange={(e) => setTranscript(e.target.value)}
 						placeholder="Paste your transcript here..."
 						disabled={isSubmitting}
-						className="w-full min-h-[160px] p-3 border rounded disabled:bg-gray-50 disabled:opacity-75"
+						className="w-full min-h-[160px] p-3 border border-input bg-background text-foreground rounded disabled:bg-muted disabled:opacity-75"
 					/>
-					<p className="text-xs text-gray-500">
+					<p className="text-xs text-muted-foreground">
 						{transcript.length} characters •{" "}
 						{transcript.split(/\s+/).filter((w) => w.length > 0).length} words
 					</p>
@@ -141,13 +141,13 @@ export default function PracticePage(): React.ReactElement {
 
 			{/* Error state */}
 			{error && (
-				<div className="mt-4 p-4 bg-red-50 border border-red-200 rounded">
-					<p className="font-semibold text-red-900">Evaluation Error</p>
-					<p className="text-red-700 text-sm mt-1">{error}</p>
+				<div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded">
+					<p className="font-semibold text-destructive">Evaluation Error</p>
+					<p className="text-destructive text-sm mt-1">{error}</p>
 					<button
 						type="button"
 						onClick={() => setError(undefined)}
-						className="mt-3 text-sm text-red-600 underline hover:text-red-800"
+						className="mt-3 text-sm text-destructive underline hover:text-destructive/80"
 					>
 						Dismiss
 					</button>
@@ -156,10 +156,10 @@ export default function PracticePage(): React.ReactElement {
 
 			{/* Loading state (while evaluating) */}
 			{isSubmitting && (
-				<div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+				<div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
 					<div className="flex items-center gap-2">
 						<svg
-							className="animate-spin h-4 w-4 text-blue-600"
+							className="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400"
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
 							viewBox="0 0 24 24"
@@ -180,7 +180,7 @@ export default function PracticePage(): React.ReactElement {
 								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 							/>
 						</svg>
-						<span className="text-sm text-blue-700 font-medium">
+						<span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
 							Evaluating your response...
 						</span>
 					</div>

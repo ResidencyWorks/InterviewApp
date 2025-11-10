@@ -1,22 +1,29 @@
 import { NextResponse } from "next/server";
 import { ProjectStructureAnalyzer } from "@/domain/structure-analysis/services/ProjectStructureAnalyzer";
+import type { AnalysisOptions } from "@/domain/structure-analysis/types/analysis-options";
+
+interface AnalyzeRequest {
+	directories?: string[];
+	options?: Partial<AnalysisOptions>;
+}
 
 export async function POST(request: Request) {
 	try {
-		const body = (await request.json().catch(() => ({}))) as any;
+		const body = (await request.json().catch(() => ({}))) as AnalyzeRequest;
 		const directories: string[] = body?.directories ?? ["src/", "app/"];
-		const options = {
+		const options: AnalysisOptions = {
 			directories,
 			targetDirectories: directories,
 			includePatterns: body?.options?.includePatterns,
 			excludePatterns: body?.options?.excludePatterns,
 			includeUnusedFiles: body?.options?.includeUnusedFiles ?? true,
 			includeDependencies: body?.options?.includeDependencies ?? true,
-			includePatternsFlag: body?.options?.includePatterns ?? true,
 			severityThreshold: body?.options?.severityThreshold ?? "medium",
 			maxConcurrency: body?.options?.maxConcurrency ?? 4,
 			timeout: body?.options?.timeout ?? 30000,
-		} as any;
+			enableCaching: body?.options?.enableCaching ?? true,
+			cacheTtl: body?.options?.cacheTtl ?? 3600000,
+		};
 
 		const analyzer = new ProjectStructureAnalyzer();
 		const result = await analyzer.analyze(options);

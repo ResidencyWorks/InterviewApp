@@ -86,9 +86,9 @@ export function UserProfile({ className }: UserProfileProps) {
 								type="email"
 								value={user.email || ""}
 								disabled
-								className="bg-gray-50"
+								className="bg-muted"
 							/>
-							<p className="text-xs text-gray-500">
+							<p className="text-xs text-muted-foreground">
 								Email address cannot be changed
 							</p>
 						</div>
@@ -122,7 +122,7 @@ export function UserProfile({ className }: UserProfileProps) {
 						<div className="space-y-2">
 							<Label>Account Type</Label>
 							<div className="flex items-center space-x-2">
-								<span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+								<span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-medium">
 									{user.user_metadata?.entitlement_level || "FREE"}
 								</span>
 								{user.user_metadata?.entitlement_level === "FREE" && (

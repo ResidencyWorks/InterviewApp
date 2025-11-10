@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardLayout({
@@ -22,10 +23,10 @@ export default function DashboardLayout({
 	// Show loading state while checking authentication
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
+			<div className="min-h-screen bg-background flex items-center justify-center">
 				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-					<p className="mt-4 text-gray-600">Loading...</p>
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+					<p className="mt-4 text-muted-foreground">Loading...</p>
 				</div>
 			</div>
 		);
@@ -37,16 +38,16 @@ export default function DashboardLayout({
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-background">
 			{/* Navigation Header */}
-			<header className="bg-white border-b border-gray-200">
+			<header className="bg-card border-b border-border">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="flex justify-between items-center h-16">
 						{/* Logo */}
 						<div className="flex items-center">
 							<Link
 								href="/dashboard"
-								className="flex items-center space-x-2 text-xl font-bold text-gray-900"
+								className="flex items-center space-x-2 text-xl font-bold text-foreground"
 							>
 								<Image
 									src="/images/logos/logo.png"
@@ -62,32 +63,32 @@ export default function DashboardLayout({
 						<nav className="hidden md:flex space-x-8">
 							<Link
 								href="/dashboard"
-								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+								className="text-muted-foreground hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
 							>
 								Dashboard
 							</Link>
 							<Link
 								href="/drill"
-								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+								className="text-muted-foreground hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
 							>
 								Drills
 							</Link>
 							<Link
 								href="/profile"
-								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+								className="text-muted-foreground hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
 							>
 								Profile
 							</Link>
 							<Link
 								href="/settings"
-								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+								className="text-muted-foreground hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
 							>
 								Settings
 							</Link>
 							{isAdmin && (
 								<Link
 									href="/admin"
-									className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+									className="text-muted-foreground hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
 								>
 									Admin
 								</Link>
@@ -96,17 +97,20 @@ export default function DashboardLayout({
 
 						{/* User Menu */}
 						<div className="flex items-center space-x-4">
+							<ThemeToggle />
 							{loading ? (
 								<div className="flex items-center space-x-2">
-									<div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
-									<span className="text-xs text-gray-500">Loading...</span>
+									<div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+									<span className="text-xs text-gray-500 dark:text-gray-400">
+										Loading...
+									</span>
 								</div>
 							) : user ? (
 								<UserMenu />
 							) : (
 								<Link
 									href="/login"
-									className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+									className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium"
 								>
 									Sign In
 								</Link>
@@ -120,9 +124,9 @@ export default function DashboardLayout({
 			<main className="flex-1">{children}</main>
 
 			{/* Footer */}
-			<footer className="bg-white border-t border-gray-200 mt-12">
+			<footer className="bg-card border-t border-border mt-12">
 				<div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-					<div className="text-center text-sm text-gray-500">
+					<div className="text-center text-sm text-muted-foreground">
 						<p>
 							&copy; {new Date().getFullYear()} InterviewPrep. All rights
 							reserved.

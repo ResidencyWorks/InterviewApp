@@ -80,6 +80,8 @@ const envSchema = z.object({
 	STRIPE_PUBLISHABLE_KEY: z.string().optional(),
 	STRIPE_SECRET_KEY: z.string().optional(),
 	STRIPE_WEBHOOK_SECRET: z.string().optional(),
+	STRIPE_PRO_PRICE_ID: z.string().optional(),
+	STRIPE_TRIAL_PRICE_ID: z.string().optional(),
 
 	// Supabase
 	NEXT_PUBLIC_SUPABASE_URL: z.url({
