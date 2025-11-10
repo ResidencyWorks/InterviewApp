@@ -1,0 +1,26 @@
+{
+	"id": "evt_test_idempotent_12345",
+	"object": "event",
+	"api_version": "2025-09-30.clover",
+	"created": 1738000000,
+	"data": {
+		"object": {
+			"id": "cs_test_checkout_session",
+			"object": "checkout.session",
+			"client_reference_id": "user_test_123",
+			"metadata": {
+				"userId": "user_test_123",
+				"entitlementLevel": "PRO"
+			},
+			"status": "complete",
+			"payment_status": "paid"
+		}
+	},
+	"livemode": false,
+	"pending_webhooks": 1,
+	"request": {
+		"id": null,
+		"idempotency_key": null
+	},
+	"type": "checkout.session.completed"
+}

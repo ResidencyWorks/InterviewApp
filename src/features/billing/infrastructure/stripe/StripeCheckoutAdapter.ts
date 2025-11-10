@@ -25,8 +25,24 @@ export class StripeCheckoutAdapter implements ICheckoutRepository {
 		}
 
 		this.stripe = new Stripe(secretKey, {
-			apiVersion: "2025-09-30.clover",
+			apiVersion: "2025-10-29.clover",
 		});
+	}
+
+	/**
+	 * Get Stripe price ID for entitlement level from environment
+	 * @param entitlementLevel - Entitlement level
+	 * @returns Price ID or null if not configured
+	 */
+	private getPriceIdForEntitlement(entitlementLevel: string): string | null {
+		// Check for environment-specific price IDs
+		if (entitlementLevel === "PRO") {
+			return env.STRIPE_PRO_PRICE_ID || null;
+		}
+		if (entitlementLevel === "TRIAL") {
+			return env.STRIPE_TRIAL_PRICE_ID || null;
+		}
+		return null;
 	}
 
 	/**
@@ -41,8 +57,17 @@ export class StripeCheckoutAdapter implements ICheckoutRepository {
 		try {
 			const baseUrl = getAppUrl();
 
-			const session = await this.stripe.checkout.sessions.create({
-				mode: "payment",
+			// Get price ID from environment or use default test price
+			// For TRIAL, we'll use a $0 price or allow_quantity: 0
+			// For PRO, we'll use the configured price ID or a test price
+			const priceId = this.getPriceIdForEntitlement(params.entitlementLevel);
+
+			// For TRIAL, use payment mode with $0
+			// For PRO, use subscription mode for recurring billing
+			const isTrial = params.entitlementLevel === "TRIAL";
+
+			const sessionConfig: Stripe.Checkout.SessionCreateParams = {
+				mode: isTrial ? "payment" : "subscription",
 				client_reference_id: params.userId,
 				metadata: {
 					userId: params.userId,
@@ -50,10 +75,52 @@ export class StripeCheckoutAdapter implements ICheckoutRepository {
 				},
 				success_url: params.successUrl,
 				cancel_url: params.cancelUrl,
-				// Note: In a real implementation, you would specify line_items or price_id
-				// For now, this is a placeholder that will need to be configured
-				// based on your Stripe product/price setup
-			});
+			};
+
+			// For TRIAL, create a $0 one-time payment
+			if (isTrial) {
+				sessionConfig.line_items = [
+					{
+						price_data: {
+							currency: "usd",
+							product_data: {
+								name: "Pro Trial",
+								description: "7-day free trial of Pro features",
+							},
+							unit_amount: 0, // Free trial
+						},
+						quantity: 1,
+					},
+				];
+			} else if (priceId) {
+				// Use configured price ID for subscription
+				sessionConfig.line_items = [
+					{
+						price: priceId,
+						quantity: 1,
+					},
+				];
+			} else {
+				// Fallback: create a subscription price on the fly for PRO
+				sessionConfig.line_items = [
+					{
+						price_data: {
+							currency: "usd",
+							product_data: {
+								name: "Pro Plan",
+								description: "Monthly subscription to Pro features",
+							},
+							recurring: {
+								interval: "month",
+							},
+							unit_amount: 2900, // $29.00
+						},
+						quantity: 1,
+					},
+				];
+			}
+
+			const session = await this.stripe.checkout.sessions.create(sessionConfig);
 
 			if (!session.url) {
 				throw new Error("Stripe checkout session created but no URL returned");

@@ -81,15 +81,15 @@ export default function CompleteProfilePage() {
 
 	if (success) {
 		return (
-			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
+			<div className="min-h-screen bg-background flex items-center justify-center">
 				<Card className="w-full max-w-md">
 					<CardContent className="pt-6">
 						<div className="text-center">
-							<CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-							<h2 className="text-2xl font-bold text-gray-900 mb-2">
+							<CheckCircle className="h-16 w-16 text-green-500 dark:text-green-400 mx-auto mb-4" />
+							<h2 className="text-2xl font-bold text-foreground mb-2">
 								Profile Complete!
 							</h2>
-							<p className="text-gray-600 mb-4">
+							<p className="text-muted-foreground mb-4">
 								Your profile has been successfully updated. Redirecting to
 								dashboard...
 							</p>
@@ -101,10 +101,10 @@ export default function CompleteProfilePage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+		<div className="min-h-screen bg-background flex items-center justify-center p-4">
 			<Card className="w-full max-w-2xl">
 				<CardHeader className="text-center">
-					<CardTitle className="text-2xl font-bold text-gray-900">
+					<CardTitle className="text-2xl font-bold text-foreground">
 						Complete Your Profile
 					</CardTitle>
 					<CardDescription>

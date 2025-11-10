@@ -124,7 +124,7 @@ export function UploadProgress({
 			<CardContent className="pt-0">
 				<div className="space-y-2">
 					<Progress value={displayProgress} className="h-2" />
-					<div className="flex justify-between text-xs text-gray-500">
+					<div className="flex justify-between text-xs text-muted-foreground">
 						<span>
 							{status === "uploading" && "Uploading file to server..."}
 							{status === "validating" &&
@@ -138,7 +138,7 @@ export function UploadProgress({
 
 				{/* Status-specific information */}
 				{status === "validating" && (
-					<div className="mt-3 p-2 bg-yellow-50 rounded text-xs text-yellow-700">
+					<div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs text-yellow-700 dark:text-yellow-300">
 						<div className="flex items-center gap-1">
 							<Loader2 className="h-3 w-3 animate-spin" />
 							<span>This may take a few moments for large files...</span>
@@ -147,7 +147,7 @@ export function UploadProgress({
 				)}
 
 				{status === "completed" && (
-					<div className="mt-3 p-2 bg-green-50 rounded text-xs text-green-700">
+					<div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded text-xs text-green-700 dark:text-green-300">
 						<div className="flex items-center gap-1">
 							<CheckCircle className="h-3 w-3" />
 							<span>Content pack is ready to be activated</span>

@@ -30,7 +30,7 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 
 export default function DashboardPage() {
 	const { user } = useAuth() as { user: AuthUser | null };
-	const _router = useRouter();
+	const router = useRouter();
 	const isAdmin = user?.user_metadata?.role === "admin";
 	const dashboardData = useDashboardData(user);
 	const userPlanData = useUserPlan(user);
@@ -124,7 +124,7 @@ export default function DashboardPage() {
 	// No client-side checks needed
 
 	return (
-		<div className="min-h-screen bg-gray-50 p-6">
+		<div className="min-h-screen bg-background p-6">
 			<div className="max-w-7xl mx-auto space-y-6">
 				{/* Error Message */}
 				{errorMessage && (
@@ -136,8 +136,8 @@ export default function DashboardPage() {
 				{/* Header */}
 				<div className="flex items-center justify-between">
 					<div>
-						<h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-						<p className="text-gray-600">
+						<h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+						<p className="text-muted-foreground">
 							Welcome back! Here's what's happening with your interview prep.
 						</p>
 					</div>
@@ -145,13 +145,22 @@ export default function DashboardPage() {
 						{userPlanData.loading ? (
 							<Skeleton className="h-6 w-24" />
 						) : userPlanData.plan ? (
-							<Badge
-								variant={userPlanData.plan.badgeVariant}
-								className="text-sm"
-							>
-								{userPlanData.plan.displayName}
-								{userPlanData.plan.expiresAt &&
-									userPlanData.plan.entitlementLevel !== "FREE" && (
+							userPlanData.plan.entitlementLevel === "FREE" ? (
+								<Button
+									size="sm"
+									variant="outline"
+									onClick={() => router.push("/plans")}
+									className="text-sm"
+								>
+									Upgrade
+								</Button>
+							) : (
+								<Badge
+									variant={userPlanData.plan.badgeVariant}
+									className="text-sm"
+								>
+									{userPlanData.plan.displayName}
+									{userPlanData.plan.expiresAt && (
 										<span className="ml-1 text-xs opacity-75">
 											(
 											{new Date(
@@ -160,11 +169,17 @@ export default function DashboardPage() {
 											)
 										</span>
 									)}
-							</Badge>
+								</Badge>
+							)
 						) : (
-							<Badge variant="outline" className="text-sm">
-								Free Plan
-							</Badge>
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => router.push("/plans")}
+								className="text-sm"
+							>
+								Upgrade
+							</Button>
 						)}
 						<Avatar>
 							<AvatarFallback className="bg-gray-200 text-gray-800">
@@ -626,7 +641,10 @@ export default function DashboardPage() {
 										• Personalized study recommendations
 									</p>
 								</div>
-								<Button className="bg-blue-600 hover:bg-blue-700">
+								<Button
+									className="bg-blue-600 hover:bg-blue-700"
+									onClick={() => router.push("/plans")}
+								>
 									Upgrade to Pro
 								</Button>
 							</div>
@@ -648,7 +666,10 @@ export default function DashboardPage() {
 								</CardDescription>
 							</CardHeader>
 							<CardContent>
-								<Button className="bg-orange-600 hover:bg-orange-700">
+								<Button
+									className="bg-orange-600 hover:bg-orange-700"
+									onClick={() => router.push("/plans")}
+								>
 									Upgrade Now
 								</Button>
 							</CardContent>
