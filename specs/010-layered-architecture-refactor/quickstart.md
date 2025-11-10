@@ -8,30 +8,32 @@
    - Ensure devcontainer rebuilds with Node.js LTS, Biome, and lefthook enabled.
 
 3. **Run baseline quality gates**
-   - `pnpm biome lint` to confirm formatting rules.
-   - `pnpm lint:boundaries` (new command) to exercise ESLint boundary config.
-   - `pnpm test:unit` to verify existing domain/application tests pass without environment configuration.
+   - `pnpm lint` to validate formatting and static analysis.
+   - `pnpm lint:boundaries` to enforce layered dependency rules configured in `biome.json`.
+   - `pnpm test:unit` and `pnpm test:integration` for fast feedback by layer.
+   - `pnpm test:e2e` (Playwright) for presentation coverage when needed.
 
 4. **Apply structure migration**
    - Move `lib/*` assets into the appropriate `src/domain`, `src/application`, `src/infrastructure`, `src/presentation`, or `src/shared` directories.
    - Scaffold feature modules under `src/features/<feature>/` with `domain/`, `application/`, `infrastructure/`, `presentation/`.
-   - Update import paths to use aliases defined in `tsconfig.json`.
+   - Update import paths to use canonical aliases (`@domain/*`, `@app/*`, `@infra/*`, `@presentation/*`, `@shared/*`, `@features/*`).
 
 5. **Wire composition root**
-   - Consolidate environment parsing and client factories inside `src/infrastructure/config`.
-   - Expose a `createAppContainer()` function that presentation handlers consume.
+   - Use `src/infrastructure/config/environment.ts` for Zod-validated environment variables.
+   - Access infrastructure clients via `src/infrastructure/config/clients.ts`.
+   - Retrieve shared dependencies in presentation code through `createAppContainer()` from `src/infrastructure/config/container.ts`.
 
 6. **Document layers**
    - Add `README.md` (or similar guidance) to each layer directory summarizing responsibilities and allowed dependencies.
    - Record ADR outlining dependency rules at repository root.
 
 7. **Verify test segmentation**
-   - Co-locate unit tests with domain/application modules (`*.unit.spec.ts`).
-  - Relocate integration tests to `src/infrastructure/__tests__`.
-   - Ensure Playwright e2e specs reference presentation entry points only.
+   - Keep unit tests under `tests/unit/**` and integration tests under `tests/integration/**`.
+   - Store Playwright specs in `tests/e2e/**` and run via `pnpm test:e2e`.
+   - Share fixtures through `tests/fixtures/**` where needed.
 
 8. **Run full suite before PR**
-   - `pnpm biome check`
+   - `pnpm check:all`
    - `pnpm lint:boundaries`
    - `pnpm test:unit`
    - `pnpm test:integration`

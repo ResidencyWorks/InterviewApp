@@ -11,15 +11,15 @@ afterEach(() => {
 	cleanup();
 });
 
-// Mock environment variables
-beforeAll(() => {
-	process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
-	process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key";
-	process.env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
-	process.env.UPSTASH_REDIS_REST_URL = "https://test-redis.upstash.io";
-	process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
-	process.env.OPENAI_API_KEY = "test-openai-key";
-});
+process.env.NEXT_PUBLIC_SUPABASE_URL ??= "https://test.supabase.co";
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-key";
+process.env.SUPABASE_URL ??= "https://service.supabase.co";
+process.env.SUPABASE_SERVICE_ROLE_KEY ??= "service-role-key";
+process.env.SUPABASE_ANON_KEY ??= "anon-key";
+process.env.NEXT_PUBLIC_SITE_URL ??= "http://localhost:3000";
+process.env.UPSTASH_REDIS_REST_URL ??= "https://test-redis.upstash.io";
+process.env.UPSTASH_REDIS_REST_TOKEN ??= "test-token";
+process.env.OPENAI_API_KEY ??= "test-openai-key";
 
 // Mock Supabase client
 vi.mock("@supabase/supabase-js", () => ({
@@ -71,8 +71,8 @@ vi.mock("@supabase/ssr", () => ({
 }));
 
 // Mock Redis client
-vi.mock("@upstash/redis", () => ({
-	Redis: vi.fn().mockImplementation(() => ({
+const RedisMock = vi.fn().mockImplementation(function RedisMockImpl() {
+	return {
 		get: vi.fn().mockResolvedValue(null),
 		set: vi.fn().mockResolvedValue("OK"),
 		setex: vi.fn().mockResolvedValue("OK"),
@@ -86,7 +86,11 @@ vi.mock("@upstash/redis", () => ({
 			del: vi.fn(),
 			exec: vi.fn().mockResolvedValue([]),
 		}),
-	})),
+	};
+});
+
+vi.mock("@upstash/redis", () => ({
+	Redis: RedisMock,
 }));
 
 // Mock Redis cache classes

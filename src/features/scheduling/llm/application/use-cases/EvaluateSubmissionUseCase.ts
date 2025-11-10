@@ -155,7 +155,6 @@ export class EvaluateSubmissionUseCase {
 		const contentInfo = getContentForProcessing(submission);
 		let textContent = submission.content;
 		let transcriptionTimeMs: number | undefined;
-		let analysisTimeMs: number | undefined;
 
 		// If it's audio, transcribe it first
 		if (contentInfo.type === "audio") {
@@ -238,7 +237,7 @@ export class EvaluateSubmissionUseCase {
 				? JSON.stringify(submission.metadata)
 				: undefined,
 		});
-		analysisTimeMs = Date.now() - analysisStartTime;
+		const analysisTimeMs = Date.now() - analysisStartTime;
 
 		console.log("🎯 Text analysis completed:", {
 			analysisTimeMs,

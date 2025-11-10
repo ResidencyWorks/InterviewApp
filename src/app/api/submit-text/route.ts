@@ -5,20 +5,11 @@
  * @file src/app/api/submit-text/route.ts
  */
 
-import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { validateUploadPermission } from "@/features/auth/application/entitlements/upload-permissions";
 import { validateTextSubmissionRequest } from "@/features/booking/application/upload/schemas";
-import { createRecording } from "@/models/recording";
-
-/**
- * Create Supabase client for database operations
- */
-const supabase = createClient(
-	process.env.NEXT_PUBLIC_SUPABASE_URL!,
-	process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+import { getSupabaseServiceRoleClient } from "@/infrastructure/config/clients";
 
 /**
  * POST handler for text submission
@@ -68,6 +59,21 @@ export async function POST(request: NextRequest) {
 					{ status: 403 },
 				);
 			}
+		}
+
+		const supabase = getSupabaseServiceRoleClient();
+		if (!supabase) {
+			console.error("Supabase service role client not configured");
+			return NextResponse.json(
+				{
+					success: false,
+					error: {
+						code: "CONFIGURATION_ERROR",
+						message: "Service configuration missing",
+					},
+				},
+				{ status: 500 },
+			);
 		}
 
 		// Generate recording ID

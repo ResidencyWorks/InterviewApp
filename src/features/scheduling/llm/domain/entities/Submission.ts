@@ -65,10 +65,10 @@ export function getContentForProcessing(submission: Submission): {
 	type: "text" | "audio";
 	content: string;
 } {
-	if (hasAudio(submission)) {
+	if (submission.audioUrl) {
 		return {
 			type: "audio",
-			content: submission.audioUrl!,
+			content: submission.audioUrl,
 		};
 	}
 

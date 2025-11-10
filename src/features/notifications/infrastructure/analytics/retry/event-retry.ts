@@ -418,81 +418,67 @@ export const FAST_RETRY_CONFIG: RetryConfig = {
 /**
  * Retry utilities
  */
-export class RetryUtils {
-	/**
-	 * Check if an error should be retried
-	 */
-	static shouldRetry(error: Error): boolean {
-		// Don't retry on client errors (4xx)
-		if (
-			error.message.includes("400") ||
-			error.message.includes("401") ||
-			error.message.includes("403") ||
-			error.message.includes("404")
-		) {
-			return false;
-		}
-
-		// Don't retry on validation errors
-		if (error.message.toLowerCase().includes("validation")) {
-			return false;
-		}
-
-		// Retry on network errors, timeouts, and server errors
-		if (
-			error.message.toLowerCase().includes("network") ||
-			error.message.toLowerCase().includes("timeout") ||
-			error.message.toLowerCase().includes("500") ||
-			error.message.toLowerCase().includes("502") ||
-			error.message.toLowerCase().includes("503") ||
-			error.message.toLowerCase().includes("504")
-		) {
-			return true;
-		}
-
+export function shouldRetryError(error: Error): boolean {
+	// Don't retry on client errors (4xx)
+	if (
+		error.message.includes("400") ||
+		error.message.includes("401") ||
+		error.message.includes("403") ||
+		error.message.includes("404")
+	) {
 		return false;
 	}
 
-	/**
-	 * Create a retry configuration for analytics events
-	 */
-	static createAnalyticsRetryConfig(): RetryConfig {
-		return {
-			...DEFAULT_RETRY_CONFIG,
-			errorFilter: (error: Error) => {
-				// Retry on network errors and timeouts
-				return (
-					error.message.toLowerCase().includes("network") ||
-					error.message.toLowerCase().includes("timeout") ||
-					error.message.toLowerCase().includes("500")
-				);
-			},
-		};
+	// Don't retry on validation errors
+	if (error.message.toLowerCase().includes("validation")) {
+		return false;
 	}
 
-	/**
-	 * Create a retry configuration for error events
-	 */
-	static createErrorRetryConfig(): RetryConfig {
-		return {
-			...AGGRESSIVE_RETRY_CONFIG,
-			errorFilter: (error: Error) => {
-				// Retry on most errors except validation errors
-				return !error.message.toLowerCase().includes("validation");
-			},
-		};
+	// Retry on network errors, timeouts, and server errors
+	if (
+		error.message.toLowerCase().includes("network") ||
+		error.message.toLowerCase().includes("timeout") ||
+		error.message.toLowerCase().includes("500") ||
+		error.message.toLowerCase().includes("502") ||
+		error.message.toLowerCase().includes("503") ||
+		error.message.toLowerCase().includes("504")
+	) {
+		return true;
 	}
 
-	/**
-	 * Create a retry configuration for critical events
-	 */
-	static createCriticalRetryConfig(): RetryConfig {
-		return {
-			...AGGRESSIVE_RETRY_CONFIG,
-			maxAttempts: 10,
-			errorFilter: () => true, // Retry on all errors
-		};
-	}
+	return false;
+}
+
+export function createAnalyticsRetryConfig(): RetryConfig {
+	return {
+		...DEFAULT_RETRY_CONFIG,
+		errorFilter: (error: Error) => {
+			// Retry on network errors and timeouts
+			return (
+				error.message.toLowerCase().includes("network") ||
+				error.message.toLowerCase().includes("timeout") ||
+				error.message.toLowerCase().includes("500")
+			);
+		},
+	};
+}
+
+export function createErrorRetryConfig(): RetryConfig {
+	return {
+		...AGGRESSIVE_RETRY_CONFIG,
+		errorFilter: (error: Error) => {
+			// Retry on most errors except validation errors
+			return !error.message.toLowerCase().includes("validation");
+		},
+	};
+}
+
+export function createCriticalRetryConfig(): RetryConfig {
+	return {
+		...AGGRESSIVE_RETRY_CONFIG,
+		maxAttempts: 10,
+		errorFilter: () => true, // Retry on all errors
+	};
 }
 
 /**
@@ -519,15 +505,15 @@ export function createFastEventRetry<T>(): EventRetry<T> {
 }
 
 export function createAnalyticsEventRetry<T>(): EventRetry<T> {
-	return new EventRetry<T>(RetryUtils.createAnalyticsRetryConfig());
+	return new EventRetry<T>(createAnalyticsRetryConfig());
 }
 
 export function createErrorEventRetry<T>(): EventRetry<T> {
-	return new EventRetry<T>(RetryUtils.createErrorRetryConfig());
+	return new EventRetry<T>(createErrorRetryConfig());
 }
 
 export function createCriticalEventRetry<T>(): EventRetry<T> {
-	return new EventRetry<T>(RetryUtils.createCriticalRetryConfig());
+	return new EventRetry<T>(createCriticalRetryConfig());
 }
 
 export function createEventRetryManager(): EventRetryManager {

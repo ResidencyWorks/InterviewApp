@@ -6,6 +6,8 @@
 
 import { PostHog } from "posthog-node";
 import type { AnalyticsServiceConfig } from "@/features/notifications/domain/analytics/interfaces/IAnalyticsService";
+import { getPostHogClient } from "../config/clients";
+import { env, hasPostHog } from "../config/environment";
 
 /**
  * PostHog client configuration
@@ -23,7 +25,7 @@ export interface PostHogClientConfig {
  * Create PostHog client configuration from environment variables
  */
 export function createPostHogConfig(): PostHogClientConfig {
-	const apiKey = process.env.POSTHOG_API_KEY;
+	const apiKey = env.POSTHOG_API_KEY;
 
 	if (!apiKey) {
 		console.warn(
@@ -33,9 +35,9 @@ export function createPostHogConfig(): PostHogClientConfig {
 
 	return {
 		apiKey: apiKey || "",
-		host: process.env.POSTHOG_HOST || "https://app.posthog.com",
-		enabled: process.env.POSTHOG_ENABLED !== "false" && !!apiKey,
-		debug: process.env.NODE_ENV === "development",
+		host: env.POSTHOG_HOST || "https://app.posthog.com",
+		enabled: hasPostHog && env.POSTHOG_API_KEY !== "",
+		debug: env.DEBUG,
 		batchSize: parseInt(process.env.POSTHOG_BATCH_SIZE || "20", 10),
 		flushInterval: parseInt(process.env.POSTHOG_FLUSH_INTERVAL || "10000", 10),
 	};
@@ -88,7 +90,7 @@ export function toAnalyticsServiceConfig(
 /**
  * Default PostHog client instance
  */
-export const posthogClient = createPostHogClient();
+export const posthogClient = getPostHogClient() ?? createPostHogClient();
 
 /**
  * Shutdown PostHog client gracefully

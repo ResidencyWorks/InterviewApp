@@ -1,6 +1,8 @@
-import { Redis } from "@upstash/redis";
+import type { Redis } from "@upstash/redis";
 import { performanceMonitor } from "@/features/scheduling/infrastructure/monitoring/performance";
 import type { ContentPackData, UserEntitlementLevel } from "@/types";
+import { getRedisClient } from "../config/clients";
+import { hasRedis } from "../config/environment";
 
 function createRedisFallback() {
 	const store = new Map<string, any>();
@@ -48,19 +50,13 @@ function createRedisFallback() {
 	} as unknown as Redis;
 }
 
-function createRedisClient(): Redis {
-	try {
-		return new Redis({
-			token: process.env.UPSTASH_REDIS_REST_TOKEN ?? "",
-			url: process.env.UPSTASH_REDIS_REST_URL ?? "",
-		});
-	} catch (error) {
-		console.warn("Using in-memory Redis fallback for tests:", error);
-		return createRedisFallback();
-	}
-}
+const redis = getRedisClient() ?? createRedisFallback();
 
-const redis = createRedisClient();
+if (!hasRedis) {
+	console.warn(
+		"UPSTASH_REDIS_REST_URL/TOKEN not configured. Using in-memory Redis fallback.",
+	);
+}
 
 export const cacheKeys = {
 	activeContentPack: () => "content:active",

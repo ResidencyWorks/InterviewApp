@@ -266,188 +266,119 @@ export class ErrorClassifier implements IErrorClassifier {
 /**
  * Error classification utilities
  */
-export class ErrorClassificationUtils {
-	/**
-	 * Check if error should be reported
-	 */
-	static shouldReport(error: ErrorEvent): boolean {
-		const classifier = new ErrorClassifier();
-		const classification = classifier.classify(error);
-		return classification.shouldReport;
+function getClassification(error: ErrorEvent): ErrorClassificationResult {
+	const classifier = new ErrorClassifier();
+	return classifier.classify(error);
+}
+
+function getSeverity(error: ErrorEvent): ErrorSeverity {
+	return getClassification(error).severity;
+}
+
+function getCategory(error: ErrorEvent): ErrorCategory {
+	return getClassification(error).category;
+}
+
+function shouldReportClassification(error: ErrorEvent): boolean {
+	return getClassification(error).shouldReport;
+}
+
+function shouldAlertClassification(error: ErrorEvent): boolean {
+	return getClassification(error).shouldAlert;
+}
+
+function generateErrorFingerprintInternal(error: ErrorEvent): string {
+	return getClassification(error).fingerprint;
+}
+
+function getErrorTagsInternal(error: ErrorEvent): Record<string, string> {
+	return getClassification(error).tags;
+}
+
+function isCriticalClassification(error: ErrorEvent): boolean {
+	return getSeverity(error) === "CRITICAL";
+}
+
+function isHighSeverityClassification(error: ErrorEvent): boolean {
+	const severity = getSeverity(error);
+	return severity === "CRITICAL" || severity === "ERROR";
+}
+
+function isLowSeverityClassification(error: ErrorEvent): boolean {
+	const severity = getSeverity(error);
+	return severity === "INFO" || severity === "DEBUG";
+}
+
+function isAuthenticationClassification(error: ErrorEvent): boolean {
+	const category = getCategory(error);
+	return (
+		category === "AUTHENTICATION_ERROR" || category === "AUTHORIZATION_ERROR"
+	);
+}
+
+function isNetworkClassification(error: ErrorEvent): boolean {
+	const category = getCategory(error);
+	return category === "NETWORK_ERROR" || category === "EXTERNAL_SERVICE_ERROR";
+}
+
+function isValidationClassification(error: ErrorEvent): boolean {
+	return getCategory(error) === "VALIDATION_ERROR";
+}
+
+function isDatabaseClassification(error: ErrorEvent): boolean {
+	return getCategory(error) === "DATABASE_ERROR";
+}
+
+function isRateLimitClassification(error: ErrorEvent): boolean {
+	return getCategory(error) === "RATE_LIMIT_ERROR";
+}
+
+function getErrorPriorityInternal(error: ErrorEvent): number {
+	const severity = getSeverity(error);
+	const priorityMap: Record<ErrorSeverity, number> = {
+		CRITICAL: 100,
+		ERROR: 80,
+		WARNING: 60,
+		INFO: 40,
+		DEBUG: 20,
+	};
+	return priorityMap[severity] || 0;
+}
+
+function shouldRetryClassification(error: ErrorEvent): boolean {
+	const category = getCategory(error);
+	const retryableCategories: ErrorCategory[] = [
+		"NETWORK_ERROR",
+		"EXTERNAL_SERVICE_ERROR",
+		"DATABASE_ERROR",
+	];
+	return retryableCategories.includes(category);
+}
+
+function getRetryDelayInternal(_error: ErrorEvent, attempt: number): number {
+	const baseDelay = 1000; // 1 second
+	const maxDelay = 30000; // 30 seconds
+	const delay = baseDelay * 2 ** (attempt - 1);
+	return Math.min(delay, maxDelay);
+}
+
+function getMaxRetryAttemptsInternal(error: ErrorEvent): number {
+	const category = getCategory(error);
+	const severity = getSeverity(error);
+
+	if (severity === "CRITICAL") {
+		return 5;
 	}
 
-	/**
-	 * Check if error should trigger an alert
-	 */
-	static shouldAlert(error: ErrorEvent): boolean {
-		const classifier = new ErrorClassifier();
-		const classification = classifier.classify(error);
-		return classification.shouldAlert;
+	if (category === "NETWORK_ERROR") {
+		return 3;
 	}
 
-	/**
-	 * Get error severity level
-	 */
-	static getSeverity(error: ErrorEvent): ErrorSeverity {
-		const classifier = new ErrorClassifier();
-		const classification = classifier.classify(error);
-		return classification.severity;
+	if (category === "EXTERNAL_SERVICE_ERROR") {
+		return 2;
 	}
 
-	/**
-	 * Get error category
-	 */
-	static getCategory(error: ErrorEvent): ErrorCategory {
-		const classifier = new ErrorClassifier();
-		const classification = classifier.classify(error);
-		return classification.category;
-	}
-
-	/**
-	 * Generate error fingerprint
-	 */
-	static generateFingerprint(error: ErrorEvent): string {
-		const classifier = new ErrorClassifier();
-		const classification = classifier.classify(error);
-		return classification.fingerprint;
-	}
-
-	/**
-	 * Get error tags
-	 */
-	static getTags(error: ErrorEvent): Record<string, string> {
-		const classifier = new ErrorClassifier();
-		const classification = classifier.classify(error);
-		return classification.tags;
-	}
-
-	/**
-	 * Check if error is critical
-	 */
-	static isCritical(error: ErrorEvent): boolean {
-		const severity = ErrorClassificationUtils.getSeverity(error);
-		return severity === "CRITICAL";
-	}
-
-	/**
-	 * Check if error is high severity
-	 */
-	static isHighSeverity(error: ErrorEvent): boolean {
-		const severity = ErrorClassificationUtils.getSeverity(error);
-		return severity === "CRITICAL" || severity === "ERROR";
-	}
-
-	/**
-	 * Check if error is low severity
-	 */
-	static isLowSeverity(error: ErrorEvent): boolean {
-		const severity = ErrorClassificationUtils.getSeverity(error);
-		return severity === "INFO" || severity === "DEBUG";
-	}
-
-	/**
-	 * Check if error is related to authentication
-	 */
-	static isAuthenticationError(error: ErrorEvent): boolean {
-		const category = ErrorClassificationUtils.getCategory(error);
-		return (
-			category === "AUTHENTICATION_ERROR" || category === "AUTHORIZATION_ERROR"
-		);
-	}
-
-	/**
-	 * Check if error is related to network
-	 */
-	static isNetworkError(error: ErrorEvent): boolean {
-		const category = ErrorClassificationUtils.getCategory(error);
-		return (
-			category === "NETWORK_ERROR" || category === "EXTERNAL_SERVICE_ERROR"
-		);
-	}
-
-	/**
-	 * Check if error is related to validation
-	 */
-	static isValidationError(error: ErrorEvent): boolean {
-		const category = ErrorClassificationUtils.getCategory(error);
-		return category === "VALIDATION_ERROR";
-	}
-
-	/**
-	 * Check if error is related to database
-	 */
-	static isDatabaseError(error: ErrorEvent): boolean {
-		const category = ErrorClassificationUtils.getCategory(error);
-		return category === "DATABASE_ERROR";
-	}
-
-	/**
-	 * Check if error is related to rate limiting
-	 */
-	static isRateLimitError(error: ErrorEvent): boolean {
-		const category = ErrorClassificationUtils.getCategory(error);
-		return category === "RATE_LIMIT_ERROR";
-	}
-
-	/**
-	 * Get error priority for processing
-	 */
-	static getPriority(error: ErrorEvent): number {
-		const severity = ErrorClassificationUtils.getSeverity(error);
-		const priorityMap: Record<ErrorSeverity, number> = {
-			CRITICAL: 100,
-			ERROR: 80,
-			WARNING: 60,
-			INFO: 40,
-			DEBUG: 20,
-		};
-		return priorityMap[severity] || 0;
-	}
-
-	/**
-	 * Check if error should be retried
-	 */
-	static shouldRetry(error: ErrorEvent): boolean {
-		const category = ErrorClassificationUtils.getCategory(error);
-		const retryableCategories: ErrorCategory[] = [
-			"NETWORK_ERROR",
-			"EXTERNAL_SERVICE_ERROR",
-			"DATABASE_ERROR",
-		];
-		return retryableCategories.includes(category);
-	}
-
-	/**
-	 * Get retry delay for error
-	 */
-	static getRetryDelay(_error: ErrorEvent, attempt: number): number {
-		const baseDelay = 1000; // 1 second
-		const maxDelay = 30000; // 30 seconds
-		const delay = baseDelay * 2 ** (attempt - 1);
-		return Math.min(delay, maxDelay);
-	}
-
-	/**
-	 * Get maximum retry attempts for error
-	 */
-	static getMaxRetryAttempts(error: ErrorEvent): number {
-		const category = ErrorClassificationUtils.getCategory(error);
-		const severity = ErrorClassificationUtils.getSeverity(error);
-
-		if (severity === "CRITICAL") {
-			return 5;
-		}
-
-		if (category === "NETWORK_ERROR") {
-			return 3;
-		}
-
-		if (category === "EXTERNAL_SERVICE_ERROR") {
-			return 2;
-		}
-
-		return 1;
-	}
+	return 1;
 }
 
 /**
@@ -459,73 +390,73 @@ export function classifyError(error: ErrorEvent): ErrorClassificationResult {
 }
 
 export function shouldReportError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.shouldReport(error);
+	return shouldReportClassification(error);
 }
 
 export function shouldAlertError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.shouldAlert(error);
+	return shouldAlertClassification(error);
 }
 
 export function getErrorSeverity(error: ErrorEvent): ErrorSeverity {
-	return ErrorClassificationUtils.getSeverity(error);
+	return getSeverity(error);
 }
 
 export function getErrorCategory(error: ErrorEvent): ErrorCategory {
-	return ErrorClassificationUtils.getCategory(error);
+	return getCategory(error);
 }
 
 export function generateErrorFingerprint(error: ErrorEvent): string {
-	return ErrorClassificationUtils.generateFingerprint(error);
+	return generateErrorFingerprintInternal(error);
 }
 
 export function getErrorTags(error: ErrorEvent): Record<string, string> {
-	return ErrorClassificationUtils.getTags(error);
+	return getErrorTagsInternal(error);
 }
 
 export function isCriticalError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.isCritical(error);
+	return isCriticalClassification(error);
 }
 
 export function isHighSeverityError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.isHighSeverity(error);
+	return isHighSeverityClassification(error);
 }
 
 export function isLowSeverityError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.isLowSeverity(error);
+	return isLowSeverityClassification(error);
 }
 
 export function isAuthenticationError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.isAuthenticationError(error);
+	return isAuthenticationClassification(error);
 }
 
 export function isNetworkError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.isNetworkError(error);
+	return isNetworkClassification(error);
 }
 
 export function isValidationError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.isValidationError(error);
+	return isValidationClassification(error);
 }
 
 export function isDatabaseError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.isDatabaseError(error);
+	return isDatabaseClassification(error);
 }
 
 export function isRateLimitError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.isRateLimitError(error);
+	return isRateLimitClassification(error);
 }
 
 export function getErrorPriority(error: ErrorEvent): number {
-	return ErrorClassificationUtils.getPriority(error);
+	return getErrorPriorityInternal(error);
 }
 
 export function shouldRetryError(error: ErrorEvent): boolean {
-	return ErrorClassificationUtils.shouldRetry(error);
+	return shouldRetryClassification(error);
 }
 
 export function getErrorRetryDelay(error: ErrorEvent, attempt: number): number {
-	return ErrorClassificationUtils.getRetryDelay(error, attempt);
+	return getRetryDelayInternal(error, attempt);
 }
 
 export function getErrorMaxRetryAttempts(error: ErrorEvent): number {
-	return ErrorClassificationUtils.getMaxRetryAttempts(error);
+	return getMaxRetryAttemptsInternal(error);
 }

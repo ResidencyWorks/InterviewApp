@@ -317,10 +317,14 @@ export class CircuitBreakerManager {
 		serviceName: string,
 		config: CircuitBreakerConfig,
 	): CircuitBreaker {
-		if (!this.circuitBreakers.has(serviceName)) {
-			this.circuitBreakers.set(serviceName, new CircuitBreaker(config));
+		const existing = this.circuitBreakers.get(serviceName);
+		if (existing) {
+			return existing;
 		}
-		return this.circuitBreakers.get(serviceName)!;
+
+		const breaker = new CircuitBreaker(config);
+		this.circuitBreakers.set(serviceName, breaker);
+		return breaker;
 	}
 
 	/**

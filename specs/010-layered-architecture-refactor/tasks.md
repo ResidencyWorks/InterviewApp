@@ -69,7 +69,7 @@
 - [x] T017 [P] [US2] Migrate billing-specific assets into `/workspaces/InterviewApp/src/features/billing/**`
 - [x] T018 [P] [US2] Migrate notifications-specific assets into `/workspaces/InterviewApp/src/features/notifications/**`
 - [x] T019 [US2] Update `/workspaces/InterviewApp/src/features/README.md` with ownership, dependency, and testing guidance
-- [ ] T020 [US2] Refactor `/workspaces/InterviewApp/src/app/**` and `/workspaces/InterviewApp/src/presentation/**` to import from feature modules instead of shared services
+- [x] T020 [US2] Refactor `/workspaces/InterviewApp/src/app/**` and `/workspaces/InterviewApp/src/presentation/**` to import from feature modules instead of shared services
 
 **Checkpoint**: Feature boundaries in place; teams can iterate autonomously.
 
@@ -82,12 +82,12 @@
 
 ### Implementation
 
-- [ ] T021 [US3] Define path aliases (`@domain/*`, `@app/*`, `@infra/*`, `@presentation/*`, `@shared/*`, `@features/*`) in `/workspaces/InterviewApp/tsconfig.json`
-- [ ] T022 [US3] Configure boundary linting in `/workspaces/InterviewApp/biome.json` (and related Biome configs) to block disallowed imports
-- [ ] T023 [P] [US3] Add scripts (`lint:boundaries`, `test:unit`, `test:integration`, `test:e2e`) to `/workspaces/InterviewApp/package.json`
-- [ ] T024 [P] [US3] Reorganize tests under `/workspaces/InterviewApp/tests/{unit,integration,e2e}` and update Vitest/Playwright configs
-- [ ] T025 [US3] Centralize startup configuration in `/workspaces/InterviewApp/src/infrastructure/config/{environment.ts,clients.ts,container.ts}`
-- [ ] T026 [US3] Publish ADR at `/workspaces/InterviewApp/docs/architecture/adr-layered-dependency-rules.md` documenting guardrails and tooling
+- [x] T021 [US3] Define path aliases (`@domain/*`, `@app/*`, `@infra/*`, `@presentation/*`, `@shared/*`, `@features/*`) in `/workspaces/InterviewApp/tsconfig.json`
+- [x] T022 [US3] Configure boundary linting in `/workspaces/InterviewApp/biome.json` (and related Biome configs) to block disallowed imports
+- [x] T023 [P] [US3] Add scripts (`lint:boundaries`, `test:unit`, `test:integration`, `test:e2e`) to `/workspaces/InterviewApp/package.json`
+- [x] T024 [P] [US3] Reorganize tests under `/workspaces/InterviewApp/tests/{unit,integration,e2e}` and update Vitest/Playwright configs
+- [x] T025 [US3] Centralize startup configuration in `/workspaces/InterviewApp/src/infrastructure/config/{environment.ts,clients.ts,container.ts}`
+- [x] T026 [US3] Publish ADR at `/workspaces/InterviewApp/docs/architecture/adr-layered-dependency-rules.md` documenting guardrails and tooling
 
 **Checkpoint**: Tooling and tests enforce architectural contracts.
 
@@ -97,12 +97,12 @@
 
 **Purpose**: Final validation, documentation updates, and handoff readiness.
 
-- [ ] T027 [P] Align `/workspaces/InterviewApp/specs/010-layered-architecture-refactor/quickstart.md` with final commands, aliases, and directory paths
-- [ ] T028 Capture migration validation results in `/workspaces/InterviewApp/docs/architecture/migration-report.md`
-- [ ] T029 Refresh architecture overview in `/workspaces/InterviewApp/README.md` to reflect layered + feature module structure
-- [ ] T030 Archive or document unsupported legacy scripts in `/workspaces/InterviewApp/docs/architecture/legacy-scripts-guidelines.md`
-- [ ] T031 Define cross-feature capability patterns (e.g., analytics) in `/workspaces/InterviewApp/docs/architecture/cross-feature-playbook.md`
-- [ ] T032 Extend Biome boundary rules to forbid unauthorized folder roots (prevent ad-hoc directories) in `/workspaces/InterviewApp/biome.json`
+- [x] T027 [P] Align `/workspaces/InterviewApp/specs/010-layered-architecture-refactor/quickstart.md` with final commands, aliases, and directory paths
+- [x] T028 Capture migration validation results in `/workspaces/InterviewApp/docs/architecture/migration-report.md`
+- [x] T029 Refresh architecture overview in `/workspaces/InterviewApp/README.md` to reflect layered + feature module structure
+- [x] T030 Archive or document unsupported legacy scripts in `/workspaces/InterviewApp/docs/architecture/legacy-scripts-guidelines.md`
+- [x] T031 Define cross-feature capability patterns (e.g., analytics) in `/workspaces/InterviewApp/docs/architecture/cross-feature-playbook.md`
+- [x] T032 Extend Biome boundary rules to forbid unauthorized folder roots (prevent ad-hoc directories) in `/workspaces/InterviewApp/biome.json`
 
 ---
 

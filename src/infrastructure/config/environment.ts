@@ -36,13 +36,19 @@ const envSchema = z.object({
 	STRIPE_PUBLISHABLE_KEY: z.string().optional(),
 	STRIPE_SECRET_KEY: z.string().optional(),
 	STRIPE_WEBHOOK_SECRET: z.string().optional(),
-	SUPABASE_ANON_KEY: z.string().min(1, "SUPABASE_ANON_KEY is required"),
+
+	// Supabase
+	NEXT_PUBLIC_SUPABASE_URL: z
+		.string()
+		.url("NEXT_PUBLIC_SUPABASE_URL must be a valid URL"),
+	NEXT_PUBLIC_SUPABASE_ANON_KEY: z
+		.string()
+		.min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY is required"),
+	SUPABASE_URL: z.string().url("SUPABASE_URL must be a valid URL"),
 	SUPABASE_SERVICE_ROLE_KEY: z
 		.string()
 		.min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
-
-	// Database (Supabase)
-	SUPABASE_URL: z.string().url("SUPABASE_URL must be a valid URL"),
+	SUPABASE_ANON_KEY: z.string().optional(),
 	UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
 	// Redis (Upstash)
@@ -87,6 +93,7 @@ export const hasPostHog = !!env.POSTHOG_API_KEY;
 export const hasSentry = !!env.SENTRY_DSN;
 export const hasStripe = !!env.STRIPE_SECRET_KEY;
 export const hasRedis = !!env.UPSTASH_REDIS_REST_URL;
+export const hasSupabaseServiceRole = !!env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Helper function to get the correct app URL
 export const getAppUrl = (): string => {

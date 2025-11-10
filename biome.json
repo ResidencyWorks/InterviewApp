@@ -28,7 +28,27 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": {
+					"level": "off"
+				}
+			},
+			"style": {
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"patterns": [
+							{
+								"group": ["@/lib/*"]
+							},
+							{
+								"group": ["@/services/*"]
+							}
+						]
+					}
+				}
+			}
 		}
 	},
 	"javascript": {
@@ -43,5 +63,76 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["src/domain/**/*.{ts,tsx}"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["@app/*"]
+									},
+									{
+										"group": ["@infra/*"]
+									},
+									{
+										"group": ["@infrastructure/*"]
+									},
+									{
+										"group": ["@presentation/*"]
+									},
+									{
+										"group": ["@features/*"]
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/application/**/*.{ts,tsx}"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["@presentation/*"]
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/app/**/*.{ts,tsx}", "src/presentation/**/*.{ts,tsx}"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["@domain/*"]
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		}
+	]
 }

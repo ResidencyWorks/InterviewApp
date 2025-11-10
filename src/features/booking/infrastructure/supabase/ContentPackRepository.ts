@@ -358,6 +358,16 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 	 * Maps Supabase data to ContentPack entity
 	 */
 	private mapSupabaseToContentPack(data: SupabaseContentPack): ContentPack {
+		if (
+			!data.created_at ||
+			!data.updated_at ||
+			data.uploaded_by === null ||
+			typeof data.file_size !== "number" ||
+			!data.checksum
+		) {
+			throw new Error("Content pack record is missing required fields");
+		}
+
 		return {
 			id: data.id,
 			version: data.version,
@@ -367,13 +377,13 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 			content: data.content as any, // Json to ContentPackData
 			metadata: data.metadata as any, // Json to ContentPackMetadata
 			status: data.status as ContentPackStatus,
-			createdAt: new Date(data.created_at!),
-			updatedAt: new Date(data.updated_at!),
+			createdAt: new Date(data.created_at),
+			updatedAt: new Date(data.updated_at),
 			activatedAt: data.activated_at ? new Date(data.activated_at) : undefined,
 			activatedBy: data.activated_by ?? undefined,
-			uploadedBy: data.uploaded_by!,
-			fileSize: data.file_size!,
-			checksum: data.checksum!,
+			uploadedBy: data.uploaded_by,
+			fileSize: data.file_size,
+			checksum: data.checksum,
 		};
 	}
 }

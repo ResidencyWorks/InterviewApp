@@ -61,10 +61,9 @@ export function AdaptiveInput({
 					return;
 				}
 
-				const permissions = (navigator as any).permissions as
-					| Permissions
-					| undefined;
-				if (permissions && permissions.query) {
+				const permissions =
+					"permissions" in navigator ? navigator.permissions : undefined;
+				if (permissions?.query) {
 					try {
 						const status = await permissions.query({
 							name: "microphone" as unknown as PermissionName,
