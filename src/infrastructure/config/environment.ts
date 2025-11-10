@@ -44,7 +44,10 @@ const envSchema = z.object({
 	NEXT_PUBLIC_SUPABASE_ANON_KEY: z
 		.string()
 		.min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY is required"),
-	SUPABASE_URL: z.string().url("SUPABASE_URL must be a valid URL"),
+	SUPABASE_URL: z.preprocess(
+		(val) => (val === "" || val === undefined ? undefined : val),
+		z.string().url("SUPABASE_URL must be a valid URL").optional(),
+	),
 	SUPABASE_SERVICE_ROLE_KEY: z
 		.string()
 		.min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
@@ -62,7 +65,13 @@ const envSchema = z.object({
 // Parse and validate environment variables
 function validateEnv() {
 	try {
-		return envSchema.parse(process.env);
+		const parsed = envSchema.parse(process.env);
+		// Default SUPABASE_URL to NEXT_PUBLIC_SUPABASE_URL if not provided
+		// They are typically the same value, just one is public and one is server-side
+		if (!parsed.SUPABASE_URL && parsed.NEXT_PUBLIC_SUPABASE_URL) {
+			parsed.SUPABASE_URL = parsed.NEXT_PUBLIC_SUPABASE_URL;
+		}
+		return parsed;
 	} catch (error) {
 		if (error instanceof z.ZodError) {
 			const missingVars = error.issues.map(

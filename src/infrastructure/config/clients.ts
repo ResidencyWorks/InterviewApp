@@ -62,8 +62,11 @@ export function getSupabaseServiceRoleClient(): SupabaseClient<any> | null {
 	}
 
 	if (!supabaseServiceRoleClient) {
+		// Use SUPABASE_URL if provided, otherwise fall back to NEXT_PUBLIC_SUPABASE_URL
+		// They are typically the same value
+		const supabaseUrl = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
 		supabaseServiceRoleClient = createSupabaseClient<any>(
-			env.SUPABASE_URL,
+			supabaseUrl,
 			env.SUPABASE_SERVICE_ROLE_KEY,
 		);
 	}
