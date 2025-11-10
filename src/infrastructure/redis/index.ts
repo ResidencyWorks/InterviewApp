@@ -3,6 +3,7 @@ import { performanceMonitor } from "@/features/scheduling/infrastructure/monitor
 import type { ContentPackData, UserEntitlementLevel } from "@/types";
 import { getRedisClient } from "../config/clients";
 import { hasRedis } from "../config/environment";
+import { getServerDatabaseService } from "../db/database-service";
 
 function createRedisFallback() {
 	const store = new Map<string, any>();
@@ -199,26 +200,193 @@ export class RedisCacheService {
 
 export const redisCache = new RedisCacheService();
 
+/**
+ * Cached entitlement data structure
+ */
+interface CachedEntitlement {
+	entitlementLevel: UserEntitlementLevel;
+	expiresAt: string; // ISO 8601 timestamp
+}
+
+/**
+ * User entitlement cache with expiration checking and database fallback
+ * Provides fast entitlement lookups with automatic cache invalidation and fallback
+ */
 export class UserEntitlementCache {
-	async get(userId: string): Promise<UserEntitlementLevel | null> {
-		return await redisCache.get(cacheKeys.userEntitlement(userId));
+	private readonly cacheHitCount = new Map<string, number>();
+	private readonly cacheMissCount = new Map<string, number>();
+	private readonly cache: typeof redisCache;
+
+	constructor(cacheInstance?: typeof redisCache) {
+		// Allow injection of cache instance for testing, default to module-level redisCache
+		this.cache = cacheInstance ?? redisCache;
 	}
 
+	/**
+	 * Get user entitlement with expiration checking and database fallback
+	 * @param userId - User identifier
+	 * @returns Promise resolving to entitlement level or null if not found
+	 */
+	async get(userId: string): Promise<UserEntitlementLevel | null> {
+		const cacheKey = cacheKeys.userEntitlement(userId);
+		const startTime = Date.now();
+
+		try {
+			// Try to get from cache
+			const cached = await this.cache.get<CachedEntitlement>(cacheKey);
+
+			if (cached) {
+				// Check if entitlement is expired
+				const expiresAt = new Date(cached.expiresAt);
+				const now = new Date();
+
+				if (expiresAt <= now) {
+					// Entitlement expired - invalidate cache and fall back to database
+					this.logCacheMiss(userId, "expired");
+					await this.cache.delete(cacheKey);
+					return await this.getFromDatabase(userId);
+				}
+
+				// Cache hit - return cached value
+				this.logCacheHit(userId, Date.now() - startTime);
+				return cached.entitlementLevel;
+			}
+
+			// Cache miss - fall back to database
+			this.logCacheMiss(userId, "miss");
+			return await this.getFromDatabase(userId);
+		} catch (error) {
+			// Redis unavailable - fall back to database
+			console.error(`Redis cache error for user ${userId}:`, error);
+			this.logCacheMiss(userId, "error");
+			return await this.getFromDatabase(userId);
+		}
+	}
+
+	/**
+	 * Get entitlement from database and refresh cache
+	 * @param userId - User identifier
+	 * @returns Promise resolving to entitlement level or null
+	 */
+	private async getFromDatabase(
+		userId: string,
+	): Promise<UserEntitlementLevel | null> {
+		try {
+			// Get server database service with Supabase client
+			const dbService = await getServerDatabaseService();
+			const supabase = (dbService as any).supabase;
+
+			if (!supabase) {
+				console.error("Supabase client not available for database fallback");
+				return null;
+			}
+
+			// Query database for most recent non-expired entitlement
+			const { data, error } = await supabase
+				.from("user_entitlements")
+				.select("entitlement_level, expires_at")
+				.eq("user_id", userId)
+				.gte("expires_at", new Date().toISOString())
+				.order("created_at", { ascending: false })
+				.limit(1)
+				.maybeSingle();
+
+			if (error || !data) {
+				return null;
+			}
+
+			const cachedData: CachedEntitlement = {
+				entitlementLevel: data.entitlement_level,
+				expiresAt: data.expires_at,
+			};
+
+			// Refresh cache (async, don't wait for it)
+			this.cache
+				.set(
+					cacheKeys.userEntitlement(userId),
+					cachedData,
+					cacheTTL.userEntitlement,
+				)
+				.catch((error) => {
+					console.error(`Failed to refresh cache for user ${userId}:`, error);
+				});
+
+			return data.entitlement_level;
+		} catch (error) {
+			console.error(`Database query error for user ${userId}:`, error);
+			return null;
+		}
+	}
+
+	/**
+	 * Set entitlement in cache with expiration timestamp
+	 * @param userId - User identifier
+	 * @param entitlement - Entitlement level
+	 * @param expiresAt - Optional expiration timestamp (defaults to 1 year from now)
+	 * @returns Promise resolving to success status
+	 */
 	async set(
 		userId: string,
 		entitlement: UserEntitlementLevel,
+		expiresAt?: string,
 	): Promise<boolean> {
-		return await redisCache.set(
+		const cachedData: CachedEntitlement = {
+			entitlementLevel: entitlement,
+			expiresAt:
+				expiresAt ||
+				new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // Default 1 year
+		};
+
+		return await this.cache.set(
 			cacheKeys.userEntitlement(userId),
-			entitlement,
+			cachedData,
 			cacheTTL.userEntitlement,
 		);
 	}
 
-	async invalidate(userId: string): Promise<boolean> {
-		return await redisCache.delete(cacheKeys.userEntitlement(userId));
+	/**
+	 * Log cache hit for performance monitoring
+	 * @param userId - User identifier
+	 * @param duration - Request duration in milliseconds
+	 */
+	private logCacheHit(userId: string, duration: number): void {
+		const count = (this.cacheHitCount.get(userId) || 0) + 1;
+		this.cacheHitCount.set(userId, count);
+
+		if (duration > 100) {
+			console.warn(
+				`Slow cache hit for user ${userId}: ${duration}ms (expected <100ms)`,
+			);
+		}
 	}
 
+	/**
+	 * Log cache miss for performance monitoring
+	 * @param userId - User identifier
+	 * @param reason - Reason for cache miss (miss, expired, error)
+	 */
+	private logCacheMiss(userId: string, reason: string): void {
+		const count = (this.cacheMissCount.get(userId) || 0) + 1;
+		this.cacheMissCount.set(userId, count);
+
+		console.log(`Cache miss for user ${userId}: ${reason}`);
+	}
+
+	/**
+	 * Invalidate cached entitlement for a user
+	 * @param userId - User identifier
+	 * @returns Promise resolving to success status
+	 */
+	async invalidate(userId: string): Promise<boolean> {
+		return await this.cache.delete(cacheKeys.userEntitlement(userId));
+	}
+
+	/**
+	 * Set entitlement in cache (alias for set)
+	 * @param userId - User identifier
+	 * @param entitlement - Entitlement level
+	 * @returns Promise resolving to success status
+	 */
 	async setEntitlement(
 		userId: string,
 		entitlement: UserEntitlementLevel,
@@ -226,10 +394,20 @@ export class UserEntitlementCache {
 		return this.set(userId, entitlement);
 	}
 
+	/**
+	 * Get entitlement from cache (alias for get)
+	 * @param userId - User identifier
+	 * @returns Promise resolving to entitlement level or null
+	 */
 	async getEntitlement(userId: string): Promise<UserEntitlementLevel | null> {
 		return this.get(userId);
 	}
 
+	/**
+	 * Delete entitlement from cache (alias for invalidate)
+	 * @param userId - User identifier
+	 * @returns Promise resolving to success status
+	 */
 	async deleteEntitlement(userId: string): Promise<boolean> {
 		return this.invalidate(userId);
 	}
@@ -244,14 +422,14 @@ export class UserEntitlementCache {
 			},
 			{} as Record<string, UserEntitlementLevel>,
 		);
-		return await redisCache.mset(entries, cacheTTL.userEntitlement);
+		return await this.cache.mset(entries, cacheTTL.userEntitlement);
 	}
 
 	async getMultipleEntitlements(
 		userIds: string[],
 	): Promise<Record<string, UserEntitlementLevel | null>> {
 		const keys = userIds.map((userId) => cacheKeys.userEntitlement(userId));
-		const values = await redisCache.mget<UserEntitlementLevel>(keys);
+		const values = await this.cache.mget<UserEntitlementLevel>(keys);
 		return userIds.reduce<Record<string, UserEntitlementLevel | null>>(
 			(result, userId, index) => {
 				result[userId] = values[index] ?? null;

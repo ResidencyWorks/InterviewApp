@@ -1,11 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerAuthService } from "@/features/auth/application/services/server-auth-service";
+import type { AuthUser } from "@/types/auth";
 import {
 	createErrorResponse,
 	createRateLimitResponse,
 	createUnauthorizedResponse,
 } from "./api-helpers";
 import type { ApiProxy, AuthConfig, RateLimitConfig } from "./api-types";
+
+/**
+ * Extended NextRequest with additional context properties
+ */
+interface ExtendedNextRequest extends NextRequest {
+	user?: AuthUser;
+	validatedData?: unknown;
+}
 
 // In-memory rate limit store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -36,7 +45,7 @@ export function createAuthProxy(config: AuthConfig): ApiProxy {
 				}
 			}
 			// Add user to request context
-			(request as any).user = user;
+			(request as ExtendedNextRequest).user = user;
 
 			return next();
 		} catch (error) {
@@ -211,7 +220,7 @@ export function createValidationProxy<T>(
 				);
 			}
 			// Add validated data to request context
-			(request as any).validatedData = validation.data;
+			(request as ExtendedNextRequest).validatedData = validation.data;
 
 			return next();
 		} catch {

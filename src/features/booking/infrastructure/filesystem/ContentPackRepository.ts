@@ -125,7 +125,12 @@ export class FilesystemContentPackRepository implements IContentPackRepository {
 				const filesystemData: FilesystemContentPack = JSON.parse(data);
 				return this.mapFilesystemToContentPack(filesystemData);
 			} catch (error) {
-				if ((error as any).code === "ENOENT") {
+				if (
+					error &&
+					typeof error === "object" &&
+					"code" in error &&
+					error.code === "ENOENT"
+				) {
 					return null; // File not found
 				}
 				throw error;
@@ -167,11 +172,17 @@ export class FilesystemContentPackRepository implements IContentPackRepository {
 			const sortOrder = options.sortOrder || "desc";
 
 			contentPacks.sort((a, b) => {
-				const aValue = (a as any)[sortBy];
-				const bValue = (b as any)[sortBy];
+				const aValue = (a as unknown as Record<string, unknown>)[sortBy];
+				const bValue = (b as unknown as Record<string, unknown>)[sortBy];
 
-				if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-				if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+				if (aValue === undefined || bValue === undefined) return 0;
+				if (typeof aValue === "number" && typeof bValue === "number") {
+					return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+				}
+				const aStr = String(aValue);
+				const bStr = String(bValue);
+				if (aStr < bStr) return sortOrder === "asc" ? -1 : 1;
+				if (aStr > bStr) return sortOrder === "asc" ? 1 : -1;
 				return 0;
 			});
 
@@ -277,7 +288,12 @@ export class FilesystemContentPackRepository implements IContentPackRepository {
 			try {
 				await fs.unlink(filePath);
 			} catch (error) {
-				if ((error as any).code === "ENOENT") {
+				if (
+					error &&
+					typeof error === "object" &&
+					"code" in error &&
+					error.code === "ENOENT"
+				) {
 					return false; // File not found
 				}
 				throw error;
@@ -346,7 +362,12 @@ export class FilesystemContentPackRepository implements IContentPackRepository {
 			await fs.access(filePath);
 			return true;
 		} catch (error) {
-			if ((error as any).code === "ENOENT") {
+			if (
+				error &&
+				typeof error === "object" &&
+				"code" in error &&
+				error.code === "ENOENT"
+			) {
 				return false;
 			}
 			throw new Error(
