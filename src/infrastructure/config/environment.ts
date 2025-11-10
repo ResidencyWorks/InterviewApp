@@ -5,6 +5,50 @@
 
 import { z } from "zod";
 
+/**
+ * Helper to create an optional URL field that handles empty strings and invalid values gracefully.
+ * This is needed because environment variables from Vercel or other platforms may be set to empty strings,
+ * and Zod's `.optional()` only handles `undefined`, not empty strings.
+ *
+ * Also handles common placeholder values like "undefined", "null", or whitespace-only strings.
+ * If a value is provided but is not a valid URL, it will be treated as undefined to allow the build to continue.
+ */
+const optionalUrl = () => {
+	return z.preprocess(
+		(val) => {
+			// Handle undefined, null, or empty string
+			if (val === undefined || val === null || val === "") {
+				return undefined;
+			}
+
+			const trimmed = String(val).trim();
+			const lowercased = trimmed.toLowerCase();
+
+			// Treat empty strings, "undefined", "null", or whitespace-only as undefined
+			if (
+				trimmed === "" ||
+				lowercased === "undefined" ||
+				lowercased === "null" ||
+				lowercased === "none"
+			) {
+				return undefined;
+			}
+
+			// Validate URL format - if invalid, treat as undefined to allow build to continue
+			// This handles cases where Vercel might have an invalid URL value set
+			try {
+				new URL(trimmed);
+				return trimmed;
+			} catch {
+				// Invalid URL format - treat as undefined to prevent build failure
+				// The application will fall back to VERCEL_URL or other defaults
+				return undefined;
+			}
+		},
+		z.union([z.url(), z.undefined()]),
+	);
+};
+
 // Define the environment schema
 const envSchema = z.object({
 	// Development
@@ -23,14 +67,14 @@ const envSchema = z.object({
 	NODE_ENV: z
 		.enum(["development", "production", "test"])
 		.default("development"),
-	NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+	NEXT_PUBLIC_APP_URL: optionalUrl(),
 
 	// External services
 	OPENAI_API_KEY: z.string().optional(),
-	PLAYWRIGHT_BASE_URL: z.string().url().default("http://localhost:3000"),
+	PLAYWRIGHT_BASE_URL: z.url().default("http://localhost:3000"),
 	POSTHOG_API_KEY: z.string().optional(),
-	POSTHOG_HOST: z.string().url().default("https://app.posthog.com"),
-	SENTRY_DSN: z.string().url().optional(),
+	POSTHOG_HOST: z.url().default("https://app.posthog.com"),
+	SENTRY_DSN: optionalUrl(),
 	SENTRY_ORG: z.string().optional(),
 	SENTRY_PROJECT: z.string().optional(),
 	STRIPE_PUBLISHABLE_KEY: z.string().optional(),
@@ -38,16 +82,13 @@ const envSchema = z.object({
 	STRIPE_WEBHOOK_SECRET: z.string().optional(),
 
 	// Supabase
-	NEXT_PUBLIC_SUPABASE_URL: z
-		.string()
-		.url("NEXT_PUBLIC_SUPABASE_URL must be a valid URL"),
+	NEXT_PUBLIC_SUPABASE_URL: z.url({
+		message: "NEXT_PUBLIC_SUPABASE_URL must be a valid URL",
+	}),
 	NEXT_PUBLIC_SUPABASE_ANON_KEY: z
 		.string()
 		.min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY is required"),
-	SUPABASE_URL: z.preprocess(
-		(val) => (val === "" || val === undefined ? undefined : val),
-		z.string().url("SUPABASE_URL must be a valid URL").optional(),
-	),
+	SUPABASE_URL: optionalUrl(),
 	SUPABASE_SERVICE_ROLE_KEY: z
 		.string()
 		.min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
@@ -55,7 +96,7 @@ const envSchema = z.object({
 	UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
 	// Redis (Upstash)
-	UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+	UPSTASH_REDIS_REST_URL: optionalUrl(),
 
 	// Deployment
 	VERCEL_URL: z.string().optional(),
@@ -78,7 +119,7 @@ function validateEnv() {
 				(err) => `${err.path.join(".")}: ${err.message}`,
 			);
 			throw new Error(
-				`❌ Environment validation failed:\n${missingVars.join("\n")}\n\nPlease check your .env.local file and ensure all required variables are set.`,
+				`❌ Environment validation failed:\n${missingVars.join("\n")}\n\nPlease check your environment variables (.env.local for local development, or Vercel environment variables for deployment) and ensure all required variables are set correctly.`,
 			);
 		}
 		throw error;
