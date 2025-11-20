@@ -56,12 +56,12 @@
 
 **Independent Test**: Enqueue audio and text jobs and confirm worker persists results and emits `job_completed` and `score_returned` events.
 
-- [ ] T018 [US2] Implement Whisper transcription helper at `src/infrastructure/openai/whisper.ts` (function `transcribeAudio(url): Promise<{ transcript, durationMs }>`)
-- [ ] T019 [US2] Implement GPT evaluator at `src/infrastructure/openai/gpt_evaluator.ts` with function `evaluateTranscript(transcript): Promise<EvaluationResult>` that calls GPT-4-turbo, validates output against `EvaluationResultSchema`, and records token usage per `specs/001-ai-asr-eval/contracts/evaluation-schema.md` rules
-- [ ] T020 [US2] Implement worker processing loop at `src/infrastructure/bullmq/worker.ts` that: marks job processing, calls transcription (if audio_url), calls GPT evaluator, validates result, calls `evaluation_store.upsertResult`, records duration/tokens (per contract), emits PostHog `job_completed` and `score_returned`, and acknowledges job
-- [ ] T021 [US2] Configure BullMQ job options for exponential backoff and max attempts=3 in `queue.ts` (ensure permanent schema validation failures are not retried)
-- [ ] T022 [US2] Implement idempotency guard inside worker: if `evaluation_store.getByRequestId` exists and job completed, skip processing and emit `job_completed` with stored metadata
-- [ ] T023 [US2] Add integration tests for worker in `tests/integration/worker.spec.ts` (mock OpenAI responses and PostHog calls)
+- [X] T018 [US2] Implement Whisper transcription helper at `src/infrastructure/openai/whisper.ts` (function `transcribeAudio(url): Promise<{ transcript, durationMs }>`)
+- [X] T019 [US2] Implement GPT evaluator at `src/infrastructure/openai/gpt_evaluator.ts` with function `evaluateTranscript(transcript): Promise<EvaluationResult>` that calls GPT-4-turbo, validates output against `EvaluationResultSchema`, and records token usage per `specs/001-ai-asr-eval/contracts/evaluation-schema.md` rules
+- [X] T020 [US2] Implement worker processing loop at `src/infrastructure/bullmq/worker.ts` that: marks job processing, calls transcription (if audio_url), calls GPT evaluator, validates result, calls `evaluation_store.upsertResult`, records duration/tokens (per contract), emits PostHog `job_completed` and `score_returned`, and acknowledges job
+- [X] T021 [US2] Configure BullMQ job options for exponential backoff and max attempts=3 in `queue.ts` (ensure permanent schema validation failures are not retried)
+- [X] T022 [US2] Implement idempotency guard inside worker: if `evaluation_store.getByRequestId` exists and job completed, skip processing and emit `job_completed` with stored metadata
+- [X] T023 [US2] Add integration tests for worker in `tests/integration/worker.spec.ts` (mock OpenAI responses and PostHog calls)
 
 ---
 
