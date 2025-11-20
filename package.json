@@ -98,6 +98,7 @@
 		"worker:start": "node ./dist/infrastructure/bullmq/worker.js",
 		"worker:dev": "tsx src/infrastructure/bullmq/worker.ts",
 		"test:coverage": "tsx scripts/coverage-check.ts",
+		"test:sla": "tsx cli/evaluate-harness.ts",
 		"build:worker": "tsc -p tsconfig.worker.json",
 		"build": "next build",
 		"check:all": "biome check . && tsc --noEmit",

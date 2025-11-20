@@ -71,10 +71,10 @@
 
 **Independent Test**: Run `node cli/evaluate-harness.ts` and verify report contains latency percentiles and success rate.
 
-- [ ] T024 [US3] Implement CLI harness at `cli/evaluate-harness.ts` that can send configurable number of requests (defaults: 25) with mix of `text` and `audio_url` and measure latencies
-- [ ] T025 [US3] Add result aggregation and percentile calculation utility at `src/lib/metrics/percentiles.ts`
-- [ ] T026 [US3] Add a script to `package.json`: `"test:sla": "tsx cli/evaluate-harness.ts"`
-- [ ] T027 [US3] Add e2e runbook `specs/001-ai-asr-eval/quickstart.md` documenting how to run the harness and interpret results
+- [X] T024 [US3] Implement CLI harness at `cli/evaluate-harness.ts` that can send configurable number of requests (defaults: 25) with mix of `text` and `audio_url` and measure latencies
+- [X] T025 [US3] Add result aggregation and percentile calculation utility at `src/lib/metrics/percentiles.ts`
+- [X] T026 [US3] Add a script to `package.json`: `"test:sla": "tsx cli/evaluate-harness.ts"`
+- [X] T027 [US3] Add e2e runbook `specs/001-ai-asr-eval/quickstart.md` documenting how to run the harness and interpret results
 
 ---
 
