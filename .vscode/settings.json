@@ -73,5 +73,16 @@
 		"titleBar.inactiveForeground": "#e7e7e799"
 	},
 	"peacock.remoteColor": "#8b5f98",
-	"todo-tree.tree.disableCompactFolders": true
+	"todo-tree.tree.disableCompactFolders": true,
+	"chat.promptFilesRecommendations": {
+		"speckit.constitution": true,
+		"speckit.specify": true,
+		"speckit.plan": true,
+		"speckit.tasks": true,
+		"speckit.implement": true
+	},
+	"chat.tools.terminal.autoApprove": {
+		".specify/scripts/bash/": true,
+		".specify/scripts/powershell/": true
+	}
 }
