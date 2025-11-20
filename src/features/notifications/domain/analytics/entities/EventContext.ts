@@ -4,10 +4,10 @@ import { z } from "zod";
  * Event context schema
  */
 export const EventContextSchema = z.object({
-	userId: z.string().uuid().optional(),
+	userId: z.uuid().optional(),
 	sessionId: z.string().optional(),
 	requestId: z.string().optional(),
-	url: z.string().url().optional(),
+	url: z.url().optional(),
 	userAgent: z.string().optional(),
 	ipAddress: z.string().optional(),
 	timestamp: z.date().default(() => new Date()),

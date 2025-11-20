@@ -68,6 +68,9 @@ const envSchema = z.object({
 		.enum(["development", "production", "test"])
 		.default("development"),
 	NEXT_PUBLIC_APP_URL: optionalUrl(),
+	SYNC_TIMEOUT_MS: z.coerce.number().default(30000),
+	RATE_LIMIT_RPM: z.coerce.number().default(60),
+	EVALUATION_WEBHOOK_SECRET: z.string().optional(),
 
 	// External services
 	OPENAI_API_KEY: z.string().optional(),
@@ -99,6 +102,7 @@ const envSchema = z.object({
 
 	// Redis (Upstash)
 	UPSTASH_REDIS_REST_URL: optionalUrl(),
+	REDIS_URL: optionalUrl(),
 
 	// Deployment
 	VERCEL_URL: z.string().optional(),

@@ -1,10 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { evaluationConfig } from "@/config";
 import {
 	isProtectedPath,
 	isPublicPath,
 } from "@/features/auth/application/auth-helpers";
 import { defaultContentPackLoader } from "@/features/booking/infrastructure/default/DefaultContentPack";
+import { getRedisClient } from "@/infrastructure/config/clients";
 import { createClient } from "./src/infrastructure/supabase/proxy";
 
 /**
@@ -42,13 +44,59 @@ export async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 	console.log("Proxy - Processing request for:", pathname);
 
+	// Special handling for /api/evaluate routes (excluding webhook)
+	// This replaces the previous per-route middleware
+	if (pathname.startsWith("/api/evaluate") && !pathname.includes("/webhook")) {
+		// 1. Auth Check
+		const authHeader = request.headers.get("Authorization");
+		const apiKeyHeader = request.headers.get("x-api-key");
+		let clientId = "";
+
+		if (authHeader?.startsWith("Bearer ")) {
+			clientId = authHeader.split(" ")[1];
+		} else if (apiKeyHeader) {
+			clientId = apiKeyHeader;
+		}
+
+		if (!clientId) {
+			return NextResponse.json(
+				{ error: "Unauthorized", message: "Missing or invalid credentials" },
+				{ status: 401 },
+			);
+		}
+
+		// 2. Rate Limit Check
+		const redis = getRedisClient();
+		if (redis) {
+			try {
+				const key = `rate_limit:${clientId}`;
+				const current = await redis.incr(key);
+
+				if (current === 1) {
+					await redis.expire(key, 60); // 1 minute window
+				}
+
+				if (current > evaluationConfig.rateLimitRpm) {
+					return NextResponse.json(
+						{ error: "Too Many Requests", message: "Rate limit exceeded" },
+						{
+							status: 429,
+							headers: { "Retry-After": "60" },
+						},
+					);
+				}
+			} catch (error) {
+				console.error("Rate limit check failed:", error);
+			}
+		}
+	}
+
 	// Skip proxy for static files, analytics, and API routes that don't need auth
 	if (
 		pathname.startsWith("/_next") ||
 		pathname.startsWith("/static") ||
 		pathname.startsWith("/favicon") ||
 		pathname.startsWith("/api/health") ||
-		pathname.startsWith("/api/evaluate") ||
 		pathname.startsWith("/ingest") // PostHog analytics endpoints
 	) {
 		return NextResponse.next();
@@ -231,8 +279,8 @@ export const config = {
 		 * - favicon.ico (favicon file)
 		 * - public folder
 		 * - ingest (analytics endpoints)
-		 * - api/evaluate (audio upload with FormData)
+		 * - api/evaluate (audio upload with FormData) - handled in proxy now
 		 */
-		"/((?!_next/static|_next/image|favicon.ico|public/|ingest/|api/evaluate).*)",
+		"/((?!_next/static|_next/image|favicon.ico|public/|ingest/).*)",
 	],
 };

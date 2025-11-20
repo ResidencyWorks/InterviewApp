@@ -40,7 +40,7 @@ export const UploadRequestSchema = z.object({
 	sessionId: z.string().min(1),
 	questionId: z.string().min(1),
 	duration: z.number().int().positive().max(90), // 90 seconds max
-	userId: z.string().uuid().optional(),
+	userId: z.uuid().optional(),
 });
 
 /**
@@ -48,7 +48,7 @@ export const UploadRequestSchema = z.object({
  */
 export const UploadResponseSchema = z.object({
 	success: z.boolean(),
-	recordingId: z.string().uuid().optional(),
+	recordingId: z.uuid().optional(),
 	status: RecordingStatusSchema.optional(),
 	fileSize: z.number().optional(),
 	duration: z.number().optional(),
@@ -144,7 +144,7 @@ export const TextSubmissionRequestSchema = z.object({
 	textContent: z.string().min(10).max(5000), // 10-5000 characters
 	sessionId: z.string().min(1),
 	questionId: z.string().min(1),
-	userId: z.string().uuid().optional(),
+	userId: z.uuid().optional(),
 });
 
 /**
@@ -152,7 +152,7 @@ export const TextSubmissionRequestSchema = z.object({
  */
 export const TextSubmissionResponseSchema = z.object({
 	success: z.boolean(),
-	recordingId: z.string().uuid().optional(),
+	recordingId: z.uuid().optional(),
 	status: RecordingStatusSchema.optional(),
 	textLength: z.number().optional(),
 	error: z

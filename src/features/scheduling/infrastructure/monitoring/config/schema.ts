@@ -5,7 +5,7 @@ import { z } from "zod";
  */
 export const PostHogConfigSchema = z.object({
 	apiKey: z.string().min(1, "PostHog API key is required"),
-	host: z.string().url().optional(),
+	host: z.url().optional(),
 	personProfiles: z.boolean().default(true),
 	capturePageView: z.boolean().default(false),
 	capturePageLeave: z.boolean().default(true),
@@ -66,7 +66,7 @@ export const MonitoringConfigSchema = z.object({
 export const MonitoringEnvSchema = z.object({
 	// PostHog
 	POSTHOG_API_KEY: z.string().min(1, "POSTHOG_API_KEY is required"),
-	POSTHOG_HOST: z.string().url().optional(),
+	POSTHOG_HOST: z.url().optional(),
 
 	// Sentry
 	SENTRY_DSN: z.string().url("SENTRY_DSN must be a valid URL"),

@@ -1,3 +1,4 @@
+bullmq
 openai
 opentelemetry
 posthog
