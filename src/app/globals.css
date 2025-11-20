@@ -83,7 +83,6 @@ video {
 	}
 }
 
-/* biome-ignore lint/suspicious/noUnknownAtRules: Tailwind CSS at-rules are allowed */
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
@@ -157,13 +156,10 @@ video {
 }
 
 @layer base {
-	/* biome-ignore lint/style/noDescendingSpecificity: Tailwind CSS at-rules are allowed */
 	* {
-		/* biome-ignore lint/suspicious/noUnknownAtRules: Tailwind CSS at-rules are allowed */
 		@apply border-border outline-ring/50;
 	}
 	body {
-		/* biome-ignore lint/suspicious/noUnknownAtRules: Tailwind CSS at-rules are allowed */
 		@apply bg-background text-foreground;
 	}
 }
