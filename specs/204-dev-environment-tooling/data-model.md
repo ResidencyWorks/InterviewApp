@@ -243,7 +243,7 @@
 
 ```typescript
 const DevEnvironmentSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1),
   nodeVersion: z.string().regex(/^\d+\.\d+\.\d+$/),
   pnpmVersion: z.string().regex(/^\d+\.\d+\.\d+$/),
@@ -259,7 +259,7 @@ const DevEnvironmentSchema = z.object({
 
 ```typescript
 const DevToolSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1),
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
   type: z.enum(['LINTER', 'FORMATTER', 'TEST', 'HOOK', 'BUILD', 'PACKAGE_MANAGER']),

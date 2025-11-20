@@ -232,7 +232,7 @@ export const UploadRequestSchema = z.object({
 export const UploadResponseSchema = z.object({
   success: z.literal(true),
   data: z.object({
-    recordingId: z.string().uuid(),
+    recordingId: z.uuid(),
     status: z.enum(["recording", "uploading", "completed", "failed"]),
     fileSize: z.number().int().positive(),
     duration: z.number().int().min(1).max(90),

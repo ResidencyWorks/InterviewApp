@@ -183,13 +183,13 @@ Events logged to PostHog:
 import { z } from "zod";
 
 export const SignedUrlRequestParamsSchema = z.object({
-  recordingId: z.string().uuid(),
+  recordingId: z.uuid(),
 });
 
 export const SignedUrlResponseSchema = z.object({
   success: z.literal(true),
   data: z.object({
-    url: z.string().url(),
+    url: z.url(),
     expiresAt: z.string().datetime(),
   }),
 });

@@ -126,10 +126,10 @@
 
 ```typescript
 const SubmissionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   userId: z.string().min(1),
   content: z.string().min(10),
-  audioUrl: z.string().url().optional(),
+  audioUrl: z.url().optional(),
   questionId: z.string().min(1),
   submittedAt: z.date(),
   metadata: z.record(z.any()).optional()
@@ -140,8 +140,8 @@ const SubmissionSchema = z.object({
 
 ```typescript
 const FeedbackSchema = z.object({
-  id: z.string().uuid(),
-  submissionId: z.string().uuid(),
+  id: z.uuid(),
+  submissionId: z.uuid(),
   score: z.number().min(0).max(100),
   feedback: z.string().min(10).max(1000),
   strengths: z.array(z.string()).max(5),
@@ -156,8 +156,8 @@ const FeedbackSchema = z.object({
 
 ```typescript
 const EvaluationRequestSchema = z.object({
-  id: z.string().uuid(),
-  submissionId: z.string().uuid(),
+  id: z.uuid(),
+  submissionId: z.uuid(),
   requestedAt: z.date(),
   retryCount: z.number().int().min(0),
   status: z.enum(['pending', 'processing', 'completed', 'failed', 'retrying']),

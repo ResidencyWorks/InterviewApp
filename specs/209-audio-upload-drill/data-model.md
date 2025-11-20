@@ -238,8 +238,8 @@ CREATE INDEX idx_recordings_status ON recordings(status);
 import { z } from "zod";
 
 export const RecordingSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.uuid(),
+  userId: z.uuid(),
   sessionId: z.string().min(1),
   questionId: z.string().min(1),
 

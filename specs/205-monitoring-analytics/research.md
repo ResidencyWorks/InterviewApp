@@ -84,8 +84,8 @@
 ```typescript
 const MonitoringConfigSchema = z.object({
   POSTHOG_API_KEY: z.string().min(1),
-  POSTHOG_HOST: z.string().url().optional(),
-  SENTRY_DSN: z.string().url(),
+  POSTHOG_HOST: z.url().optional(),
+  SENTRY_DSN: z.url(),
   SENTRY_ENVIRONMENT: z.enum(['development', 'staging', 'production']),
   NODE_ENV: z.enum(['development', 'production', 'test'])
 });

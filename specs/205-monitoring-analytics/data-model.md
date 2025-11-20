@@ -291,9 +291,9 @@
 
 ```typescript
 const AnalyticsEventSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   event: z.enum(['drill_started', 'drill_submitted', 'score_returned', 'content_pack_loaded']),
-  userId: z.string().uuid().optional(),
+  userId: z.uuid().optional(),
   sessionId: z.string().min(1),
   timestamp: z.date(),
   properties: z.record(z.any()).optional(),
@@ -306,12 +306,12 @@ const AnalyticsEventSchema = z.object({
 
 ```typescript
 const ErrorEventSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   message: z.string().min(1),
   stack: z.string().optional(),
   severity: z.enum(['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']),
   category: z.enum(['CLIENT_ERROR', 'SERVER_ERROR', 'NETWORK_ERROR', 'VALIDATION_ERROR', 'AUTHENTICATION_ERROR', 'AUTHORIZATION_ERROR', 'RATE_LIMIT_ERROR', 'EXTERNAL_SERVICE_ERROR']),
-  userId: z.string().uuid().optional(),
+  userId: z.uuid().optional(),
   sessionId: z.string().optional(),
   timestamp: z.date(),
   context: ErrorContextSchema,

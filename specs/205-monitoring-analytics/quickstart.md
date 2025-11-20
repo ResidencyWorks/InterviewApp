@@ -524,7 +524,7 @@ import { z } from 'zod';
 const AnalyticsEventSchema = z.object({
   event: z.enum(['drill_started', 'drill_submitted', 'score_returned', 'content_pack_loaded']),
   sessionId: z.string().min(1),
-  userId: z.string().uuid().optional(),
+  userId: z.uuid().optional(),
   properties: z.record(z.any()).optional(),
 });
 
