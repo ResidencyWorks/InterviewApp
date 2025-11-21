@@ -19,7 +19,8 @@
 		"ghcr.io/flexwie/devcontainer-features/op:1": {},
 		"ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store:1": {},
 		"ghcr.io/nullcoder/devcontainer-features/stripe-cli:1": {},
-		"ghcr.io/devcontainers-extra/features/uv:1": {}
+		"ghcr.io/devcontainers-extra/features/uv:1": {},
+		"ghcr.io/devcontainers-extra/features/supabase-cli:1": {}
 	},
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",

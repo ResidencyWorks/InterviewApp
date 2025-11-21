@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type Job, Worker } from "bullmq";
 import type {
 	EvaluationRequest,
@@ -120,6 +121,23 @@ export const evaluationWorker = new Worker<EvaluationRequest>(
 		} catch (error) {
 			const durationMs = Date.now() - startTime;
 			console.error(`[Worker] Job ${job.id} failed:`, error);
+
+			// Capture error in Sentry
+			Sentry.captureException(error, {
+				contexts: {
+					job: {
+						jobId: job.id,
+						requestId,
+						durationMs,
+						hasAudio: !!job.data.audio_url,
+						hasText: !!job.data.text,
+					},
+				},
+				tags: {
+					component: "evaluation-worker",
+					jobId: job.id,
+				},
+			});
 
 			// Emit failure event
 			captureEvent("job_failed", {

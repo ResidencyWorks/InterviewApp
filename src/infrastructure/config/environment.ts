@@ -98,11 +98,10 @@ const envSchema = z.object({
 		.string()
 		.min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
 	SUPABASE_ANON_KEY: z.string().optional(),
-	UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
 	// Redis (Upstash)
 	UPSTASH_REDIS_REST_URL: optionalUrl(),
-	REDIS_URL: optionalUrl(),
+	UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
 	// Deployment
 	VERCEL_URL: z.string().optional(),

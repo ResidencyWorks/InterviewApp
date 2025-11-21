@@ -27,7 +27,7 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # Redis connection for BullMQ
-REDIS_URL=redis://localhost:6379
+UPSTASH_REDIS_REST_URL=redis://localhost:6379
 
 # PostHog for analytics (optional)
 POSTHOG_API_KEY=your-posthog-key

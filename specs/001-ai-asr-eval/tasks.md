@@ -5,7 +5,7 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
- - [X] T001 [P] Create environment example file at `env.example` with keys: `OPENAI_API_KEY`, `POSTHOG_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `REDIS_URL`, `REQUEST_TIMEOUT_MS`
+ - [X] T001 [P] Create environment example file at `env.example` with keys: `OPENAI_API_KEY`, `POSTHOG_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `UPSTASH_REDIS_REST_URL`, `REQUEST_TIMEOUT_MS`
  - [X] T002 [P] Add runtime dependency `bullmq` and peer-dependency `ioredis` to `package.json` (dev: run `pnpm add bullmq ioredis`) — track changes in `package.json`
  - [X] T003 [P] Add worker start script to `package.json` scripts: `"worker:start": "node ./dist/infrastructure/bullmq/worker.js"` and `"worker:dev": "tsx src/infrastructure/bullmq/worker.ts"`
  - [X] T004 [P] Configure `.env.local.example` and `.env.example` in repo root with placeholders and usage notes at `README.md`
@@ -80,10 +80,10 @@
 
 ## Phase N: Polish & Cross-Cutting Concerns
 
-- [ ] T028 [P] Add README section `docs/ai-asr-eval.md` with architecture diagram and how to run locally
-- [ ] T029 [P] Add CI job configuration snippet to run worker integration tests and the SLA harness in a controlled environment
-- [ ] T030 [P] Add PostHog event schema documentation to `specs/001-ai-asr-eval/contracts/posthog-events.md`
-- [ ] T031 [P] Ensure error handling and Sentry instrumentation are present in worker and endpoint
+- [X] T028 [P] Add README section `docs/ai-asr-eval.md` with architecture diagram and how to run locally
+- [X] T029 [P] Add CI job configuration snippet to run worker integration tests and the SLA harness in a controlled environment
+- [X] T030 [P] Add PostHog event schema documentation to `specs/001-ai-asr-eval/contracts/posthog-events.md`
+- [X] T031 [P] Ensure error handling and Sentry instrumentation are present in worker and endpoint
 
 ---
 
