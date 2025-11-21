@@ -22,17 +22,21 @@ vi.mock("ioredis", () => {
 
 // Mock BullMQ Queue to prevent Redis connection
 vi.mock("bullmq", () => {
+	class MockQueueEvents {
+		close = vi.fn().mockResolvedValue(undefined);
+	}
+
 	return {
-		Queue: vi.fn(() => ({
-			name: "evaluationQueue",
-			getJob: vi.fn(),
-			add: vi.fn(),
-			close: vi.fn(),
-			opts: { connection: {} },
-		})),
-		QueueEvents: vi.fn(() => ({
-			close: vi.fn().mockResolvedValue(undefined),
-		})),
+		Queue: vi.fn(function MockQueue() {
+			return {
+				name: "evaluationQueue",
+				getJob: vi.fn(),
+				add: vi.fn(),
+				close: vi.fn(),
+				opts: { connection: {} },
+			};
+		}),
+		QueueEvents: MockQueueEvents,
 	};
 });
 
