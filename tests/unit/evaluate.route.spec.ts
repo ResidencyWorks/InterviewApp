@@ -1,13 +1,92 @@
 import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * Unit tests for /api/evaluate route (T017)
  * Tests: validation, auth enforcement, idempotency, sync/async behavior
  */
 
+// Mock IORedis to prevent actual Redis connections
+vi.mock("ioredis", () => {
+	const mockRedis = {
+		on: vi.fn().mockReturnThis(),
+		connect: vi.fn().mockResolvedValue(undefined),
+		disconnect: vi.fn().mockResolvedValue(undefined),
+		quit: vi.fn().mockResolvedValue(undefined),
+	};
+	return {
+		default: vi.fn(() => mockRedis),
+	};
+});
+
+// Mock BullMQ Queue to prevent Redis connection
+vi.mock("bullmq", () => {
+	return {
+		Queue: vi.fn(() => ({
+			name: "evaluationQueue",
+			getJob: vi.fn(),
+			add: vi.fn(),
+			close: vi.fn(),
+			opts: { connection: {} },
+		})),
+		QueueEvents: vi.fn(() => ({
+			close: vi.fn().mockResolvedValue(undefined),
+		})),
+	};
+});
+
+// Mock Supabase at the module level
+vi.mock("../../src/infrastructure/config/clients", () => ({
+	getSupabaseServiceRoleClient: vi.fn(() => ({
+		from: vi.fn(() => ({
+			select: vi.fn(() => ({
+				eq: vi.fn(() => ({
+					single: vi.fn(() => ({
+						data: null,
+						error: null,
+					})),
+				})),
+			})),
+			insert: vi.fn(() => ({
+				select: vi.fn(() => ({
+					single: vi.fn(() => ({
+						data: {},
+						error: null,
+					})),
+				})),
+			})),
+		})),
+	})),
+	createSupabaseServerClient: vi.fn(),
+	createSupabaseBrowserClient: vi.fn(),
+}));
+
+// Mock evaluation store
+vi.mock("../../src/infrastructure/supabase/evaluation_store", () => ({
+	getByRequestId: vi.fn(),
+	saveEvaluationResult: vi.fn(),
+}));
+
+// Mock enqueue service
+vi.mock("../../src/services/evaluation/enqueue", () => ({
+	enqueueEvaluation: vi.fn(),
+}));
+
+// Mock BullMQ queue
+vi.mock("../../src/infrastructure/bullmq/queue", () => ({
+	evaluationQueue: {
+		getJob: vi.fn(),
+		name: "evaluationQueue",
+		opts: { connection: {} },
+	},
+}));
+
 describe("POST /api/evaluate", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
 	const mockRequest = (opts: {
 		headers?: Record<string, string>;
 		body?: object;
@@ -28,7 +107,6 @@ describe("POST /api/evaluate", () => {
 				},
 			});
 
-			// Mock the POST handler from route.ts
 			const { POST } = await import("../../src/app/api/evaluate/route");
 			const response = await POST(req);
 
@@ -53,6 +131,20 @@ describe("POST /api/evaluate", () => {
 		});
 
 		it("passes auth check with valid Bearer token", async () => {
+			const { getByRequestId } = await import(
+				"../../src/infrastructure/supabase/evaluation_store"
+			);
+			const { enqueueEvaluation } = await import(
+				"../../src/services/evaluation/enqueue"
+			);
+			const { evaluationQueue } = await import(
+				"../../src/infrastructure/bullmq/queue"
+			);
+
+			vi.mocked(getByRequestId).mockResolvedValue(null);
+			vi.mocked(enqueueEvaluation).mockResolvedValue("job-123");
+			vi.mocked(evaluationQueue.getJob).mockResolvedValue(undefined);
+
 			const req = mockRequest({
 				headers: { authorization: "Bearer valid-token-123" },
 				body: {
@@ -60,16 +152,6 @@ describe("POST /api/evaluate", () => {
 					text: "Sample answer",
 				},
 			});
-
-			// Mock dependencies
-			vi.doMock("../../src/infrastructure/supabase/evaluation_store", () => ({
-				getByRequestId: vi.fn().mockResolvedValue(null),
-			}));
-
-			vi.doMock("../../src/services/evaluation/enqueue", () => ({
-				enqueueEvaluation: vi.fn().mockResolvedValue("job-123"),
-			}));
-
 			const { POST } = await import("../../src/app/api/evaluate/route");
 			const response = await POST(req);
 
@@ -112,6 +194,20 @@ describe("POST /api/evaluate", () => {
 		});
 
 		it("accepts valid request with text", async () => {
+			const { getByRequestId } = await import(
+				"../../src/infrastructure/supabase/evaluation_store"
+			);
+			const { enqueueEvaluation } = await import(
+				"../../src/services/evaluation/enqueue"
+			);
+			const { evaluationQueue } = await import(
+				"../../src/infrastructure/bullmq/queue"
+			);
+
+			vi.mocked(getByRequestId).mockResolvedValue(null);
+			vi.mocked(enqueueEvaluation).mockResolvedValue("job-123");
+			vi.mocked(evaluationQueue.getJob).mockResolvedValue(undefined);
+
 			const req = mockRequest({
 				headers: { authorization: "Bearer token" },
 				body: {
@@ -119,16 +215,6 @@ describe("POST /api/evaluate", () => {
 					text: "Clear and concise answer",
 				},
 			});
-
-			// Mock dependencies
-			vi.doMock("../../src/infrastructure/supabase/evaluation_store", () => ({
-				getByRequestId: vi.fn().mockResolvedValue(null),
-			}));
-
-			vi.doMock("../../src/services/evaluation/enqueue", () => ({
-				enqueueEvaluation: vi.fn().mockResolvedValue("job-123"),
-			}));
-
 			const { POST } = await import("../../src/app/api/evaluate/route");
 			const response = await POST(req);
 
@@ -137,6 +223,20 @@ describe("POST /api/evaluate", () => {
 		});
 
 		it("accepts valid request with audio_url", async () => {
+			const { getByRequestId } = await import(
+				"../../src/infrastructure/supabase/evaluation_store"
+			);
+			const { enqueueEvaluation } = await import(
+				"../../src/services/evaluation/enqueue"
+			);
+			const { evaluationQueue } = await import(
+				"../../src/infrastructure/bullmq/queue"
+			);
+
+			vi.mocked(getByRequestId).mockResolvedValue(null);
+			vi.mocked(enqueueEvaluation).mockResolvedValue("job-123");
+			vi.mocked(evaluationQueue.getJob).mockResolvedValue(undefined);
+
 			const req = mockRequest({
 				headers: { authorization: "Bearer token" },
 				body: {
@@ -144,16 +244,6 @@ describe("POST /api/evaluate", () => {
 					audio_url: "https://example.com/audio.mp3",
 				},
 			});
-
-			// Mock dependencies
-			vi.doMock("../../src/infrastructure/supabase/evaluation_store", () => ({
-				getByRequestId: vi.fn().mockResolvedValue(null),
-			}));
-
-			vi.doMock("../../src/services/evaluation/enqueue", () => ({
-				enqueueEvaluation: vi.fn().mockResolvedValue("job-123"),
-			}));
-
 			const { POST } = await import("../../src/app/api/evaluate/route");
 			const response = await POST(req);
 
@@ -176,6 +266,11 @@ describe("POST /api/evaluate", () => {
 				tokensUsed: 300,
 			};
 
+			const { getByRequestId } = await import(
+				"../../src/infrastructure/supabase/evaluation_store"
+			);
+			vi.mocked(getByRequestId).mockResolvedValue(existingResult);
+
 			const req = mockRequest({
 				headers: { authorization: "Bearer token" },
 				body: {
@@ -183,11 +278,6 @@ describe("POST /api/evaluate", () => {
 					text: "Duplicate submission",
 				},
 			});
-
-			// Mock getByRequestId to return existing result
-			vi.doMock("../../src/infrastructure/supabase/evaluation_store", () => ({
-				getByRequestId: vi.fn().mockResolvedValue(existingResult),
-			}));
 
 			const { POST } = await import("../../src/app/api/evaluate/route");
 			const response = await POST(req);
@@ -201,6 +291,20 @@ describe("POST /api/evaluate", () => {
 		it("proceeds to enqueue when no existing result found", async () => {
 			const requestId = randomUUID();
 
+			const { getByRequestId } = await import(
+				"../../src/infrastructure/supabase/evaluation_store"
+			);
+			const { enqueueEvaluation } = await import(
+				"../../src/services/evaluation/enqueue"
+			);
+			const { evaluationQueue } = await import(
+				"../../src/infrastructure/bullmq/queue"
+			);
+
+			vi.mocked(getByRequestId).mockResolvedValue(null);
+			vi.mocked(enqueueEvaluation).mockResolvedValue("job-789");
+			vi.mocked(evaluationQueue.getJob).mockResolvedValue(undefined);
+
 			const req = mockRequest({
 				headers: { authorization: "Bearer token" },
 				body: {
@@ -208,27 +312,39 @@ describe("POST /api/evaluate", () => {
 					text: "New submission",
 				},
 			});
-
-			// Mock getByRequestId to return null (no existing result)
-			vi.doMock("../../src/infrastructure/supabase/evaluation_store", () => ({
-				getByRequestId: vi.fn().mockResolvedValue(null),
-			}));
-
-			const mockEnqueue = vi.fn().mockResolvedValue("job-789");
-			vi.doMock("../../src/services/evaluation/enqueue", () => ({
-				enqueueEvaluation: mockEnqueue,
-			}));
-
 			const { POST } = await import("../../src/app/api/evaluate/route");
 			await POST(req);
 
-			expect(mockEnqueue).toHaveBeenCalled();
+			expect(enqueueEvaluation).toHaveBeenCalled();
 		});
 	});
 
 	describe("Sync/Async Behavior", () => {
 		it("returns 202 with jobId when job times out", async () => {
 			const requestId = randomUUID();
+
+			const { getByRequestId } = await import(
+				"../../src/infrastructure/supabase/evaluation_store"
+			);
+			const { enqueueEvaluation } = await import(
+				"../../src/services/evaluation/enqueue"
+			);
+			const { evaluationQueue } = await import(
+				"../../src/infrastructure/bullmq/queue"
+			);
+
+			vi.mocked(getByRequestId).mockResolvedValue(null);
+			vi.mocked(enqueueEvaluation).mockResolvedValue("job-timeout");
+			vi.mocked(evaluationQueue.getJob).mockResolvedValue({
+				id: "job-timeout",
+				waitUntilFinished: vi
+					.fn()
+					.mockRejectedValue(
+						new Error(
+							"Job wait evaluation timed out before finishing, no finish notification arrived after 30000ms",
+						),
+					),
+			} as any);
 
 			const req = mockRequest({
 				headers: { authorization: "Bearer token" },
@@ -237,33 +353,6 @@ describe("POST /api/evaluate", () => {
 					text: "Long running evaluation",
 				},
 			});
-
-			// Mock to simulate timeout
-			vi.doMock("../../src/infrastructure/supabase/evaluation_store", () => ({
-				getByRequestId: vi.fn().mockResolvedValue(null),
-			}));
-
-			vi.doMock("../../src/services/evaluation/enqueue", () => ({
-				enqueueEvaluation: vi.fn().mockResolvedValue("job-timeout"),
-			}));
-
-			// Mock evaluationQueue.getJob to return a job that times out
-			vi.doMock("../../src/infrastructure/bullmq/queue", () => ({
-				evaluationQueue: {
-					getJob: vi.fn().mockResolvedValue({
-						id: "job-timeout",
-						waitUntilFinished: vi
-							.fn()
-							.mockRejectedValue(
-								new Error(
-									"Job wait evaluation timed out before finishing, no finish notification arrived after 30000ms",
-								),
-							),
-					}),
-					name: "evaluationQueue",
-					opts: { connection: {} },
-				},
-			}));
 
 			const { POST } = await import("../../src/app/api/evaluate/route");
 			const response = await POST(req);
@@ -288,6 +377,29 @@ describe("POST /api/evaluate", () => {
 				tokensUsed: 250,
 			};
 
+			const { getByRequestId } = await import(
+				"../../src/infrastructure/supabase/evaluation_store"
+			);
+			const { enqueueEvaluation } = await import(
+				"../../src/services/evaluation/enqueue"
+			);
+			const { evaluationQueue } = await import(
+				"../../src/infrastructure/bullmq/queue"
+			);
+
+			let callCount = 0;
+			vi.mocked(getByRequestId).mockImplementation(() => {
+				callCount++;
+				// First call: no existing result (idempotency check)
+				// Second call: result available after job completion
+				return Promise.resolve(callCount === 1 ? null : completedResult);
+			});
+			vi.mocked(enqueueEvaluation).mockResolvedValue("job-success");
+			vi.mocked(evaluationQueue.getJob).mockResolvedValue({
+				id: "job-success",
+				waitUntilFinished: vi.fn().mockResolvedValue({ success: true }),
+			} as any);
+
 			const req = mockRequest({
 				headers: { authorization: "Bearer token" },
 				body: {
@@ -295,32 +407,6 @@ describe("POST /api/evaluate", () => {
 					text: "Quick evaluation",
 				},
 			});
-
-			// Mock to simulate successful completion
-			let callCount = 0;
-			vi.doMock("../../src/infrastructure/supabase/evaluation_store", () => ({
-				getByRequestId: vi.fn().mockImplementation(() => {
-					callCount++;
-					// First call: no existing result (idempotency check)
-					// Second call: result available after job completion
-					return callCount === 1 ? null : completedResult;
-				}),
-			}));
-
-			vi.doMock("../../src/services/evaluation/enqueue", () => ({
-				enqueueEvaluation: vi.fn().mockResolvedValue("job-success"),
-			}));
-
-			vi.doMock("../../src/infrastructure/bullmq/queue", () => ({
-				evaluationQueue: {
-					getJob: vi.fn().mockResolvedValue({
-						id: "job-success",
-						waitUntilFinished: vi.fn().mockResolvedValue({ success: true }),
-					}),
-					name: "evaluationQueue",
-					opts: { connection: {} },
-				},
-			}));
 
 			const { POST } = await import("../../src/app/api/evaluate/route");
 			const response = await POST(req);
