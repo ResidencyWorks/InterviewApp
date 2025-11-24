@@ -41,6 +41,44 @@ export async function getByRequestId(
 	};
 }
 
+export async function getByJobId(
+	jobId: string,
+): Promise<EvaluationResult | null> {
+	const supabase = getSupabaseServiceRoleClient();
+	if (!supabase) {
+		throw new Error("Supabase service role client not initialized");
+	}
+
+	const { data, error } = await supabase
+		.from(TABLE_NAME)
+		.select("*")
+		.eq("job_id", jobId)
+		.single();
+
+	if (error) {
+		if (error.code === "PGRST116") {
+			// Not found
+			return null;
+		}
+		throw new Error(`Failed to fetch evaluation result: ${error.message}`);
+	}
+
+	if (!data) return null;
+
+	// Map DB columns to domain model
+	return {
+		requestId: data.request_id,
+		jobId: data.job_id,
+		score: Number(data.score),
+		feedback: data.feedback,
+		what_changed: data.what_changed,
+		practice_rule: data.practice_rule,
+		durationMs: data.duration_ms,
+		tokensUsed: data.tokens_used ?? undefined,
+		createdAt: data.created_at,
+	};
+}
+
 export async function upsertResult(result: EvaluationResult): Promise<void> {
 	const supabase = getSupabaseServiceRoleClient();
 	if (!supabase) {

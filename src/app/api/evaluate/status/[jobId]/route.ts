@@ -1,48 +1,63 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { evaluationQueue } from "../../../../../infrastructure/bullmq/queue";
-import { getByRequestId } from "../../../../../infrastructure/supabase/evaluation_store";
+import { getByJobId } from "../../../../../infrastructure/supabase/evaluation_store";
+
+type StatusRouteParams = { jobId: string };
 
 export async function GET(
 	_req: NextRequest,
-	{ params }: { params: { jobId: string } },
+	context: { params: StatusRouteParams | Promise<StatusRouteParams> },
 ) {
-	const { jobId } = params;
+	const { jobId } = await context.params;
 
-	// 1. Check DB for completed result (authoritative for success)
-	// Note: We don't have requestId here easily unless we query job first or it's passed.
-	// But getByRequestId requires requestId.
-	// The spec says "GET /api/evaluate/status/:jobId".
-	// We need to look up the job in Queue to get the requestId, OR query DB by jobId.
-	// Our store `getByRequestId` is by requestId.
-	// Let's assume we can get the job from the queue to find the requestId.
+	console.log(`[Status API] Checking status for jobId: ${jobId}`);
 
-	const job = await evaluationQueue.getJob(jobId);
-
-	if (!job) {
-		// If job is not in queue (expired/removed), check DB by jobId?
-		// Our store currently only has `getByRequestId`.
-		// We might need `getByJobId` or just rely on queue for recent jobs.
-		// If job is gone from queue and not in DB (we can't check DB without requestId), it's 404.
-		// Wait, we can add `getByJobId` to store or just fail if queue doesn't have it.
-		// For now, let's assume if it's not in queue, we can't find it unless we add `getByJobId`.
-		// Let's stick to queue first.
-		return NextResponse.json({ error: "Job not found" }, { status: 404 });
+	// 1. Check DB first for completed result (authoritative and persistent)
+	let storedResult = null;
+	try {
+		storedResult = await getByJobId(jobId);
+		console.log(
+			`[Status API] DB lookup result:`,
+			storedResult ? "FOUND" : "NOT FOUND",
+		);
+	} catch (error) {
+		console.error(`[Status API] DB lookup error:`, error);
 	}
 
-	const requestId = job.data.requestId;
-
-	// Check DB for final result (idempotency/persistence)
-	const storedResult = await getByRequestId(requestId);
 	if (storedResult) {
 		return NextResponse.json({
 			jobId,
-			requestId,
+			requestId: storedResult.requestId,
 			status: "completed",
 			result: storedResult,
 			error: null,
 			poll_after_ms: 0,
 		});
 	}
+
+	// 2. Job not in DB, check if it's still in the queue (active/pending)
+	let job = null;
+	try {
+		job = await evaluationQueue.getJob(jobId);
+	} catch (error) {
+		// Redis connection error - if job isn't in DB, we can't check queue status
+		console.error("Failed to check job queue:", error);
+		// Since job is not in DB (checked above) and we can't check queue, return 404
+		return NextResponse.json(
+			{
+				error: "Job not found",
+				details: "Unable to verify job status",
+			},
+			{ status: 404 },
+		);
+	}
+
+	if (!job) {
+		// Job not in queue and not in DB - it doesn't exist or has expired
+		return NextResponse.json({ error: "Job not found" }, { status: 404 });
+	}
+
+	const requestId = job.data.requestId;
 
 	// Check Queue Status
 	const isFailed = await job.isFailed();

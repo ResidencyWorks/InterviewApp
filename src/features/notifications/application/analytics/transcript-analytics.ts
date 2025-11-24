@@ -25,7 +25,6 @@ class ConsoleAnalyticsClient implements IAnalyticsClient {
 	track<TPayload extends Record<string, unknown>>(
 		event: IAnalyticsEvent<TPayload>,
 	): void {
-		// eslint-disable-next-line no-console
 		console.info("[analytics]", JSON.stringify(event));
 	}
 }
@@ -50,7 +49,6 @@ class PostHogAnalyticsClient implements IAnalyticsClient {
 		event: IAnalyticsEvent<TPayload>,
 	): void {
 		if (!this.projectKey) {
-			// eslint-disable-next-line no-console
 			console.warn("[analytics] PostHog project key not configured");
 			return;
 		}
@@ -84,7 +82,6 @@ class PostHogAnalyticsClient implements IAnalyticsClient {
 			},
 			method: "POST",
 		}).catch((err) => {
-			// eslint-disable-next-line no-console
 			console.error("[analytics] PostHog batch send failed:", err);
 		});
 	}
@@ -103,7 +100,7 @@ export function initializeAnalytics(): void {
 	const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 	if (posthogKey) {
 		client = new PostHogAnalyticsClient(posthogKey);
-		// eslint-disable-next-line no-console
+
 		console.info("[analytics] PostHog initialized");
 	}
 }

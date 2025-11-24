@@ -44,13 +44,11 @@ class PerformanceMonitor {
 		const threshold = this.thresholds.get(operationName);
 		if (threshold) {
 			if (durationMs >= threshold.critical) {
-				// eslint-disable-next-line no-console
 				console.warn(
 					`[PERF-CRITICAL] ${operationName} took ${durationMs}ms (critical: ${threshold.critical}ms)`,
 					metadata,
 				);
 			} else if (durationMs >= threshold.warning) {
-				// eslint-disable-next-line no-console
 				console.warn(
 					`[PERF-WARNING] ${operationName} took ${durationMs}ms (warning: ${threshold.warning}ms)`,
 					metadata,

@@ -5,12 +5,10 @@ export interface IErrorTrackingService {
 
 class ConsoleErrorTrackingService implements IErrorTrackingService {
 	captureException(error: Error, context?: Record<string, unknown>): void {
-		// eslint-disable-next-line no-console
 		console.error("[error]", error, context);
 	}
 
 	captureMessage(message: string, context?: Record<string, unknown>): void {
-		// eslint-disable-next-line no-console
 		console.warn("[error-message]", message, context);
 	}
 }

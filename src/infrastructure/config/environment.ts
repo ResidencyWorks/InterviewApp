@@ -100,6 +100,7 @@ const envSchema = z.object({
 	SUPABASE_ANON_KEY: z.string().optional(),
 
 	// Redis (Upstash)
+	UPSTASH_REDIS_NATIVE_URL: optionalUrl(),
 	UPSTASH_REDIS_REST_URL: optionalUrl(),
 	UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
@@ -148,6 +149,7 @@ export const hasPostHog = !!env.POSTHOG_API_KEY;
 export const hasSentry = !!env.SENTRY_DSN;
 export const hasStripe = !!env.STRIPE_SECRET_KEY;
 export const hasRedis = !!env.UPSTASH_REDIS_REST_URL;
+export const hasRedisNative = !!env.UPSTASH_REDIS_NATIVE_URL;
 export const hasSupabaseServiceRole = !!env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Helper function to get the correct app URL
