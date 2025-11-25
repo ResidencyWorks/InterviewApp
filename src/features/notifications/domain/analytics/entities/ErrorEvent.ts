@@ -33,10 +33,10 @@ export const ErrorCategorySchema = z.enum([
  * Error context schema
  */
 export const ErrorContextSchema = z.object({
-	userId: z.string().uuid().optional(),
+	userId: z.uuid().optional(),
 	sessionId: z.string().optional(),
 	requestId: z.string().optional(),
-	url: z.string().url().optional(),
+	url: z.url().optional(),
 	userAgent: z.string().optional(),
 	ipAddress: z.string().optional(),
 	component: z.string().optional(),
@@ -53,7 +53,7 @@ export const ErrorContextSchema = z.object({
  * Error event schema
  */
 export const ErrorEventSchema = z.object({
-	id: z.string().uuid(),
+	id: z.uuid(),
 	message: z.string().min(1),
 	stack: z.string().optional(),
 	severity: ErrorSeveritySchema,

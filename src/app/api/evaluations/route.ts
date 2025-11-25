@@ -4,11 +4,11 @@ import { getServerAuthService } from "@/features/auth/application/services/serve
 import { getServerDatabaseService } from "@/infrastructure/db/database-service";
 
 const SaveEvaluationSchema = z.object({
-	id: z.string().uuid().optional(),
-	user_id: z.string().uuid().optional(),
-	content_pack_id: z.string().uuid().optional().nullable(),
+	id: z.uuid().optional(),
+	user_id: z.uuid().optional(),
+	content_pack_id: z.uuid().optional().nullable(),
 	response_text: z.string().optional(),
-	response_audio_url: z.string().url().optional(),
+	response_audio_url: z.url().optional(),
 	response_type: z.enum(["text", "audio"]),
 	duration_seconds: z.number().int().min(0).optional(),
 	word_count: z.number().int().min(0).optional(),

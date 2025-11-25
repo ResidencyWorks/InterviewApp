@@ -23,6 +23,8 @@ All code must pass Biome formatting and linting checks. TypeScript must be used 
 
 Apply **Onion Architecture** with **Domain-Driven Design** where applicable: Domain layer (core logic) must remain independent of frameworks and MCPs. Application services should orchestrate flows and remain thin. Interface adapters (e.g., API routes, UI) must use DI to interact with core logic. Avoid service bleed: isolate infrastructure concerns behind clear interfaces.
 
+**Next.js 16 Proxy Migration**: Use `proxy.ts` instead of `middleware.ts` for global request handling. All global middleware logic (auth, rate limiting) must reside in `proxy.ts`.
+
 ### III. Test-First Development (NON-NEGOTIABLE)
 
 Follow test-first approach: Unit test (e.g., Zod schema), Integration test (e.g., Stripe webhook idempotency). Use Vitest for all test files. Code coverage must reach ≥80% for unit + integration tests in M0. TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced.

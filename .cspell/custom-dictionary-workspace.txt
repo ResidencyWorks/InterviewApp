@@ -1,4 +1,6 @@
+bullmq
 openai
 opentelemetry
 posthog
+tailwindcss
 upstash

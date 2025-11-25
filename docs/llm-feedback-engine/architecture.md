@@ -273,7 +273,7 @@ class RetryService {
 ```typescript
 const EvaluationRequestSchema = z.object({
   content: z.string().optional(),
-  audioUrl: z.string().url().optional(),
+  audioUrl: z.url().optional(),
   question: z.string().min(1).max(1000),
   context: z.object({
     role: z.string().optional(),
@@ -414,4 +414,3 @@ app.get('/health', async (req, res) => {
 - Custom model fine-tuning
 - Multi-model ensemble
 - Real-time learning from feedback
-

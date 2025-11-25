@@ -20,10 +20,10 @@ export const AnalyticsEventTypeSchema = z.enum([
  * Analytics event context schema
  */
 export const EventContextSchema = z.object({
-	userId: z.string().uuid().optional(),
+	userId: z.uuid().optional(),
 	sessionId: z.string().optional(),
 	requestId: z.string().optional(),
-	url: z.string().url().optional(),
+	url: z.url().optional(),
 	userAgent: z.string().optional(),
 	ipAddress: z.string().optional(),
 	timestamp: z.date().default(() => new Date()),
@@ -34,7 +34,7 @@ export const EventContextSchema = z.object({
  * Analytics event schema
  */
 export const AnalyticsEventSchema = z.object({
-	id: z.string().uuid(),
+	id: z.uuid(),
 	type: AnalyticsEventTypeSchema,
 	name: z.string().min(1),
 	properties: z.record(z.string(), z.unknown()).optional(),

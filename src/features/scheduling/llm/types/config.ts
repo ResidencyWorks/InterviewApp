@@ -60,8 +60,8 @@ export type FallbackConfig = z.infer<typeof FallbackConfigSchema>;
  */
 export const AnalyticsConfigSchema = z.object({
 	posthogApiKey: z.string().optional(),
-	posthogHost: z.string().url().optional(),
-	sentryDsn: z.string().url().optional(),
+	posthogHost: z.url().optional(),
+	sentryDsn: z.url().optional(),
 });
 
 export type AnalyticsConfig = z.infer<typeof AnalyticsConfigSchema>;

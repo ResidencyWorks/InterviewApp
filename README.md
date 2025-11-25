@@ -47,6 +47,29 @@ NEXT_PUBLIC_USE_FAKE_ASR=true
 NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
 STRIPE_SECRET_KEY=your_stripe_key
 STRIPE_WEBHOOK_SECRET=your_webhook_secret
+
+### AI/ASR Evaluation Feature Variables (M3)
+
+Add the following for the AI/ASR evaluation endpoint and worker (see `env.example`):
+
+```
+OPENAI_API_KEY=sk-...
+POSTHOG_API_KEY=phc_...
+SUPABASE_URL=https://<id>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=service-role-key
+UPSTASH_REDIS_REST_URL=redis://user:pass@host:port
+REQUEST_TIMEOUT_MS=30000
+SYNC_TIMEOUT_MS=30000
+RATE_LIMIT_RPM=60
+EVALUATION_WEBHOOK_URL=https://your-app.com/api/evaluate/webhook
+EVALUATION_WEBHOOK_SECRET=change-me
+```
+
+`SYNC_TIMEOUT_MS` controls the maximum synchronous wait before returning `202` with a `jobId`. Adjust only if OpenAI latency profile changes significantly.
+
+`RATE_LIMIT_RPM` sets per-key requests per minute. Increase cautiously; higher values may mask abuse or inflate costs.
+
+See `specs/001-ai-asr-eval/spec.md` for contract examples and polling/webhook behavior.
 ```
 
 ## Day-3 Demo Flow
