@@ -11,6 +11,61 @@ import { captureEvent } from "../posthog";
 import { getByRequestId, upsertResult } from "../supabase/evaluation_store";
 import { connection, EVALUATION_QUEUE_NAME } from "./queue";
 
+const sentryEnabled = Boolean(process.env.SENTRY_DSN);
+
+// `Sentry.isInitialized` is not available on the newer SDKs used here.
+// Use `getCurrentHub().getClient()` to determine whether a client is installed.
+const _sentryClient = (
+	Sentry as unknown as {
+		getCurrentHub?: () => { getClient?: () => unknown };
+	}
+)
+	.getCurrentHub?.()
+	?.getClient?.();
+
+if (sentryEnabled && !_sentryClient) {
+	Sentry.init({
+		dsn: process.env.SENTRY_DSN,
+		environment:
+			process.env.SENTRY_ENV ?? process.env.NODE_ENV ?? "development",
+		release: process.env.SENTRY_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA,
+		tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.05"),
+	});
+	(Sentry as any).configureScope?.((scope: any) =>
+		scope.setTag?.("component", "evaluation-worker"),
+	);
+	console.log("[Worker] Sentry initialized for evaluation worker");
+} else if (!sentryEnabled) {
+	console.warn(
+		"[Worker] Sentry disabled: SENTRY_DSN not provided in environment",
+	);
+}
+
+const flushSentry = async () => {
+	if (!sentryEnabled) return;
+	try {
+		// Prefer flushing via the installed client if available, otherwise fall back
+		// to any top-level flush function. Guard both to avoid runtime errors
+		// with different Sentry package shapes in worker environments.
+		const clientFlush = (Sentry as any).getCurrentHub?.()?.getClient?.()?.flush;
+		if (typeof clientFlush === "function") {
+			await clientFlush(2000);
+		} else if (typeof (Sentry as any).flush === "function") {
+			await (Sentry as any).flush(2000);
+		}
+	} catch (flushError) {
+		console.error("[Worker] Failed to flush Sentry events", flushError);
+	}
+};
+
+["SIGTERM", "SIGINT"].forEach((signal) => {
+	process.on(signal, async () => {
+		console.log(`[Worker] Received ${signal}, shutting down gracefully`);
+		await flushSentry();
+		process.exit(0);
+	});
+});
+
 /**
  * BullMQ worker that processes evaluation jobs.
  * Handles transcription (if audio_url provided), GPT evaluation, validation, persistence, and analytics.

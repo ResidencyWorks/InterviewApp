@@ -11,6 +11,7 @@ import { EvaluationRequestSchema } from "../../../domain/evaluation/ai-evaluatio
 import { evaluationQueue } from "../../../infrastructure/bullmq/queue";
 import { getByRequestId } from "../../../infrastructure/supabase/evaluation_store";
 import { enqueueEvaluation } from "../../../services/evaluation/enqueue";
+import { captureException } from "../../../shared/error/ErrorTrackingService";
 
 /**
  * Simple authentication check
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		// 4. Enqueue job for evaluation
-		const jobId = await enqueueEvaluation(request);
+		let jobId = await enqueueEvaluation(request);
 
 		// 5. Attempt sync evaluation (wait for completion up to syncTimeoutMs)
 		try {
@@ -103,6 +104,36 @@ export async function POST(req: NextRequest) {
 			});
 
 			try {
+				// If the job already has a recorded failure (from a previous worker run),
+				// remove it and enqueue a fresh job so the worker can reprocess cleanly.
+				if ((job as any).failedReason) {
+					console.warn(
+						`[Evaluate API] Job ${jobId} has recorded failure:`,
+						(job as any).failedReason,
+					);
+					try {
+						await job.remove();
+						jobId = await enqueueEvaluation(request);
+						console.info(
+							`[Evaluate API] Re-enqueued job ${jobId} after removing failed record`,
+						);
+					} catch (requeueError) {
+						console.error(
+							`[Evaluate API] Failed to requeue job ${jobId}:`,
+							requeueError,
+						);
+					}
+					return NextResponse.json(
+						{
+							jobId,
+							requestId: request.requestId,
+							status: "queued",
+							poll_url: `/api/evaluate/status/${jobId}`,
+						},
+						{ status: 202 },
+					);
+				}
+
 				// Wait for job completion with timeout
 				await job.waitUntilFinished(
 					queueEvents,
@@ -172,7 +203,13 @@ export async function POST(req: NextRequest) {
 			throw error;
 		}
 	} catch (error) {
-		console.error("Evaluation endpoint error:", error);
+		console.error(
+			"Evaluation endpoint error:",
+			error,
+			(error as any)?.stack ?? null,
+		);
+		console.error("Evaluation endpoint error (trace):", new Error().stack);
+		// captureException(error as Error);
 		return NextResponse.json(
 			{
 				error: "Internal server error",

@@ -3,5 +3,7 @@ openai
 opentelemetry
 posthog
 rediss
+retryable
+Retryable
 tailwindcss
 upstash

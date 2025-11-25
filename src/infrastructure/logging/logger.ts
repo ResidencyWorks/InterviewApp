@@ -1,25 +1,16 @@
-import * as Sentry from "@sentry/nextjs";
+import { captureException } from "@/shared/error/ErrorTrackingService";
 import {
 	type LogContext,
 	type LoggerContract,
 	LogLevel,
 } from "@/shared/logger/types";
-
 /**
  * Structured logger for application-wide logging
  */
 export class Logger implements LoggerContract {
-	private static instance: Logger;
 	private isDevelopment = process.env.NODE_ENV === "development";
 
-	private constructor() {}
-
-	static getInstance(): Logger {
-		if (!Logger.instance) {
-			Logger.instance = new Logger();
-		}
-		return Logger.instance;
-	}
+	constructor() {}
 
 	/**
 	 * Log debug message
@@ -53,7 +44,7 @@ export class Logger implements LoggerContract {
 
 		// Send to Sentry in production
 		if (!this.isDevelopment && error) {
-			Sentry.captureException(error, {
+			captureException(error, {
 				tags: {
 					component: context?.component,
 					action: context?.action,
@@ -164,7 +155,6 @@ export class Logger implements LoggerContract {
 	}
 }
 
-// Export singleton instance
-export const logger = Logger.getInstance();
+export const logger = new Logger();
 
 export { type LogContext, LogLevel } from "@/shared/logger/types";

@@ -1,12 +1,11 @@
-import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
 import Stripe from "stripe";
-import { entitlementsService } from "@/features/auth/domain/entitlements/EntitlementsService";
 import { stripeIdempotencyStore } from "@/features/billing/infrastructure/stripe/StripeIdempotencyStore";
 import { getPostHogClient } from "@/infrastructure/config/clients";
 import { env } from "@/infrastructure/config/environment";
 import { serverDatabaseService } from "@/infrastructure/db/database-service";
 import { userEntitlementCache } from "@/infrastructure/redis";
+import { captureException } from "@/shared/error/ErrorTrackingService";
 import type { UserEntitlementLevel } from "@/types";
 
 export interface StripeWebhookResponse {
@@ -54,7 +53,7 @@ export async function handleStripeWebhookRequest(
 			console.error("Webhook signature verification failed:", err);
 
 			// Track signature verification failure in Sentry
-			Sentry.captureException(err, {
+			captureException(err as Error, {
 				tags: {
 					component: "stripe-webhook",
 					action: "signature_verification",
@@ -129,7 +128,7 @@ export async function handleStripeWebhookRequest(
 		console.error("Stripe webhook error:", error);
 
 		// Track error in Sentry
-		Sentry.captureException(error, {
+		captureException(error as Error, {
 			tags: {
 				component: "stripe-webhook",
 				action: "handle_webhook_request",
@@ -194,7 +193,7 @@ async function processStripeEvent(event: Stripe.Event): Promise<{
 		console.error("Error processing Stripe event:", error);
 
 		// Track event processing error in Sentry
-		Sentry.captureException(error, {
+		captureException(error as Error, {
 			tags: {
 				component: "stripe-webhook",
 				action: "process_event",
@@ -273,7 +272,7 @@ async function handleCheckoutSessionCompleted(
 
 			// Track database write failure in Sentry
 			const errorMessage = insertResult.error ?? "Unknown database error";
-			Sentry.captureException(new Error(errorMessage), {
+			captureException(new Error(errorMessage), {
 				tags: {
 					component: "stripe-webhook",
 					action: "create_entitlement",

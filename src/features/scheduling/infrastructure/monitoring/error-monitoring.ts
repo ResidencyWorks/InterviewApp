@@ -1,4 +1,11 @@
-import * as Sentry from "@sentry/nextjs";
+import {
+	addBreadcrumb,
+	captureException,
+	captureMessage,
+	setContext,
+	setTag,
+	setUser,
+} from "@sentry/nextjs";
 import { analytics } from "@/features/notifications/application/analytics";
 
 /**
@@ -36,7 +43,7 @@ export class ErrorMonitoringService {
 
 		// Set user context in Sentry
 		if (context?.userId) {
-			Sentry.setUser({
+			setUser({
 				email: context.userEmail,
 				id: context.userId,
 			});
@@ -44,19 +51,19 @@ export class ErrorMonitoringService {
 
 		// Set additional context
 		if (context?.component) {
-			Sentry.setTag("component", context.component);
+			setTag("component", context.component);
 		}
 
 		if (context?.action) {
-			Sentry.setTag("action", context.action);
+			setTag("action", context.action);
 		}
 
 		if (context?.metadata) {
-			Sentry.setContext("metadata", context.metadata);
+			setContext("metadata", context.metadata);
 		}
 
 		// Capture the error
-		Sentry.captureException(error, {
+		captureException(error, {
 			extra: {
 				context: context?.metadata,
 				message,
@@ -90,13 +97,13 @@ export class ErrorMonitoringService {
 		context?: ErrorContext,
 	): void {
 		if (context?.userId) {
-			Sentry.setUser({
+			setUser({
 				email: context.userEmail,
 				id: context.userId,
 			});
 		}
 
-		Sentry.captureMessage(message, {
+		captureMessage(message, {
 			extra: context?.metadata,
 			level,
 			tags: {
@@ -118,7 +125,7 @@ export class ErrorMonitoringService {
 		email?: string,
 		additionalContext?: Record<string, any>,
 	): void {
-		Sentry.setUser({
+		setUser({
 			email,
 			id: userId,
 			...additionalContext,
@@ -130,7 +137,7 @@ export class ErrorMonitoringService {
 	 * @returns void
 	 */
 	clearUserContext(): void {
-		Sentry.setUser(null);
+		setUser(null);
 	}
 
 	/**
@@ -145,7 +152,7 @@ export class ErrorMonitoringService {
 		category?: string,
 		level?: "error" | "warning" | "info" | "debug",
 	): void {
-		Sentry.addBreadcrumb({
+		addBreadcrumb({
 			category: category || "custom",
 			level: level || "info",
 			message,
@@ -160,7 +167,7 @@ export class ErrorMonitoringService {
 	 * @returns void
 	 */
 	setContext(key: string, context: Record<string, any>): void {
-		Sentry.setContext(key, context);
+		setContext(key, context);
 	}
 
 	/**
@@ -170,23 +177,12 @@ export class ErrorMonitoringService {
 	 * @returns void
 	 */
 	setTag(key: string, value: string): void {
-		Sentry.setTag(key, value);
+		setTag(key, value);
 	}
 }
 
 // Export singleton instance
 export const errorMonitoring = new ErrorMonitoringService();
-
-/**
- * Error boundary helper for React components
- * @param Component - React component to wrap with error boundary
- * @returns Component wrapped with Sentry error boundary
- */
-export function withErrorBoundary<T extends Record<string, any>>(
-	Component: React.ComponentType<T>,
-) {
-	return Sentry.withErrorBoundary(Component, {});
-}
 
 /**
  * API error handler
@@ -384,7 +380,7 @@ export function trackPerformance(
 export async function checkErrorMonitoringHealth(): Promise<boolean> {
 	try {
 		// Test Sentry by capturing a test message
-		Sentry.captureMessage("Health check", "info");
+		captureMessage("Health check", "info");
 		return true;
 	} catch (error) {
 		console.error("Error monitoring health check failed:", error);

@@ -5,7 +5,7 @@
  * @file src/lib/upload/errors.ts
  */
 
-import * as Sentry from "@sentry/nextjs";
+import { captureException } from "@/shared/error/ErrorTrackingService";
 
 /**
  * Base error class for upload operations
@@ -88,37 +88,26 @@ export function captureUploadError(
 ): void {
 	const errorInfo = error instanceof Error ? error : new Error(String(error));
 
-	Sentry.withScope((scope) => {
-		scope.setTag("service", "audio-upload");
-		scope.setTag("component", "upload-service");
+	const tags: Record<string, string> = {
+		service: "audio-upload",
+		component: "upload-service",
+	};
+	if (context.recordingId) tags.recording_id = context.recordingId;
+	if (context.userId) tags.user_id = context.userId;
 
-		if (context.recordingId) {
-			scope.setTag("recording_id", context.recordingId);
-		}
-
-		if (context.userId) {
-			scope.setUser({ id: context.userId });
-		}
-
-		if (context.attempt) {
-			scope.setContext("retry", {
-				attempt: context.attempt,
-			});
-		}
-
-		if (context.fileSize) {
-			scope.setContext("upload", {
-				fileSize: context.fileSize,
-			});
-		}
-
-		scope.setContext("error", {
+	const extra: Record<string, unknown> = {
+		error: {
 			name: errorInfo.name,
 			message: errorInfo.message,
 			stack: errorInfo.stack,
-		});
+		},
+	};
+	if (context.attempt) extra.retry = { attempt: context.attempt };
+	if (context.fileSize) extra.upload = { fileSize: context.fileSize };
 
-		Sentry.captureException(errorInfo);
+	captureException(errorInfo, {
+		tags,
+		extra,
 	});
 }
 

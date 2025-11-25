@@ -3,7 +3,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	// External packages for server-side rendering
-	serverExternalPackages: ["@supabase/ssr"],
+	serverExternalPackages: ["@supabase/ssr", "bullmq", "ioredis"],
 	transpilePackages: ["import-in-the-middle", "require-in-the-middle"],
 	images: {
 		remotePatterns: [{ hostname: "localhost" }],

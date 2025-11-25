@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { logger } from "@/infrastructure/logging/logger";
+import { logger } from "../../../infrastructure/logging/logger";
 
 /**
  * GET /api/migrations
