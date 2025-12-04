@@ -1,7 +1,53 @@
 {
 	"mcpServers": {
 		"Sentry": {
-			"url": "https://mcp.sentry.dev/mcp/residencyworks/javascript-nextjs"
+			"command": "npx",
+			"args": ["-y", "mcp-remote@latest", "https://mcp.sentry.dev/mcp"]
+		},
+		"context7": {
+			"args": [
+				"-y",
+				"@upstash/context7-mcp",
+				"--api-key",
+				"ctx7sk-956db346-2545-4ea0-9987-7f3da855afac"
+			],
+			"command": "npx"
+		},
+		"supabase": {
+			"url": "https://mcp.supabase.com/mcp"
+		},
+		"posthog": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"mcp-remote@latest",
+				"https://mcp.posthog.com/sse",
+				"--header",
+				"Authorization:phc_brrAbclz40ktRCQXXuuFwjn7DnGaQrIpc0rf5QdkR0d"
+			],
+			"env": {
+				"POSTHOG_AUTH_HEADER": "Bearer phx_oTBn2rqlO21QWV496bJ5Vh6pWlfhvpwyqSQSuOkCdr4bFfB"
+			}
+		},
+		"sequential-thinking": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-sequential-thinking@2025.11.25"
+			]
+		},
+		"serena": {
+			"command": "uvx",
+			"args": [
+				"--from",
+				"git+https://github.com/oraios/serena",
+				"serena",
+				"start-mcp-server",
+				"--project",
+				"InterviewApp",
+				"--context",
+				"ide-assistant"
+			]
 		}
 	}
 }

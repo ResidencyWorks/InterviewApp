@@ -1,6 +1,6 @@
 {
 	"[jsonc]": {
-		"editor.defaultFormatter": "vscode.json-language-features"
+		"editor.defaultFormatter": "biomejs.biome"
 	},
 	"cSpell.customDictionaries": {
 		"custom-dictionary-workspace": {

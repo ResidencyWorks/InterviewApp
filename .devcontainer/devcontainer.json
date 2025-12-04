@@ -9,7 +9,9 @@
 				"posthog.posthog-vscode",
 				"supabase.postgrestools",
 				"1Password.op-vscode",
-				"vitest.explorer"
+				"vitest.explorer",
+				"ms-vscode.vscode-typescript-next",
+				"bradlc.vscode-tailwindcss"
 			]
 		}
 	},
