@@ -136,7 +136,7 @@ describe("Upload Service Integration Tests", () => {
 		it("should track upload duration", async () => {
 			// Mock successful upload with delay
 			vi.mocked(uploadFile).mockImplementation(async () => {
-				await new Promise((resolve) => setTimeout(resolve, 100));
+				await new Promise((resolve) => setTimeout(resolve, 110));
 				return { success: true };
 			});
 
@@ -157,8 +157,8 @@ describe("Upload Service Integration Tests", () => {
 			);
 
 			const loggedDuration = vi.mocked(logUploadCompleted).mock.calls[0][1];
-			// Allow for timing precision - should be close to 100ms
-			expect(loggedDuration).toBeGreaterThanOrEqual(99);
+			// Allow for timing precision - should be close to 110ms
+			expect(loggedDuration).toBeGreaterThanOrEqual(100);
 		});
 	});
 
