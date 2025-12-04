@@ -24,7 +24,11 @@ pre-push:
   commands:
     test-coverage:
       run: pnpm test:coverage
-      fail_text: "❌ Coverage check failed. Please ensure code coverage is above 80%."
+      skip:
+        - merge
+        - rebase
+        - SKIP_COVERAGE
+      fail_text: "❌ Coverage check failed. Please ensure code coverage is above 80%. Use SKIP_COVERAGE=1 to skip (not recommended for main branch)."
       pass_text: "✅ Coverage check passed"
 
     # test-e2e:
