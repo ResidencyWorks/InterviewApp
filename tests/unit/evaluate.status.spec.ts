@@ -5,6 +5,7 @@ import { GET } from "../../src/app/api/evaluate/status/[jobId]/route";
 // Mock dependencies
 vi.mock("../../src/infrastructure/supabase/evaluation_store", () => ({
 	getByRequestId: vi.fn(),
+	getByJobId: vi.fn(),
 }));
 
 vi.mock("../../src/infrastructure/bullmq/queue", () => ({
@@ -14,13 +15,17 @@ vi.mock("../../src/infrastructure/bullmq/queue", () => ({
 }));
 
 import { evaluationQueue } from "../../src/infrastructure/bullmq/queue";
-import { getByRequestId } from "../../src/infrastructure/supabase/evaluation_store";
+import {
+	getByJobId,
+	getByRequestId,
+} from "../../src/infrastructure/supabase/evaluation_store";
 
 describe("GET /api/evaluate/status/[jobId]", () => {
 	it("returns 404 if job not found in queue or DB", async () => {
 		// getJob should resolve to undefined when not found (rather than null) to satisfy TS type
 		vi.mocked(evaluationQueue.getJob).mockResolvedValue(undefined);
 		vi.mocked(getByRequestId).mockResolvedValue(null);
+		vi.mocked(getByJobId).mockResolvedValue(null);
 
 		const req = new NextRequest(
 			"http://localhost/api/evaluate/status/eval:123",
@@ -38,7 +43,7 @@ describe("GET /api/evaluate/status/[jobId]", () => {
 			isActive: vi.fn().mockResolvedValue(false),
 		} as any);
 
-		vi.mocked(getByRequestId).mockResolvedValue({
+		vi.mocked(getByJobId).mockResolvedValue({
 			requestId: "uuid-123",
 			jobId: "eval:123",
 			score: 90,
@@ -61,7 +66,7 @@ describe("GET /api/evaluate/status/[jobId]", () => {
 	});
 
 	it("returns queue status if job is active/waiting", async () => {
-		vi.mocked(getByRequestId).mockResolvedValue(null);
+		vi.mocked(getByJobId).mockResolvedValue(null);
 		vi.mocked(evaluationQueue.getJob).mockResolvedValue({
 			id: "eval:123",
 			data: { requestId: "uuid-123" },
@@ -83,7 +88,7 @@ describe("GET /api/evaluate/status/[jobId]", () => {
 	});
 
 	it("returns failed status if job failed", async () => {
-		vi.mocked(getByRequestId).mockResolvedValue(null);
+		vi.mocked(getByJobId).mockResolvedValue(null);
 		vi.mocked(evaluationQueue.getJob).mockResolvedValue({
 			id: "eval:123",
 			data: { requestId: "uuid-123" },
