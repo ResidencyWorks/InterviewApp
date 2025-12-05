@@ -103,7 +103,7 @@
 	},
 	"scripts": {
 		"analyze": "tsx src/lib/structure-analysis/cli/analyze.ts",
-		"worker:start": "node ./dist/infrastructure/bullmq/worker.js",
+		"worker:start": "NODE_ENV=production tsx --env-file=.env.local src/infrastructure/bullmq/worker.ts",
 		"worker:dev": "tsx --env-file=.env.local src/infrastructure/bullmq/worker.ts",
 		"dev:all": "concurrently \"pnpm dev\" \"pnpm worker:dev\" --names \"app,worker\" --prefix-colors \"cyan,magenta\"",
 		"test:coverage": "tsx scripts/coverage-check.ts",
