@@ -44,6 +44,19 @@ export async function POST(request: NextRequest) {
 
 		const { data: validatedData } = validation;
 
+		if (!validatedData.userId) {
+			return NextResponse.json(
+				{
+					success: false,
+					error: {
+						code: "MISSING_USER",
+						message: "userId is required to submit text",
+					},
+				},
+				{ status: 400 },
+			);
+		}
+
 		// Validate user permission
 		if (validatedData.userId) {
 			try {
@@ -94,7 +107,7 @@ export async function POST(request: NextRequest) {
 		// Create recording record in database
 		const { error: dbError } = await supabase.from("recordings").insert({
 			id: recordingId,
-			user_id: validatedData.userId ?? null,
+			user_id: validatedData.userId,
 			session_id: validatedData.sessionId ?? null,
 			question_id: validatedData.questionId ?? null,
 			response_type: "text",

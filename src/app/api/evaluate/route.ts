@@ -6,40 +6,100 @@
 
 import { QueueEvents } from "bullmq";
 import { type NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/infrastructure/supabase/server";
 import { evaluationConfig } from "../../../config";
 import { EvaluationRequestSchema } from "../../../domain/evaluation/ai-evaluation-schema";
 import { evaluationQueue } from "../../../infrastructure/bullmq/queue";
 import { getByRequestId } from "../../../infrastructure/supabase/evaluation_store";
 import { enqueueEvaluation } from "../../../services/evaluation/enqueue";
-import { captureException } from "../../../shared/error/ErrorTrackingService";
 
-/**
- * Simple authentication check
- */
-function checkAuthentication(request: NextRequest): NextResponse | null {
-	const authHeader = request.headers.get("authorization");
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+export async function POST(req: NextRequest) {
+	// 1. Authentication - Use Supabase session-based auth
+	const supabase = await createClient();
+	const {
+		data: { user },
+		error: authError,
+	} = await supabase.auth.getUser();
+
+	if (authError || !user) {
 		return NextResponse.json(
 			{ error: "Authentication required" },
 			{ status: 401 },
 		);
 	}
-	return null; // Authentication passed
-}
-
-export async function POST(req: NextRequest) {
-	// 1. Authentication
-	const authError = checkAuthentication(req);
-	if (authError) {
-		return authError;
-	}
 
 	try {
-		// 2. Parse and validate request body
-		const body = await req.json();
+		// 2. Parse and validate request body (handle both JSON and FormData)
+		const contentType = req.headers.get("content-type") || "";
+		let body: Record<string, unknown>;
+
+		if (contentType.includes("multipart/form-data")) {
+			// Handle FormData (audio uploads)
+			const formData = await req.formData();
+			const questionId = formData.get("questionId") as string;
+			const userId = formData.get("userId") as string;
+			const metadataStr = formData.get("metadata") as string;
+			const audioFile = formData.get("audioFile") as File;
+
+			if (!audioFile) {
+				return NextResponse.json(
+					{ error: "Audio file is required for audio submissions" },
+					{ status: 400 },
+				);
+			}
+
+			// Parse metadata
+			const metadata = metadataStr ? JSON.parse(metadataStr) : {};
+
+			// Upload audio file to Supabase Storage
+			const fileName = `audio-${questionId}-${Date.now()}.wav`;
+			const filePath = `evaluations/${userId}/${fileName}`;
+
+			const arrayBuffer = await audioFile.arrayBuffer();
+			const { data: uploadData, error: uploadError } = await supabase.storage
+				.from("recordings")
+				.upload(filePath, arrayBuffer, {
+					contentType: audioFile.type || "audio/wav",
+					upsert: false,
+				});
+
+			if (uploadError) {
+				console.error("Failed to upload audio file:", uploadError);
+				return NextResponse.json(
+					{
+						error: "Failed to upload audio file",
+						details: uploadError.message,
+					},
+					{ status: 500 },
+				);
+			}
+
+			// Get public URL for the uploaded file
+			const { data: urlData } = supabase.storage
+				.from("recordings")
+				.getPublicUrl(uploadData.path);
+
+			// Generate a proper UUID for requestId
+			const requestId = crypto.randomUUID();
+
+			body = {
+				requestId,
+				audio_url: urlData.publicUrl,
+				userId,
+				metadata,
+			};
+		} else {
+			// Handle JSON
+			body = await req.json();
+		}
+
 		const parseResult = EvaluationRequestSchema.safeParse(body);
 
 		if (!parseResult.success) {
+			console.error("Evaluation request validation failed:", {
+				body,
+				errors: parseResult.error.format(),
+			});
 			return NextResponse.json(
 				{
 					error: "Invalid request",
@@ -50,6 +110,14 @@ export async function POST(req: NextRequest) {
 		}
 
 		const request = parseResult.data;
+		const derivedUserId =
+			request.userId ??
+			(typeof request.metadata?.userId === "string"
+				? (request.metadata.userId as string)
+				: undefined);
+		const requestWithUser = derivedUserId
+			? { ...request, userId: derivedUserId }
+			: request;
 
 		// 3. Idempotency check - return existing result if found
 		const existingResult = await getByRequestId(request.requestId);
@@ -66,7 +134,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		// 4. Enqueue job for evaluation
-		let jobId = await enqueueEvaluation(request);
+		let jobId = await enqueueEvaluation(requestWithUser);
 
 		// 5. Attempt sync evaluation (wait for completion up to syncTimeoutMs)
 		try {
@@ -113,7 +181,7 @@ export async function POST(req: NextRequest) {
 					);
 					try {
 						await job.remove();
-						jobId = await enqueueEvaluation(request);
+						jobId = await enqueueEvaluation(requestWithUser);
 						console.info(
 							`[Evaluate API] Re-enqueued job ${jobId} after removing failed record`,
 						);

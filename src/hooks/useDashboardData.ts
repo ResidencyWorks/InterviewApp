@@ -216,8 +216,8 @@ function calculateStreak(evaluations: Tables<"evaluation_results">[]): number {
 		const date = new Date(sortedDates[i]);
 		const dayEvaluations = evaluationsByDate.get(sortedDates[i]) || [];
 
-		// Check if there's at least one completed evaluation on this day
-		const hasCompleted = dayEvaluations.some((e) => e.status === "COMPLETED");
+		// New schema records only completed evaluations, so presence implies completion
+		const hasCompleted = dayEvaluations.length > 0;
 
 		if (hasCompleted) {
 			// Check if this date is consecutive (within 1 day of the previous date or today)

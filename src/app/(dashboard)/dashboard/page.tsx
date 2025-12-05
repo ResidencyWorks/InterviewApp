@@ -29,11 +29,21 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserPlan } from "@/hooks/useUserPlan";
 
 export default function DashboardPage() {
-	const { user } = useAuth() as { user: AuthUser | null };
+	const { user, loading: authLoading } = useAuth() as {
+		user: AuthUser | null;
+		loading: boolean;
+	};
 	const router = useRouter();
 	const isAdmin = user?.user_metadata?.role === "admin";
 	const dashboardData = useDashboardData(user);
 	const userPlanData = useUserPlan(user);
+
+	// Redirect to login if not authenticated (safety check - layout also handles this)
+	useEffect(() => {
+		if (!authLoading && !user) {
+			router.push("/login");
+		}
+	}, [user, authLoading, router]);
 
 	// Check for error messages from URL params
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);

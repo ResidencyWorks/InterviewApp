@@ -23,10 +23,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
  */
 export async function POST(
 	request: NextRequest,
-	{ params }: { params: { recordingId: string } },
+	{ params }: { params: Promise<{ recordingId: string }> },
 ) {
 	try {
-		const { recordingId } = params;
+		const { recordingId } = await params;
 
 		if (!recordingId) {
 			return NextResponse.json(

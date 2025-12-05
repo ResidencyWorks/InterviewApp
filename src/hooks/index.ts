@@ -10,6 +10,7 @@ export { useAuth } from "./useAuth";
 export { useClickOutside } from "./useClickOutside";
 export { useDashboardData } from "./useDashboardData";
 export { useDebounce } from "./useDebounce";
+export { useEvaluationStream } from "./useEvaluationStream";
 export { useLocalStorage } from "./useLocalStorage";
 export { useProfileCompletion } from "./useProfileCompletion";
 export { useUserPlan } from "./useUserPlan";

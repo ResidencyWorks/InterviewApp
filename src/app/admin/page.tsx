@@ -20,6 +20,7 @@ import {
 	Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { SystemStatus } from "@/components/admin/SystemStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -34,6 +35,7 @@ import {
 } from "@/components/ui/card";
 import { ContentPackStatus } from "@/features/booking/domain/entities/ContentPack";
 import { FallbackWarning } from "@/features/booking/presentation/components/content-pack/FallbackWarning";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ContentPack {
 	id: string;
@@ -52,6 +54,8 @@ interface SystemStats {
 }
 
 export default function AdminDashboard() {
+	const { user, loading: authLoading } = useAuth();
+	const router = useRouter();
 	const [contentPacks, setContentPacks] = useState<ContentPack[]>([]);
 	const [stats, setStats] = useState<SystemStats>({
 		totalContentPacks: 0,
@@ -76,7 +80,15 @@ export default function AdminDashboard() {
 			}
 
 			const data = await response.json();
-			const packs = data.data;
+			const packs = Array.isArray(data.data) ? data.data : [];
+
+			console.log("AdminDashboard: Received packs:", {
+				count: packs.length,
+				firstPack: packs[0] || null,
+				hasData: !!data.data,
+				dataType: Array.isArray(data.data) ? "array" : typeof data.data,
+				fullResponse: data,
+			});
 
 			setContentPacks(packs);
 
@@ -96,16 +108,24 @@ export default function AdminDashboard() {
 						p.status === ContentPackStatus.UPLOADED ||
 						p.status === ContentPackStatus.VALIDATING,
 				).length,
-				recentUploads: packs.filter(
-					(p: ContentPack) => new Date(p.createdAt) > oneDayAgo,
-				).length,
+				recentUploads: packs.filter((p: ContentPack) => {
+					const createdAt =
+						typeof p.createdAt === "string"
+							? new Date(p.createdAt)
+							: new Date(p.createdAt as unknown as string);
+					return createdAt > oneDayAgo;
+				}).length,
 			});
 
-			// Check if we're using fallback content
-			setIsUsingFallback(activePacks.length === 0);
+			// Check if we're using fallback content - only show warning if there are NO packs at all
+			// or if there are packs but none are activated
+			const hasAnyPacks = packs.length > 0;
+			const hasActivatedPack = activePacks.length > 0;
+			setIsUsingFallback(!hasActivatedPack && hasAnyPacks);
 
 			setError(null);
 		} catch (err) {
+			console.error("AdminDashboard: Error fetching dashboard data:", err);
 			setError(
 				err instanceof Error ? err.message : "Failed to fetch dashboard data",
 			);
@@ -126,6 +146,47 @@ export default function AdminDashboard() {
 		setFallbackWarningDismissed(false);
 		fetchDashboardData();
 	}, [fetchDashboardData]);
+
+	// Redirect to login if not authenticated
+	useEffect(() => {
+		if (!authLoading && !user) {
+			router.push("/login");
+		}
+	}, [user, authLoading, router]);
+
+	// Check admin role
+	useEffect(() => {
+		if (!authLoading && user) {
+			const userRole = user.user_metadata?.role || "user";
+			if (userRole !== "admin") {
+				router.push("/dashboard?error=insufficient_permissions");
+			}
+		}
+	}, [user, authLoading, router]);
+
+	// Show loading state while checking authentication
+	if (authLoading) {
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+					<p className="mt-4 text-muted-foreground">Loading...</p>
+				</div>
+			</div>
+		);
+	}
+
+	// Don't render if not authenticated or not admin
+	if (!user || (user.user_metadata?.role || "user") !== "admin") {
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+					<p className="mt-4 text-muted-foreground">Redirecting...</p>
+				</div>
+			</div>
+		);
+	}
 
 	const activeContentPack = contentPacks.find(
 		(pack) => pack.status === ContentPackStatus.ACTIVATED,

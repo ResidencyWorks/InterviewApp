@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { ContentPackMissingBanner } from "@/components/content/ContentPackMissingBanner";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -14,12 +15,16 @@ export default function DashboardLayout({
 	children: React.ReactNode;
 }) {
 	const { user, loading } = useAuth();
-	const _router = useRouter();
+	const router = useRouter();
 	const _pathname = usePathname();
 	const isAdmin = user?.user_metadata?.role === "admin";
 
-	// Note: Authentication routing is now handled by proxy
-	// No client-side redirects needed
+	// Redirect to login if no user (must be in useEffect to avoid render-time navigation)
+	useEffect(() => {
+		if (!loading && !user) {
+			router.push("/login");
+		}
+	}, [user, loading, router]);
 
 	// Show loading state while checking authentication
 	if (loading) {
@@ -33,9 +38,16 @@ export default function DashboardLayout({
 		);
 	}
 
-	// Don't render dashboard if no user (proxy will handle redirects)
+	// Show redirecting state if no user
 	if (!user) {
-		return null;
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+					<p className="mt-4 text-muted-foreground">Redirecting to login...</p>
+				</div>
+			</div>
+		);
 	}
 
 	return (

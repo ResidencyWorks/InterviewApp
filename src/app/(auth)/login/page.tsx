@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks";
+import type { DrillProgress } from "@/hooks/useDrillProgress";
 
 /**
  * Magic link login page
@@ -25,6 +27,9 @@ export default function LoginPage() {
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
 	const [emailId, setEmailId] = useState("email-input");
+	const [drillProgress, setDrillProgress] = useState<DrillProgress | null>(
+		null,
+	);
 	const { signIn, user, loading: authLoading } = useAuth();
 	const router = useRouter();
 
@@ -32,6 +37,47 @@ export default function LoginPage() {
 	useEffect(() => {
 		setEmailId(`email-${Math.random().toString(36).substr(2, 9)}`);
 	}, []);
+
+	// Fetch drill progress for authenticated users
+	useEffect(() => {
+		const fetchProgress = async () => {
+			if (user && !authLoading) {
+				try {
+					// First, fetch the active content pack evaluations
+					const evaluationsResponse = await fetch(
+						"/api/content-packs/active/evaluations",
+					);
+					if (!evaluationsResponse.ok) return;
+
+					const evaluationsResult = await evaluationsResponse.json();
+					// The API wraps the response in a 'data' property
+					const evaluations = evaluationsResult.data?.evaluations || [];
+
+					if (evaluations.length === 0) return;
+
+					// Get progress for the first evaluation (or any in-progress one)
+					for (const evaluation of evaluations) {
+						const progressResponse = await fetch(
+							`/api/drill/progress?drill_id=${evaluation.id}`,
+						);
+						if (progressResponse.ok) {
+							const progressResult = await progressResponse.json();
+							// The API wraps the response in a 'data' property
+							const progress =
+								progressResult.data?.progress || progressResult.progress;
+							if (progress && !progress.completed_at) {
+								setDrillProgress(progress);
+								return; // Show the first incomplete drill
+							}
+						}
+					}
+				} catch (err) {
+					console.error("Failed to fetch drill progress:", err);
+				}
+			}
+		};
+		fetchProgress();
+	}, [user, authLoading]);
 
 	// Redirect authenticated users to dashboard (proxy will handle profile completion routing)
 	useEffect(() => {
@@ -81,6 +127,36 @@ export default function LoginPage() {
 					<p className="mt-2 text-sm text-muted-foreground">
 						Practice your interview skills with AI-powered feedback
 					</p>
+
+					{/* Show drill progress if user is authenticated and has progress */}
+					{user && drillProgress && !drillProgress.completed_at && (
+						<div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+							<div className="flex items-center justify-between mb-2">
+								<span className="text-sm font-medium">Your Progress</span>
+								<span className="text-sm text-muted-foreground">
+									{drillProgress.completed_questions} /{" "}
+									{drillProgress.total_questions} questions
+								</span>
+							</div>
+							<Progress
+								value={
+									(drillProgress.completed_questions /
+										drillProgress.total_questions) *
+									100
+								}
+								className="h-2"
+							/>
+							<Button
+								onClick={() =>
+									router.push(`/drill/${drillProgress.current_question_id}`)
+								}
+								className="w-full mt-3"
+								size="sm"
+							>
+								Resume Drill
+							</Button>
+						</div>
+					)}
 				</div>
 
 				<Card>

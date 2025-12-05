@@ -1,7 +1,11 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScorePopover } from "@/components/ui/score-popover";
 import { cn } from "@/shared/utils";
@@ -13,6 +17,9 @@ import type {
 export interface EvaluationResultDisplayProps {
 	result: EvaluationResult;
 	className?: string;
+	onNextQuestion?: () => void;
+	showNextButton?: boolean;
+	nextButtonText?: string;
 }
 
 /**
@@ -23,6 +30,9 @@ export interface EvaluationResultDisplayProps {
 export function EvaluationResultDisplay({
 	result,
 	className,
+	onNextQuestion,
+	showNextButton = true,
+	nextButtonText = "Next Question",
 }: EvaluationResultDisplayProps) {
 	console.log("🔍 EvaluationResultDisplay received:", {
 		status: result.status,
@@ -186,8 +196,8 @@ export function EvaluationResultDisplay({
 										className={cn(
 											"flex items-center justify-between w-full border rounded-md px-3 py-2 text-left",
 											flag.passFlag === "PASS"
-												? "border-green-200 bg-green-50"
-												: "border-yellow-200 bg-yellow-50",
+												? "border-green-200 bg-green-50 text-green-800"
+												: "border-yellow-200 bg-yellow-50 text-yellow-800",
 										)}
 										aria-label={`${flag.name} ${
 											flag.passFlag === "PASS" ? "✅" : "⚠️"
@@ -213,10 +223,10 @@ export function EvaluationResultDisplay({
 				{result.feedback && (
 					<div className="space-y-2">
 						<h3 className="text-lg font-semibold">Detailed Feedback</h3>
-						<div className="p-4 bg-muted rounded-lg">
-							<p className="text-sm leading-relaxed whitespace-pre-wrap">
+						<div className="p-4 bg-muted rounded-lg prose prose-sm dark:prose-invert max-w-none">
+							<ReactMarkdown remarkPlugins={[remarkGfm]}>
 								{result.feedback}
-							</p>
+							</ReactMarkdown>
 						</div>
 					</div>
 				)}
@@ -272,6 +282,16 @@ export function EvaluationResultDisplay({
 						</div>
 					</div>
 				</div>
+
+				{/* Next Question Button */}
+				{showNextButton && onNextQuestion && (
+					<div className="mt-6 flex justify-center">
+						<Button onClick={onNextQuestion} size="lg" className="gap-2">
+							{nextButtonText}
+							<ArrowRight className="h-4 w-4" />
+						</Button>
+					</div>
+				)}
 			</CardContent>
 		</Card>
 	);

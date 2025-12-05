@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	_request: Request,
-	{ params }: { params: { analysisId: string; duplicationId: string } },
+	{
+		params,
+	}: { params: Promise<{ analysisId: string; duplicationId: string }> },
 ) {
+	const { analysisId, duplicationId } = await params;
 	// Placeholder: In a full implementation we'd fetch duplication details by IDs
-	const { analysisId, duplicationId } = params;
 	return NextResponse.json({
 		success: true,
 		data: {

@@ -1,116 +1,520 @@
 {
 	"version": "1.0.0",
-	"name": "MatchReady Starter Pack",
-	"description": "Minimal content pack for end-to-end testing of loader and drill flow.",
+	"name": "MatchReady Medical Interview Pack",
+	"description": "Comprehensive content pack for medical student residency and fellowship interviews with MMI (Multiple Mini Interview) scenarios.",
 	"content": {
 		"evaluations": [
 			{
-				"id": "eval-technical-001",
-				"title": "JavaScript Fundamentals",
-				"description": "Assess understanding of variable declarations and scoping.",
+				"id": "eval-clinical-reasoning-001",
+				"title": "Clinical Reasoning & Problem Solving",
+				"description": "Assess clinical decision-making and diagnostic reasoning skills.",
+				"difficulty": "intermediate",
+				"estimatedMinutes": 20,
+				"category": "clinical",
+				"competencies": [
+					"medical_knowledge",
+					"clinical_reasoning",
+					"problem_solving"
+				],
+				"interviewFormat": "mmi",
+				"scoringRubric": "holistic",
 				"criteria": [
 					{
-						"id": "clarity",
-						"name": "Clarity",
-						"weight": 0.25,
-						"description": "Clear communication and structure of explanation."
+						"id": "clinical_knowledge",
+						"name": "Clinical Knowledge",
+						"weight": 0.3,
+						"description": "Demonstrates appropriate medical knowledge and understanding of clinical concepts."
 					},
 					{
-						"id": "content",
-						"name": "Content Accuracy",
-						"weight": 0.35,
-						"description": "Technical correctness and relevant details."
+						"id": "reasoning_process",
+						"name": "Reasoning Process",
+						"weight": 0.3,
+						"description": "Shows logical, systematic approach to problem-solving and differential diagnosis."
 					},
 					{
-						"id": "structure",
-						"name": "Structure",
+						"id": "communication",
+						"name": "Communication",
 						"weight": 0.2,
-						"description": "Logical flow and organization of the answer."
+						"description": "Clearly articulates thought process and medical reasoning."
 					},
 					{
-						"id": "delivery",
-						"name": "Delivery",
+						"id": "patient_safety",
+						"name": "Patient Safety",
 						"weight": 0.2,
-						"description": "Confidence and concise delivery."
+						"description": "Considers patient safety, risk management, and appropriate escalation."
 					}
 				],
 				"questions": [
 					{
-						"id": "q-let-const-var",
-						"text": "Explain the difference between let, const, and var in JavaScript and when to use each.",
-						"type": "text"
+						"id": "q-chest-pain-ddx",
+						"text": "A 55-year-old male presents to the ED with acute chest pain radiating to his left arm. Walk me through your differential diagnosis and initial management approach.",
+						"type": "text",
+						"difficulty": "intermediate",
+						"estimatedMinutes": 5,
+						"tags": [
+							"cardiology",
+							"emergency_medicine",
+							"differential_diagnosis"
+						],
+						"competency": "clinical_reasoning",
+						"expectedResponseElements": [
+							"differential_diagnosis",
+							"red_flags",
+							"initial_workup",
+							"management_plan"
+						]
+					},
+					{
+						"id": "q-pediatric-fever",
+						"text": "A 2-year-old child presents with fever of 39°C for 3 days. The parents are worried. How would you approach this case?",
+						"type": "text",
+						"difficulty": "intermediate",
+						"estimatedMinutes": 5,
+						"tags": ["pediatrics", "fever", "clinical_assessment"],
+						"competency": "clinical_reasoning",
+						"expectedResponseElements": [
+							"history_taking",
+							"physical_exam",
+							"red_flags",
+							"parent_communication"
+						]
+					},
+					{
+						"id": "q-medication-error",
+						"text": "You realize you've made a medication dosing error for a patient. The patient hasn't received the medication yet. What do you do?",
+						"type": "text",
+						"difficulty": "beginner",
+						"estimatedMinutes": 4,
+						"tags": ["patient_safety", "professionalism", "error_disclosure"],
+						"competency": "professionalism",
+						"expectedResponseElements": [
+							"immediate_action",
+							"reporting",
+							"prevention",
+							"learning"
+						]
 					}
 				]
 			},
 			{
-				"id": "eval-behavioral-001",
-				"title": "Behavioral: Conflict Resolution",
-				"description": "Probe for structured STAR responses to conflict situations.",
+				"id": "eval-ethics-001",
+				"title": "Medical Ethics & Professionalism",
+				"description": "Evaluate ethical reasoning, professional judgment, and handling of complex moral dilemmas.",
+				"difficulty": "intermediate",
+				"estimatedMinutes": 25,
+				"category": "ethics",
+				"competencies": [
+					"professionalism",
+					"ethical_reasoning",
+					"communication"
+				],
+				"interviewFormat": "mmi",
+				"scoringRubric": "criteria_based",
 				"criteria": [
 					{
-						"id": "clarity",
-						"name": "Clarity",
+						"id": "ethical_framework",
+						"name": "Ethical Framework",
+						"weight": 0.3,
+						"description": "Applies ethical principles (autonomy, beneficence, non-maleficence, justice) appropriately."
+					},
+					{
+						"id": "perspective_taking",
+						"name": "Perspective Taking",
 						"weight": 0.25,
-						"description": "Clear articulation of Situation, Task, Action, Result."
+						"description": "Considers multiple stakeholder perspectives and competing interests."
 					},
 					{
-						"id": "content",
-						"name": "Content Depth",
-						"weight": 0.35,
-						"description": "Specific actions and measurable outcomes."
+						"id": "professionalism",
+						"name": "Professionalism",
+						"weight": 0.25,
+						"description": "Demonstrates professional values, integrity, and appropriate boundaries."
 					},
 					{
-						"id": "structure",
-						"name": "Structure",
+						"id": "communication",
+						"name": "Communication",
 						"weight": 0.2,
-						"description": "STAR organization and coherence."
-					},
-					{
-						"id": "delivery",
-						"name": "Delivery",
-						"weight": 0.2,
-						"description": "Confidence and concision."
+						"description": "Articulates reasoning clearly and shows empathy."
 					}
 				],
 				"questions": [
 					{
-						"id": "q-conflict-star",
-						"text": "Tell me about a time you had a conflict with a stakeholder and how you resolved it.",
-						"type": "text"
+						"id": "q-informed-consent",
+						"text": "An elderly patient with early dementia refuses a recommended surgery. The family insists you should proceed. How do you handle this situation?",
+						"type": "text",
+						"difficulty": "intermediate",
+						"estimatedMinutes": 6,
+						"tags": [
+							"autonomy",
+							"capacity",
+							"family_dynamics",
+							"informed_consent"
+						],
+						"competency": "ethical_reasoning",
+						"expectedResponseElements": [
+							"capacity_assessment",
+							"autonomy",
+							"family_discussion",
+							"legal_considerations"
+						]
+					},
+					{
+						"id": "q-colleague-impairment",
+						"text": "You suspect a colleague is coming to work impaired. What are your ethical obligations and how would you address this?",
+						"type": "text",
+						"difficulty": "hard",
+						"estimatedMinutes": 6,
+						"tags": ["professionalism", "patient_safety", "colleague_wellness"],
+						"competency": "professionalism",
+						"expectedResponseElements": [
+							"patient_safety",
+							"colleague_support",
+							"reporting_obligations",
+							"confidentiality"
+						]
+					},
+					{
+						"id": "q-resource-allocation",
+						"text": "You have one ICU bed available and two critically ill patients who need it. How do you make this decision?",
+						"type": "text",
+						"difficulty": "hard",
+						"estimatedMinutes": 6,
+						"tags": ["justice", "resource_allocation", "triage"],
+						"competency": "ethical_reasoning",
+						"expectedResponseElements": [
+							"triage_criteria",
+							"fairness",
+							"team_consultation",
+							"documentation"
+						]
+					},
+					{
+						"id": "q-medical-error-disclosure",
+						"text": "A medical error occurred that harmed a patient. You were not directly involved but witnessed it. What is your responsibility?",
+						"type": "text",
+						"difficulty": "intermediate",
+						"estimatedMinutes": 5,
+						"tags": ["error_disclosure", "transparency", "patient_safety"],
+						"competency": "professionalism",
+						"expectedResponseElements": [
+							"disclosure",
+							"reporting",
+							"support",
+							"learning_culture"
+						]
+					}
+				]
+			},
+			{
+				"id": "eval-communication-001",
+				"title": "Patient Communication & Empathy",
+				"description": "Assess communication skills, empathy, and ability to handle difficult conversations.",
+				"difficulty": "intermediate",
+				"estimatedMinutes": 20,
+				"category": "communication",
+				"competencies": ["communication", "empathy", "professionalism"],
+				"interviewFormat": "mmi",
+				"scoringRubric": "holistic",
+				"criteria": [
+					{
+						"id": "empathy",
+						"name": "Empathy & Compassion",
+						"weight": 0.3,
+						"description": "Demonstrates genuine empathy, active listening, and emotional intelligence."
+					},
+					{
+						"id": "clarity",
+						"name": "Clarity",
+						"weight": 0.25,
+						"description": "Communicates clearly, avoids jargon, checks understanding."
+					},
+					{
+						"id": "rapport",
+						"name": "Rapport Building",
+						"weight": 0.25,
+						"description": "Establishes trust, shows respect, and creates safe environment."
+					},
+					{
+						"id": "difficult_conversations",
+						"name": "Handling Difficult Conversations",
+						"weight": 0.2,
+						"description": "Manages emotional situations, delivers bad news appropriately."
+					}
+				],
+				"questions": [
+					{
+						"id": "q-bad-news",
+						"text": "You need to tell a young mother that her child has been diagnosed with leukemia. How would you approach this conversation?",
+						"type": "text",
+						"difficulty": "hard",
+						"estimatedMinutes": 6,
+						"tags": [
+							"bad_news",
+							"pediatrics",
+							"family_communication",
+							"empathy"
+						],
+						"competency": "communication",
+						"expectedResponseElements": [
+							"spikes_protocol",
+							"empathy",
+							"information_delivery",
+							"support_resources"
+						]
+					},
+					{
+						"id": "q-angry-patient",
+						"text": "A patient is angry about wait times and is yelling at you in the hallway. How do you respond?",
+						"type": "text",
+						"difficulty": "intermediate",
+						"estimatedMinutes": 5,
+						"tags": ["conflict_resolution", "de-escalation", "professionalism"],
+						"competency": "communication",
+						"expectedResponseElements": [
+							"de-escalation",
+							"active_listening",
+							"validation",
+							"problem_solving"
+						]
+					},
+					{
+						"id": "q-language-barrier",
+						"text": "You need to obtain informed consent from a patient who doesn't speak English and no interpreter is immediately available. What do you do?",
+						"type": "text",
+						"difficulty": "intermediate",
+						"estimatedMinutes": 4,
+						"tags": [
+							"cultural_competence",
+							"informed_consent",
+							"communication_barriers"
+						],
+						"competency": "communication",
+						"expectedResponseElements": [
+							"interpreter_services",
+							"patient_rights",
+							"alternative_solutions",
+							"documentation"
+						]
+					},
+					{
+						"id": "q-health-literacy",
+						"text": "You're explaining diabetes management to a patient with limited health literacy. How do you ensure they understand?",
+						"type": "text",
+						"difficulty": "beginner",
+						"estimatedMinutes": 5,
+						"tags": ["health_literacy", "patient_education", "chronic_disease"],
+						"competency": "communication",
+						"expectedResponseElements": [
+							"teach_back",
+							"plain_language",
+							"visual_aids",
+							"follow_up"
+						]
+					}
+				]
+			},
+			{
+				"id": "eval-teamwork-001",
+				"title": "Teamwork & Interprofessional Collaboration",
+				"description": "Evaluate ability to work in teams, collaborate with other healthcare professionals, and handle team conflicts.",
+				"difficulty": "intermediate",
+				"estimatedMinutes": 15,
+				"category": "teamwork",
+				"competencies": ["teamwork", "collaboration", "leadership"],
+				"interviewFormat": "mmi",
+				"scoringRubric": "criteria_based",
+				"criteria": [
+					{
+						"id": "collaboration",
+						"name": "Collaboration",
+						"weight": 0.3,
+						"description": "Works effectively with diverse team members and values interprofessional input."
+					},
+					{
+						"id": "leadership",
+						"name": "Leadership",
+						"weight": 0.25,
+						"description": "Shows appropriate leadership, delegates effectively, and supports team members."
+					},
+					{
+						"id": "conflict_resolution",
+						"name": "Conflict Resolution",
+						"weight": 0.25,
+						"description": "Handles disagreements constructively and maintains professional relationships."
+					},
+					{
+						"id": "communication",
+						"name": "Team Communication",
+						"weight": 0.2,
+						"description": "Communicates clearly with team, provides updates, and seeks input."
+					}
+				],
+				"questions": [
+					{
+						"id": "q-nurse-disagreement",
+						"text": "A nurse questions your medication order. You believe you're correct. How do you handle this?",
+						"type": "text",
+						"difficulty": "intermediate",
+						"estimatedMinutes": 5,
+						"tags": ["interprofessional", "patient_safety", "hierarchy"],
+						"competency": "teamwork",
+						"expectedResponseElements": [
+							"respect",
+							"verification",
+							"safety_culture",
+							"collaboration"
+						]
+					},
+					{
+						"id": "q-team-conflict",
+						"text": "Two members of your team have a personal conflict that's affecting patient care. As a resident, what do you do?",
+						"type": "text",
+						"difficulty": "intermediate",
+						"estimatedMinutes": 5,
+						"tags": ["conflict_management", "leadership", "patient_care"],
+						"competency": "leadership",
+						"expectedResponseElements": [
+							"patient_priority",
+							"mediation",
+							"escalation",
+							"professionalism"
+						]
+					},
+					{
+						"id": "q-handoff-error",
+						"text": "You receive a patient handoff with incomplete information. The previous team has left. What's your approach?",
+						"type": "text",
+						"difficulty": "beginner",
+						"estimatedMinutes": 5,
+						"tags": ["handoffs", "patient_safety", "communication"],
+						"competency": "teamwork",
+						"expectedResponseElements": [
+							"information_gathering",
+							"documentation",
+							"patient_assessment",
+							"system_improvement"
+						]
 					}
 				]
 			}
 		],
 		"categories": [
 			{
-				"id": "clarity",
-				"name": "Clarity",
-				"description": "How clearly ideas are communicated."
+				"id": "clinical_knowledge",
+				"name": "Clinical Knowledge",
+				"description": "Medical knowledge and understanding of clinical concepts."
 			},
 			{
-				"id": "content",
-				"name": "Content",
-				"description": "Relevance and accuracy of the response."
+				"id": "reasoning_process",
+				"name": "Clinical Reasoning",
+				"description": "Logical, systematic approach to diagnosis and management."
 			},
 			{
-				"id": "structure",
-				"name": "Structure",
-				"description": "Organization and logical flow."
+				"id": "communication",
+				"name": "Communication",
+				"description": "Clear, empathetic communication with patients and team."
 			},
 			{
-				"id": "delivery",
-				"name": "Delivery",
-				"description": "Confidence and presentation style."
+				"id": "patient_safety",
+				"name": "Patient Safety",
+				"description": "Prioritizes patient safety and appropriate risk management."
+			},
+			{
+				"id": "ethical_framework",
+				"name": "Ethical Reasoning",
+				"description": "Application of ethical principles to clinical scenarios."
+			},
+			{
+				"id": "perspective_taking",
+				"name": "Perspective Taking",
+				"description": "Considers multiple viewpoints and stakeholder interests."
+			},
+			{
+				"id": "professionalism",
+				"name": "Professionalism",
+				"description": "Professional values, integrity, and appropriate boundaries."
+			},
+			{
+				"id": "empathy",
+				"name": "Empathy & Compassion",
+				"description": "Genuine empathy and emotional intelligence."
+			},
+			{
+				"id": "collaboration",
+				"name": "Collaboration",
+				"description": "Effective teamwork and interprofessional collaboration."
+			},
+			{
+				"id": "leadership",
+				"name": "Leadership",
+				"description": "Appropriate leadership and team support."
 			}
-		]
+		],
+		"competencyFramework": {
+			"name": "ACGME Core Competencies",
+			"version": "2.0",
+			"competencies": [
+				{
+					"id": "medical_knowledge",
+					"name": "Medical Knowledge",
+					"description": "Knowledge about established and evolving biomedical, clinical, and cognate sciences."
+				},
+				{
+					"id": "patient_care",
+					"name": "Patient Care",
+					"description": "Compassionate, appropriate, and effective patient care."
+				},
+				{
+					"id": "communication",
+					"name": "Interpersonal and Communication Skills",
+					"description": "Effective information exchange and collaboration with patients, families, and professionals."
+				},
+				{
+					"id": "professionalism",
+					"name": "Professionalism",
+					"description": "Commitment to professional responsibilities and adherence to ethical principles."
+				},
+				{
+					"id": "practice_based_learning",
+					"name": "Practice-Based Learning and Improvement",
+					"description": "Investigation and evaluation of patient care, appraisal of evidence, and improvement."
+				},
+				{
+					"id": "systems_based_practice",
+					"name": "Systems-Based Practice",
+					"description": "Awareness of healthcare system context and ability to optimize care delivery."
+				}
+			]
+		}
 	},
 	"metadata": {
-		"author": "InterviewApp",
-		"tags": ["starter", "demo", "matchready"],
+		"author": "InterviewApp - Medical Education Team",
+		"targetAudience": "medical_students",
+		"interviewType": "residency_fellowship",
+		"specialty": "general",
+		"tags": [
+			"medical",
+			"residency",
+			"mmi",
+			"acgme",
+			"clinical_reasoning",
+			"ethics",
+			"communication"
+		],
+		"version": "1.0.0",
+		"lastUpdated": "2025-12-05",
+		"accreditation": "ACGME_aligned",
 		"compatibility": {
 			"minVersion": "0.1.0",
 			"maxVersion": "*",
-			"features": ["content-pack-loader", "analytics-event:content_pack_loaded"]
+			"features": [
+				"content-pack-loader",
+				"analytics-event:content_pack_loaded",
+				"difficulty-levels",
+				"time-estimates",
+				"competency-mapping",
+				"mmi-format",
+				"medical-scenarios"
+			]
 		}
 	}
 }

@@ -1,4 +1,4 @@
-import type { Database, Json } from "@/types/database";
+import type { Database } from "@/types/database";
 import type { EvaluationResult } from "../../domain/evaluation/ai-evaluation-schema";
 import { getSupabaseServiceRoleClient } from "../config/clients";
 
@@ -9,25 +9,15 @@ type EvaluationResultsRow =
 function mapRowToEvaluationResult(
 	data: EvaluationResultsRow,
 ): EvaluationResult {
-	const fallbackText = (value: string | null, fallback: string) =>
-		value ?? fallback;
-
 	return {
-		requestId: data.request_id ?? data.id,
-		jobId: data.job_id ?? data.id,
-		score: Number(data.score ?? 0),
-		feedback: fallbackText(data.feedback, "Feedback unavailable"),
-		what_changed: fallbackText(data.what_changed, "No changes recorded"),
-		practice_rule: fallbackText(
-			data.practice_rule,
-			"No practice guidance available",
-		),
-		durationMs:
-			data.duration_ms ??
-			(data.duration_seconds != null ? data.duration_seconds * 1000 : 0),
+		requestId: data.request_id,
+		jobId: data.job_id,
+		score: data.score,
+		feedback: data.feedback,
+		what_changed: data.what_changed,
+		practice_rule: data.practice_rule,
+		durationMs: data.duration_ms,
 		tokensUsed: data.tokens_used ?? undefined,
-		transcription: data.transcription ?? data.response_text ?? undefined,
-		metrics: (data.metrics as Record<string, unknown> | null) ?? undefined,
 		createdAt: data.created_at ?? undefined,
 	};
 }
@@ -86,27 +76,39 @@ export async function getByJobId(
 	return mapRowToEvaluationResult(data);
 }
 
-export async function upsertResult(result: EvaluationResult): Promise<void> {
+export async function upsertResult(
+	result: EvaluationResult,
+	userId: string | null = null,
+	metadata?: Record<string, unknown>,
+): Promise<void> {
 	const supabase = getSupabaseServiceRoleClient();
 	if (!supabase) {
 		throw new Error("Supabase service role client not initialized");
 	}
 
-	// Map domain model to DB columns
-	const metricsValue =
-		typeof result.metrics === "undefined" ? null : (result.metrics as Json);
+	// Extract question_id and content_pack_id from metadata
+	const questionId =
+		typeof metadata?.questionId === "string" ? metadata.questionId : "unknown";
+	const contentPackId =
+		typeof metadata?.contentPackId === "string" ? metadata.contentPackId : null;
+	const responseType =
+		typeof metadata?.responseType === "string" ? metadata.responseType : null;
+
 	const dbRecord: Database["public"]["Tables"]["evaluation_results"]["Insert"] =
 		{
 			request_id: result.requestId,
 			job_id: result.jobId,
+			user_id: userId ?? null,
+			question_id: questionId,
+			content_pack_id: contentPackId,
 			score: result.score,
 			feedback: result.feedback,
 			what_changed: result.what_changed,
 			practice_rule: result.practice_rule,
 			duration_ms: result.durationMs,
 			tokens_used: result.tokensUsed ?? null,
+			response_type: responseType,
 			transcription: result.transcription ?? null,
-			metrics: metricsValue,
 			// created_at is handled by default now() on insert, but we can preserve it if provided
 			...(result.createdAt ? { created_at: result.createdAt } : {}),
 		};

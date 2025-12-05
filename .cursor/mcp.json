@@ -41,6 +41,10 @@
 				"--context",
 				"ide-assistant"
 			]
+		},
+		"accessibility": {
+			"command": "npx",
+			"args": ["-y", "a11y-color-contrast-mcp"]
 		}
 	}
 }

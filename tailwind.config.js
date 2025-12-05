@@ -6,7 +6,7 @@ export default {
 		"./components/**/*.{js,ts,jsx,tsx,mdx}",
 		"./src/**/*.{js,ts,jsx,tsx,mdx}",
 	],
-	plugins: [],
+	plugins: [require("@tailwindcss/typography")],
 	theme: {
 		extend: {
 			borderRadius: {

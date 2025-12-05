@@ -81,12 +81,38 @@ export class ContentPackService implements IContentPackService {
 				);
 			}
 
-			// Get current active pack
-			const previousActivePack = await this.getActiveContentPack();
+			// Get current active pack for analytics (before deactivation)
+			let previousActivePack: ContentPack | null = null;
+			try {
+				previousActivePack = await this.getActiveContentPack();
+			} catch (error) {
+				console.warn("Failed to get previous active pack:", error);
+			}
 
-			// Deactivate current active pack if exists
-			if (previousActivePack) {
-				await this.deactivateContentPack(userId);
+			// Deactivate ALL currently activated packs to ensure only one is active
+			// This handles the case where multiple packs might be activated due to a bug
+			try {
+				// Use the repository method to deactivate all activated packs
+				if (
+					typeof (this.repository as any).deactivateAllActivated === "function"
+				) {
+					const deactivatedCount = await (
+						this.repository as any
+					).deactivateAllActivated();
+					if (deactivatedCount > 0) {
+						console.log(
+							`Deactivated ${deactivatedCount} content pack(s) before activating new one`,
+						);
+					}
+				} else {
+					// Fallback to old method if new method not available
+					if (previousActivePack) {
+						await this.deactivateContentPack(userId);
+					}
+				}
+			} catch (error) {
+				console.warn("Failed to deactivate previous content packs:", error);
+				// Continue with activation even if deactivation fails
 			}
 
 			// Update content pack status to activated
@@ -285,8 +311,46 @@ export class ContentPackService implements IContentPackService {
 				};
 			}
 
+			// Add detailed logging to diagnose validation issues
+			console.log(
+				"ContentPackService.validateContentPack: Content pack structure:",
+				{
+					id: contentPack.id,
+					name: contentPack.name,
+					status: contentPack.status,
+					hasContent: !!contentPack.content,
+					hasMetadata: !!contentPack.metadata,
+					contentType: typeof contentPack.content,
+					metadataType: typeof contentPack.metadata,
+					contentKeys: contentPack.content
+						? Object.keys(contentPack.content)
+						: [],
+					metadataKeys: contentPack.metadata
+						? Object.keys(contentPack.metadata)
+						: [],
+				},
+			);
+
 			// Use the validator to validate the content pack
-			const validationResult = await this.validator.validate(contentPack);
+			// The validator expects the full content pack structure (name, version, content, metadata)
+			const validationData = {
+				version: contentPack.version,
+				name: contentPack.name,
+				description: contentPack.description,
+				content: contentPack.content,
+				metadata: contentPack.metadata,
+			};
+			const validationResult = await this.validator.validate(validationData);
+
+			console.log(
+				"ContentPackService.validateContentPack: Validation result:",
+				{
+					isValid: validationResult.isValid,
+					errorCount: validationResult.errors.length,
+					warningCount: validationResult.warnings.length,
+					errors: validationResult.errors.map((e) => e.message),
+				},
+			);
 
 			return {
 				isValid: validationResult.isValid,
@@ -297,6 +361,10 @@ export class ContentPackService implements IContentPackService {
 				validationTimeMs: Date.now() - startTime,
 			};
 		} catch (error) {
+			console.error(
+				"ContentPackService.validateContentPack: Validation error:",
+				error,
+			);
 			return {
 				isValid: false,
 				errors: [

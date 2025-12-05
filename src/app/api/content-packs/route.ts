@@ -8,6 +8,10 @@
 import { createHash } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import {
+	isExcelMimeType,
+	parseExcelContentPack,
+} from "@/features/booking/application/content-pack/excel-utils";
+import {
 	type ContentPackData,
 	type ContentPackMetadata,
 	createContentPack,
@@ -134,16 +138,120 @@ export async function GET(request: NextRequest) {
 				})),
 			});
 
-			return NextResponse.json({
-				data: contentPacks,
+			// Serialize Date objects to ISO strings and ensure all fields are serializable
+			// Only include fields needed by the frontend to avoid serialization issues
+			const serializedPacks = contentPacks
+				.map((pack) => {
+					try {
+						return {
+							id: pack.id,
+							version: pack.version,
+							name: pack.name,
+							description: pack.description,
+							status: pack.status,
+							createdAt:
+								pack.createdAt instanceof Date
+									? pack.createdAt.toISOString()
+									: typeof pack.createdAt === "string"
+										? pack.createdAt
+										: new Date().toISOString(),
+							updatedAt:
+								pack.updatedAt instanceof Date
+									? pack.updatedAt.toISOString()
+									: typeof pack.updatedAt === "string"
+										? pack.updatedAt
+										: new Date().toISOString(),
+							activatedAt:
+								pack.activatedAt instanceof Date
+									? pack.activatedAt.toISOString()
+									: pack.activatedAt
+										? typeof pack.activatedAt === "string"
+											? pack.activatedAt
+											: (pack.activatedAt as Date).toISOString()
+										: undefined,
+							activatedBy: pack.activatedBy,
+							uploadedBy: pack.uploadedBy,
+							fileSize: pack.fileSize,
+							checksum: pack.checksum,
+						};
+					} catch (error) {
+						console.error(
+							"ContentPacks API: Error serializing pack:",
+							pack.id,
+							error,
+						);
+						return null;
+					}
+				})
+				.filter((pack) => pack !== null);
+
+			console.log(
+				"ContentPacks API: Serialized packs count:",
+				serializedPacks.length,
+			);
+			if (serializedPacks.length > 0) {
+				console.log("ContentPacks API: First serialized pack:", {
+					id: serializedPacks[0].id,
+					name: serializedPacks[0].name,
+					status: serializedPacks[0].status,
+					createdAt: serializedPacks[0].createdAt,
+					createdAtType: typeof serializedPacks[0].createdAt,
+				});
+			}
+
+			const responseData = {
+				data: serializedPacks,
 				pagination: {
 					limit,
 					offset,
 					total: totalCount,
 					hasMore: offset + limit < totalCount,
 				},
-			});
-		} catch (_error) {
+			};
+
+			// Test serialization before returning
+			try {
+				const testString = JSON.stringify(responseData);
+				console.log(
+					"ContentPacks API: JSON serialization test passed, length:",
+					testString.length,
+				);
+			} catch (error) {
+				console.error(
+					"ContentPacks API: JSON serialization test failed:",
+					error,
+				);
+				// Return a simplified response if serialization fails
+				return NextResponse.json({
+					data: serializedPacks.map((p) => ({
+						id: p.id,
+						name: p.name,
+						version: p.version,
+						status: p.status,
+						createdAt: p.createdAt,
+						updatedAt: p.updatedAt,
+						fileSize: p.fileSize,
+					})),
+					pagination: {
+						limit,
+						offset,
+						total: totalCount,
+						hasMore: offset + limit < totalCount,
+					},
+				});
+			}
+
+			console.log(
+				"ContentPacks API: Returning response with",
+				serializedPacks.length,
+				"packs",
+			);
+			return NextResponse.json(responseData);
+		} catch (error) {
+			console.error(
+				"ContentPacks API: Error in Supabase repository, falling back to filesystem:",
+				error,
+			);
 			// Fallback to filesystem repository
 			const fsRepository = createFilesystemContentPackRepository();
 			const contentPacks = await fsRepository.findAll({
@@ -153,6 +261,12 @@ export async function GET(request: NextRequest) {
 				sortBy: sortBy as "createdAt" | "updatedAt" | "name" | "version",
 				sortOrder: sortOrder as "asc" | "desc",
 			});
+
+			console.log(
+				"ContentPacks API: Filesystem repository returned:",
+				contentPacks.length,
+				"packs",
+			);
 
 			return NextResponse.json({
 				data: contentPacks,
@@ -269,33 +383,58 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Validate file type
-		if (file.type !== "application/json") {
+		const fileName = file.name || "";
+		const isJsonUpload =
+			file.type === "application/json" ||
+			fileName.toLowerCase().endsWith(".json");
+		const isExcelUpload = isExcelMimeType(file.type, fileName);
+
+		if (!isJsonUpload && !isExcelUpload) {
 			return NextResponse.json(
 				{
 					error: "BAD_REQUEST",
-					message: "File must be a JSON file",
+					message: "File must be a JSON or Excel (.xlsx) file",
 					timestamp: new Date().toISOString(),
 				},
 				{ status: 400 },
 			);
 		}
 
-		// Read and parse file content
-		const fileContent = await file.text();
+		let fileContent = "";
 		let contentData: unknown;
 
-		try {
-			contentData = JSON.parse(fileContent);
-		} catch (_error) {
-			return NextResponse.json(
-				{
-					error: "BAD_REQUEST",
-					message: "Invalid JSON format",
-					timestamp: new Date().toISOString(),
-				},
-				{ status: 400 },
-			);
+		if (isExcelUpload) {
+			try {
+				const excelBuffer = await file.arrayBuffer();
+				contentData = parseExcelContentPack(excelBuffer);
+				fileContent = JSON.stringify(contentData);
+			} catch (error) {
+				return NextResponse.json(
+					{
+						error: "BAD_REQUEST",
+						message:
+							error instanceof Error
+								? error.message
+								: "Invalid Excel template format",
+						timestamp: new Date().toISOString(),
+					},
+					{ status: 400 },
+				);
+			}
+		} else {
+			fileContent = await file.text();
+			try {
+				contentData = JSON.parse(fileContent);
+			} catch (_error) {
+				return NextResponse.json(
+					{
+						error: "BAD_REQUEST",
+						message: "Invalid JSON format",
+						timestamp: new Date().toISOString(),
+					},
+					{ status: 400 },
+				);
+			}
 		}
 
 		// Validate content pack structure
@@ -317,8 +456,14 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const parsedContent = contentData as ContentPackData;
-		const parsedVersion = (parsedContent as { version?: unknown }).version;
+		// Extract fields from the validated content data
+		const parsedData = contentData as {
+			version?: unknown;
+			content?: unknown;
+			metadata?: unknown;
+		};
+
+		const parsedVersion = parsedData.version;
 		if (
 			typeof parsedVersion !== "string" ||
 			parsedVersion.trim().length === 0
@@ -333,7 +478,22 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const rawMetadata = (parsedContent as { metadata?: unknown }).metadata;
+		// Extract the actual content data (evaluations, categories, etc.)
+		const rawContent = parsedData.content;
+		if (!rawContent || typeof rawContent !== "object") {
+			return NextResponse.json(
+				{
+					error: "VALIDATION_FAILED",
+					message: "Content pack content is missing or invalid",
+					timestamp: new Date().toISOString(),
+				},
+				{ status: 400 },
+			);
+		}
+		const parsedContent = rawContent as ContentPackData;
+
+		// Extract metadata
+		const rawMetadata = parsedData.metadata;
 		const parsedMetadata: ContentPackMetadata =
 			rawMetadata && typeof rawMetadata === "object"
 				? (rawMetadata as ContentPackMetadata)
@@ -346,7 +506,7 @@ export async function POST(request: NextRequest) {
 			name: name.trim(),
 			description: description?.trim() || undefined,
 			schemaVersion: "1.0.0", // Default to latest schema version
-			content: parsedContent,
+			content: parsedContent, // Now correctly contains { evaluations, categories }
 			metadata: parsedMetadata,
 			uploadedBy: user.id,
 			fileSize: file.size,

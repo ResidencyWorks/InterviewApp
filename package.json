@@ -44,18 +44,22 @@
 		"react": "^19.2.1",
 		"react-dom": "^19.2.1",
 		"react-dropzone": "^14.3.8",
+		"react-markdown": "^10.1.0",
+		"remark-gfm": "^4.0.1",
 		"require-in-the-middle": "^8.0.1",
 		"stripe": "^20.0.0",
 		"supabase": "2.65.6",
 		"tailwind-merge": "^3.4.0",
 		"tailwindcss-animate": "^1.0.7",
 		"typescript-parser": "^2.6.1",
-		"uuid": "^13.0.0"
+		"uuid": "^13.0.0",
+		"xlsx": "^0.18.5"
 	},
 	"description": "AI-powered interview preparation application",
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.8",
 		"@playwright/test": "^1.57.0",
+		"@tailwindcss/typography": "^0.5.19",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.0",
 		"@testing-library/user-event": "^14.6.1",

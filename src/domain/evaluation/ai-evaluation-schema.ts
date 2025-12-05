@@ -5,6 +5,7 @@ export const EvaluationRequestSchema = z
 		requestId: z.uuid(),
 		text: z.string().optional(),
 		audio_url: z.url().startsWith("https://").optional(),
+		userId: z.uuid().optional(),
 		metadata: z.record(z.string(), z.unknown()).optional(),
 	})
 	.refine((data) => data.text || data.audio_url, {

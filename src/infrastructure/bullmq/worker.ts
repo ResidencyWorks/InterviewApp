@@ -81,7 +81,7 @@ export const evaluationWorker = new Worker<EvaluationRequest>(
 	EVALUATION_QUEUE_NAME,
 	async (job: Job<EvaluationRequest>) => {
 		const startTime = Date.now();
-		const { requestId, text, audio_url } = job.data;
+		const { requestId, text, audio_url, userId, metadata } = job.data;
 
 		console.log(`[Worker] Processing job ${job.id} for request ${requestId}`);
 
@@ -152,13 +152,14 @@ export const evaluationWorker = new Worker<EvaluationRequest>(
 				practice_rule: evaluation.practice_rule,
 				durationMs,
 				tokensUsed: evaluation.tokensUsed,
+				transcription: audio_url ? transcript : undefined,
 			};
 
 			// Validate result against schema
 			EvaluationResultSchema.parse(result);
 
 			// Persist to database
-			await upsertResult(result);
+			await upsertResult(result, userId ?? null, metadata);
 			console.log(`[Worker] Result persisted for request ${requestId}`);
 
 			// Emit analytics events

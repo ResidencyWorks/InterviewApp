@@ -20,9 +20,11 @@ import type { Tables } from "@/types/database";
  */
 export async function POST(
 	_request: NextRequest,
-	{ params }: { params: { id: string } },
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
+		const { id: contentPackId } = await params;
+
 		const supabase = await createClient();
 		const {
 			data: { user },
@@ -72,8 +74,6 @@ export async function POST(
 			);
 		}
 
-		const contentPackId = params.id;
-
 		if (!contentPackId) {
 			return NextResponse.json(
 				{
@@ -122,9 +122,18 @@ export async function POST(
 		}
 
 		// Perform validation
+		// The validator expects the full content pack structure (name, version, content, metadata)
+		// not just the content field
 		const validator = createContentPackValidator();
+		const validationData = {
+			version: contentPack.version,
+			name: contentPack.name,
+			description: contentPack.description,
+			content: contentPack.content,
+			metadata: contentPack.metadata,
+		};
 		const validationResult = await validator.validate(
-			contentPack.content,
+			validationData,
 			contentPack.schemaVersion,
 		);
 

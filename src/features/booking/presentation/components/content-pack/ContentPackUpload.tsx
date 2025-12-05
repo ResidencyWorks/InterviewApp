@@ -87,7 +87,9 @@ export function ContentPackUpload({
 				// Create form data
 				const formData = new FormData();
 				formData.append("file", file);
-				formData.append("name", file.name.replace(".json", ""));
+				// Remove file extension for name (supports both .json and .xlsx/.xls)
+				const nameWithoutExt = file.name.replace(/\.(json|xlsx|xls)$/i, "");
+				formData.append("name", nameWithoutExt);
 				formData.append("description", `Uploaded content pack: ${file.name}`);
 
 				console.log("ContentPackUpload: Sending request to /api/content-packs");
@@ -176,8 +178,28 @@ export function ContentPackUpload({
 				onUploadComplete?.(result.data.id);
 			} catch (error) {
 				console.error("ContentPackUpload: Upload error:", error);
-				const errorMessage =
-					error instanceof Error ? error.message : "Upload failed";
+				let errorMessage = "Upload failed";
+
+				if (error instanceof Error) {
+					errorMessage = error.message;
+				} else if (typeof error === "string") {
+					errorMessage = error;
+				}
+
+				// Provide more user-friendly error messages
+				if (
+					errorMessage.includes("Failed to fetch") ||
+					errorMessage.includes("NetworkError")
+				) {
+					errorMessage =
+						"Network error. Please check your connection and try again.";
+				} else if (
+					errorMessage.includes("Invalid Excel") ||
+					errorMessage.includes("Missing required")
+				) {
+					errorMessage = `Invalid file format: ${errorMessage}`;
+				}
+
 				setUploadStatus({
 					status: "failed",
 					progress: 0,
@@ -203,6 +225,10 @@ export function ContentPackUpload({
 		onDrop,
 		accept: {
 			"application/json": [".json"],
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+				".xlsx",
+			],
+			"application/vnd.ms-excel": [".xls"],
 		},
 		maxFiles: 1,
 		maxSize: maxFileSize,
@@ -220,7 +246,8 @@ export function ContentPackUpload({
 					errorMessage = `File is too large. Maximum size is ${Math.round(maxFileSize / 1024 / 1024)}MB`;
 					break;
 				case "file-invalid-type":
-					errorMessage = "File must be a JSON file";
+					errorMessage =
+						"File must be a JSON (.json) or Excel (.xlsx, .xls) file";
 					break;
 				case "too-many-files":
 					errorMessage = "Only one file can be uploaded at a time";
@@ -262,13 +289,19 @@ export function ContentPackUpload({
 		switch (uploadStatus.status) {
 			case "uploading":
 			case "validating":
-				return <Upload className="h-8 w-8 animate-pulse text-blue-500" />;
+				return (
+					<Upload className="h-8 w-8 animate-pulse text-blue-600 dark:text-blue-400" />
+				);
 			case "completed":
-				return <CheckCircle className="h-8 w-8 text-green-500" />;
+				return (
+					<CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+				);
 			case "failed":
-				return <AlertCircle className="h-8 w-8 text-red-500" />;
+				return (
+					<AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+				);
 			default:
-				return <FileText className="h-8 w-8 text-gray-400" />;
+				return <FileText className="h-8 w-8 text-muted-foreground" />;
 		}
 	};
 
@@ -300,7 +333,8 @@ export function ContentPackUpload({
 						Upload Content Pack
 					</CardTitle>
 					<CardDescription>
-						Upload a JSON file containing your content pack configuration
+						Upload a JSON file containing your content pack configuration or an
+						Excel file using the template below.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -310,8 +344,8 @@ export function ContentPackUpload({
               border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
               ${
 								isDragActive || dragActive
-									? "border-blue-500 bg-blue-50"
-									: "border-gray-300 hover:border-gray-400"
+									? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/30"
+									: "border-border hover:border-muted-foreground/50"
 							}
               ${
 								uploadStatus.status === "uploading" ||
@@ -325,21 +359,21 @@ export function ContentPackUpload({
 						<input
 							ref={fileInputRef}
 							type="file"
-							accept=".json,application/json"
+							accept=".json,.xlsx,.xls,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
 							onChange={handleFileInputChange}
 							className="hidden"
 						/>
 
 						<div className="space-y-4">
-							<div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+							<div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
 								{getStatusIcon()}
 							</div>
 
 							<div>
-								<p className="text-lg font-medium text-gray-900">
+								<p className="text-lg font-medium text-foreground">
 									{getStatusMessage()}
 								</p>
-								<p className="text-sm text-gray-500 mt-1">
+								<p className="text-sm text-muted-foreground mt-1">
 									Maximum file size: {Math.round(maxFileSize / 1024 / 1024)}MB
 								</p>
 							</div>
@@ -352,9 +386,33 @@ export function ContentPackUpload({
 						</div>
 					</div>
 
+					<div className="mt-4 space-y-2 text-sm text-muted-foreground">
+						<p>
+							Supported formats: JSON (.json) or Excel (.xlsx). Download a blank
+							template to fill in or grab a fully populated sample pack to see
+							the expected structure.
+						</p>
+						<div className="flex flex-wrap gap-2">
+							<Button variant="secondary" size="sm" asChild>
+								<a href="/api/content-packs/template">
+									Download Blank Template
+								</a>
+							</Button>
+							<Button variant="outline" size="sm" asChild>
+								<a href="/api/content-packs/sample">Download Sample Pack</a>
+							</Button>
+							<Button variant="outline" size="sm" asChild>
+								<a href="/admin/content-packs?tab=list">
+									View All Content Packs
+								</a>
+							</Button>
+						</div>
+					</div>
+
 					{/* Upload Progress */}
 					{(uploadStatus.status === "uploading" ||
-						uploadStatus.status === "validating") && (
+						uploadStatus.status === "validating" ||
+						uploadStatus.status === "failed") && (
 						<div className="mt-4">
 							<UploadProgress
 								status={uploadStatus.status}

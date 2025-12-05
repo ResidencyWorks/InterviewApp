@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	_request: Request,
-	{ params }: { params: { analysisId: string } },
+	{ params }: { params: Promise<{ analysisId: string }> },
 ) {
+	const { analysisId } = await params;
 	// Placeholder: In a full implementation we'd fetch from storage/cache
-	const { analysisId } = params;
 	return NextResponse.json({
 		success: true,
 		data: {
