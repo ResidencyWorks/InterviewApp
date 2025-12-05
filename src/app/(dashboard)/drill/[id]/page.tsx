@@ -345,12 +345,35 @@ export default function DrillInterfacePage() {
 		}
 	}, [navigationData, evaluationData, router]);
 
-	// Handle try again (reset current question)
+	// Handle try again (navigate to first question of drill)
 	const handleTryAgain = React.useCallback(() => {
-		setEvaluationResult(null);
-		setIsSubmitting(false);
-		setCurrentSubmission(null);
-	}, []);
+		if (evaluationData?.id) {
+			// Find the first question in the drill
+			// We need to fetch the first question ID from the evaluation
+			fetch(`/api/content-packs/active/evaluations/${evaluationData.id}`)
+				.then((res) => res.json())
+				.then((data) => {
+					const firstQuestionId = data.data?.questions?.[0]?.id;
+					if (firstQuestionId) {
+						router.push(
+							`/drill/${firstQuestionId}?evaluation=${evaluationData.id}`,
+						);
+					} else {
+						// Fallback: just reset current question
+						setEvaluationResult(null);
+						setIsSubmitting(false);
+						setCurrentSubmission(null);
+					}
+				})
+				.catch((err) => {
+					console.error("Failed to fetch first question:", err);
+					// Fallback: just reset current question
+					setEvaluationResult(null);
+					setIsSubmitting(false);
+					setCurrentSubmission(null);
+				});
+		}
+	}, [evaluationData, router]);
 
 	// Loading state
 	if (loading) {
@@ -1167,7 +1190,7 @@ export default function DrillInterfacePage() {
 											onClick={handleTryAgain}
 											className="w-full"
 										>
-											Try This Question Again
+											Try This Drill Again
 										</Button>
 										<Button
 											onClick={() => router.push("/drill")}

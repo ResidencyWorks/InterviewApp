@@ -59,6 +59,28 @@ vi.mock("@/infrastructure/config/clients", () => ({
 	createSupabaseBrowserClient: vi.fn(),
 }));
 
+// Mock Supabase server client (used by evaluate route)
+vi.mock("@/infrastructure/supabase/server", () => ({
+	createClient: vi.fn(() => ({
+		auth: {
+			getUser: vi.fn(() => ({
+				data: { user: { id: "test-user-id", email: "test@example.com" } },
+				error: null,
+			})),
+		},
+		from: vi.fn(() => ({
+			select: vi.fn(() => ({
+				eq: vi.fn(() => ({
+					single: vi.fn(() => ({
+						data: null,
+						error: null,
+					})),
+				})),
+			})),
+		})),
+	})),
+}));
+
 // Mock evaluation store
 vi.mock("@/infrastructure/supabase/evaluation_store", () => ({
 	getByRequestId: vi.fn(),

@@ -66,6 +66,43 @@ vi.mock("../../src/infrastructure/config/clients", () => ({
 	createSupabaseBrowserClient: vi.fn(),
 }));
 
+// Mock Supabase server client (used by evaluate route)
+// Store a reference to control auth behavior per test
+const mockAuthBehavior = {
+	shouldSucceed: true,
+};
+(globalThis as any).__mockAuthBehavior = mockAuthBehavior;
+
+vi.mock("../../src/infrastructure/supabase/server", () => ({
+	createClient: vi.fn(() => ({
+		auth: {
+			getUser: vi.fn(() => {
+				const behavior = (globalThis as any).__mockAuthBehavior;
+				if (behavior && !behavior.shouldSucceed) {
+					return {
+						data: { user: null },
+						error: { message: "Invalid token" },
+					};
+				}
+				return {
+					data: { user: { id: "test-user-id", email: "test@example.com" } },
+					error: null,
+				};
+			}),
+		},
+		from: vi.fn(() => ({
+			select: vi.fn(() => ({
+				eq: vi.fn(() => ({
+					single: vi.fn(() => ({
+						data: null,
+						error: null,
+					})),
+				})),
+			})),
+		})),
+	})),
+}));
+
 // Mock evaluation store
 vi.mock("../../src/infrastructure/supabase/evaluation_store", () => ({
 	getByRequestId: vi.fn(),
@@ -89,6 +126,11 @@ vi.mock("../../src/infrastructure/bullmq/queue", () => ({
 describe("POST /api/evaluate", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Reset auth behavior to succeed by default
+		const behavior = (globalThis as any).__mockAuthBehavior;
+		if (behavior) {
+			behavior.shouldSucceed = true;
+		}
 	});
 
 	const mockRequest = (opts: {
@@ -104,6 +146,12 @@ describe("POST /api/evaluate", () => {
 
 	describe("Authentication", () => {
 		it("returns 401 when no authorization header", async () => {
+			// Make auth fail for this test
+			const behavior = (globalThis as any).__mockAuthBehavior;
+			if (behavior) {
+				behavior.shouldSucceed = false;
+			}
+
 			const req = mockRequest({
 				body: {
 					requestId: randomUUID(),
@@ -120,6 +168,12 @@ describe("POST /api/evaluate", () => {
 		});
 
 		it("returns 401 when authorization header is missing Bearer prefix", async () => {
+			// Make auth fail for this test
+			const behavior = (globalThis as any).__mockAuthBehavior;
+			if (behavior) {
+				behavior.shouldSucceed = false;
+			}
+
 			const req = mockRequest({
 				headers: { authorization: "InvalidToken" },
 				body: {

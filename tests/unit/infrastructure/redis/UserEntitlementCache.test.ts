@@ -44,6 +44,7 @@ vi.mock("@/infrastructure/db/database-service", async () => {
 	return {
 		...actual,
 		getServerDatabaseService: vi.fn(async () => ({
+			getClient: () => mockSupabaseInstance,
 			supabase: mockSupabaseInstance,
 		})),
 	};
