@@ -294,31 +294,42 @@ export default function DrillInterfacePage() {
 		return () => clearTimeout(fallbackTimer);
 	}, [isSubmitting, streamingJobId, evaluationResult]);
 
-	// Update evaluation result when streaming completes
+	// Update evaluation result when streaming completes - with delay to show tips
 	React.useEffect(() => {
 		if (streamingFeedback.result && !evaluationResult) {
-			// Convert streaming result to EvaluationResult format
-			const result: EvaluationResult = {
-				id: crypto.randomUUID(),
-				user_id: user?.id ?? "anonymous",
-				content_pack_id: contentPackData?.id ?? "default",
-				response_type: "text",
-				score: streamingFeedback.result.score,
-				feedback: streamingFeedback.result.feedback,
-				status: "COMPLETED",
-				created_at: new Date().toISOString(),
-				updated_at: new Date().toISOString(),
-				categories: {
-					clarity: streamingFeedback.result.score,
-					content: streamingFeedback.result.score,
-					delivery: streamingFeedback.result.score,
-					structure: streamingFeedback.result.score,
-				},
-			};
-			setEvaluationResult(result);
-			setIsSubmitting(false);
-			setStreamingJobId(null);
-			setStreamingRequestId(null);
+			const delay = 8000; // 8 second delay to allow tips to rotate and be visible
+			console.log(
+				`⏳ Delaying evaluation result by ${delay}ms to show streaming tips.`,
+			);
+
+			const streamResult = streamingFeedback.result; // Capture result to avoid null checks in timeout
+
+			const timer = setTimeout(() => {
+				// Convert streaming result to EvaluationResult format
+				const result: EvaluationResult = {
+					id: crypto.randomUUID(),
+					user_id: user?.id ?? "anonymous",
+					content_pack_id: contentPackData?.id ?? "default",
+					response_type: "text",
+					score: streamResult.score,
+					feedback: streamResult.feedback,
+					status: "COMPLETED",
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+					categories: {
+						clarity: streamResult.score,
+						content: streamResult.score,
+						delivery: streamResult.score,
+						structure: streamResult.score,
+					},
+				};
+				setEvaluationResult(result);
+				setIsSubmitting(false);
+				setStreamingJobId(null);
+				setStreamingRequestId(null);
+			}, delay);
+
+			return () => clearTimeout(timer);
 		}
 	}, [streamingFeedback.result, evaluationResult, user, contentPackData]);
 
@@ -486,6 +497,13 @@ export default function DrillInterfacePage() {
 
 			const responseData = await response.json();
 
+			// Enable streaming feedback immediately if we have IDs
+			if (responseData.jobId || responseData.requestId) {
+				console.log("📋 Evaluation queued:", responseData);
+				setStreamingJobId(responseData.jobId || null);
+				setStreamingRequestId(responseData.requestId || null);
+			}
+
 			// Save submission immediately (even before evaluation completes)
 			let submissionId: string | null = null;
 			try {
@@ -520,12 +538,7 @@ export default function DrillInterfacePage() {
 
 			// Handle async response (202 - evaluation queued)
 			if (response.status === 202) {
-				console.log("📋 Evaluation queued:", responseData);
-				const { jobId, requestId: evalRequestId } = responseData;
-
-				// Enable streaming feedback
-				setStreamingJobId(jobId);
-				setStreamingRequestId(evalRequestId);
+				const { jobId } = responseData;
 
 				// Poll for completion (max 60 seconds)
 				const maxAttempts = 30; // 30 attempts * 2 seconds = 60 seconds
@@ -794,7 +807,12 @@ export default function DrillInterfacePage() {
 					feedback: evaluationResult.feedback,
 					fullObject: evaluationResult,
 				});
-				setEvaluationResult(evaluationResult);
+
+				// DISABLED: Evaluation result is now handled by the streaming useEffect (line 298)
+				// The streaming hook will receive the result and display tips before showing the final result
+				// setTimeout(() => {
+				// 	setEvaluationResult(evaluationResult);
+				// }, 5000);
 
 				// Update drill progress
 				const completedCount = evaluationData.currentQuestionIndex;
@@ -1086,7 +1104,7 @@ export default function DrillInterfacePage() {
 								/>
 							) : (
 								<div className="text-sm text-muted-foreground animate-pulse">
-									Preparing evaluation...
+									💡 Preparing evaluation...
 								</div>
 							)}
 

@@ -21,6 +21,7 @@ interface StreamChunk {
  */
 export async function GET(request: NextRequest) {
 	try {
+		console.log("🌊 Stream endpoint called");
 		const supabase = await createClient();
 		const {
 			data: { user },
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
 		} = await supabase.auth.getUser();
 
 		if (authError || !user) {
+			console.log("🌊 Auth failed:", authError);
 			return createUnauthorizedResponse("Authentication required");
 		}
 
@@ -35,7 +37,10 @@ export async function GET(request: NextRequest) {
 		const jobId = searchParams.get("jobId");
 		const requestId = searchParams.get("requestId");
 
+		console.log("🌊 Stream params:", { jobId, requestId });
+
 		if (!jobId && !requestId) {
+			console.log("🌊 Missing parameters");
 			return createErrorResponse(
 				"Missing jobId or requestId parameter",
 				"MISSING_PARAMETER",
@@ -44,11 +49,18 @@ export async function GET(request: NextRequest) {
 		}
 
 		// Fetch streaming tips from database
-		const { data: tipsData } = await supabase
+		const { data: tipsData, error: tipsError } = await supabase
 			.from("streaming_tips")
 			.select("tip_text")
 			.eq("is_active", true)
 			.order("display_order", { ascending: true });
+
+		console.log(
+			"🌊 Tips fetched:",
+			tipsData?.length,
+			"tips",
+			tipsError ? `Error: ${tipsError.message}` : "",
+		);
 
 		const tips = tipsData?.map((t) => t.tip_text) || [];
 

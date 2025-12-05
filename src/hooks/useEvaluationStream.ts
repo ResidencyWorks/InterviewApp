@@ -53,6 +53,8 @@ export function useEvaluationStream(
 			return;
 		}
 
+		console.log("🌊 Starting streaming with:", { jobId, requestId });
+
 		let isCancelled = false;
 		setIsStreaming(true);
 		setProgressState(null);
@@ -67,13 +69,21 @@ export function useEvaluationStream(
 				if (jobId) params.append("jobId", jobId);
 				if (requestId) params.append("requestId", requestId);
 
-				const response = await fetch(
-					`/api/evaluate/stream?${params.toString()}`,
-				);
+				const streamUrl = `/api/evaluate/stream?${params.toString()}`;
+				console.log("🌊 Fetching stream from:", streamUrl);
+
+				const response = await fetch(streamUrl);
 
 				if (!response.ok) {
-					throw new Error("Failed to start stream");
+					console.error(
+						"🌊 Stream response not OK:",
+						response.status,
+						response.statusText,
+					);
+					throw new Error(`Failed to start stream: ${response.status}`);
 				}
+
+				console.log("🌊 Stream connected successfully");
 
 				const reader = response.body?.getReader();
 				const decoder = new TextDecoder();
@@ -88,6 +98,7 @@ export function useEvaluationStream(
 					const { done, value } = await reader.read();
 
 					if (done || isCancelled) {
+						console.log("🌊 Stream ended");
 						break;
 					}
 
@@ -101,6 +112,7 @@ export function useEvaluationStream(
 						if (line.startsWith("data: ")) {
 							try {
 								const chunk = JSON.parse(line.slice(6)) as StreamChunk;
+								console.log("🌊 Received chunk:", chunk.type, chunk.data);
 
 								switch (chunk.type) {
 									case "progress": {

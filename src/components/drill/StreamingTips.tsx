@@ -22,29 +22,26 @@ export function StreamingTips({
 	className,
 }: StreamingTipsProps) {
 	const [currentIndex, setCurrentIndex] = React.useState(0);
-	const [isVisible, setIsVisible] = React.useState(false);
 
-	// Show first tip after 1s
+	// Rotate tips when we have more than one
 	React.useEffect(() => {
-		const showTimer = setTimeout(() => {
-			setIsVisible(true);
-		}, 1000);
-
-		return () => clearTimeout(showTimer);
-	}, []);
-
-	// Rotate tips
-	React.useEffect(() => {
-		if (!isVisible || tips.length <= 1) return;
+		if (tips.length <= 1) return;
 
 		const rotateTimer = setInterval(() => {
 			setCurrentIndex((prev) => (prev + 1) % tips.length);
 		}, rotationInterval);
 
 		return () => clearInterval(rotateTimer);
-	}, [isVisible, tips.length, rotationInterval]);
+	}, [tips.length, rotationInterval]);
 
-	if (!isVisible || tips.length === 0) {
+	// Reset index when tips array changes
+	React.useEffect(() => {
+		if (currentIndex >= tips.length && tips.length > 0) {
+			setCurrentIndex(0);
+		}
+	}, [tips.length, currentIndex]);
+
+	if (tips.length === 0) {
 		return null;
 	}
 
