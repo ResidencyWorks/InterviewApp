@@ -205,7 +205,9 @@ export type ContentPackMetadata = z.infer<typeof metadataSchema>;
 /**
  * Utility functions for schema management
  */
-export function getSchemaForVersion(version: string): z.ZodSchema<any> | null {
+export function getSchemaForVersion(
+	version: string,
+): z.ZodSchema<unknown> | null {
 	return SCHEMA_REGISTRY[version as keyof typeof SCHEMA_REGISTRY] || null;
 }
 

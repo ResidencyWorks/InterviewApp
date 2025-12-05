@@ -20,7 +20,7 @@ export interface PerformanceMetrics {
 	/** Success status */
 	success: boolean;
 	/** Additional metadata */
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 }
 
 export interface PerformanceTarget {
@@ -65,7 +65,7 @@ export class PerformanceMonitor {
 	private metrics: PerformanceMetrics[] = [];
 	private activeOperations: Map<
 		string,
-		{ startTime: number; metadata?: Record<string, any> }
+		{ startTime: number; metadata?: Record<string, unknown> }
 	> = new Map();
 
 	/**
@@ -74,7 +74,7 @@ export class PerformanceMonitor {
 	 * @param metadata - Optional metadata
 	 * @returns Operation ID for tracking
 	 */
-	start(_operation: string, _metadata?: Record<string, any>): string {
+	start(_operation: string, _metadata?: Record<string, unknown>): string {
 		const operationId = `${_operation}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 		const startTime = performance.now();
 
@@ -93,7 +93,7 @@ export class PerformanceMonitor {
 	end(
 		operationId: string,
 		success = true,
-		metadata?: Record<string, any>,
+		metadata?: Record<string, unknown>,
 	): PerformanceMetrics {
 		const operationData = this.activeOperations.get(operationId);
 		if (!operationData) {
@@ -290,7 +290,7 @@ export function timed(_operation: string, _target?: number) {
 export async function timeOperation<T>(
 	operation: string,
 	fn: () => Promise<T>,
-	metadata?: Record<string, any>,
+	metadata?: Record<string, unknown>,
 ): Promise<{ result: T; metrics: PerformanceMetrics }> {
 	const operationId = performanceMonitor.start(operation, metadata);
 	let success = true;
@@ -319,7 +319,7 @@ export async function timeOperation<T>(
 export function timeSyncOperation<T>(
 	operation: string,
 	fn: () => T,
-	metadata?: Record<string, any>,
+	metadata?: Record<string, unknown>,
 ): { result: T; metrics: PerformanceMetrics } {
 	const operationId = performanceMonitor.start(operation, metadata);
 	let success = true;

@@ -8,6 +8,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import posthog from "posthog-js";
+import { DataScrubber } from "@/shared/security/data-scrubber";
 
 // Initialize PostHog for analytics
 posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY ?? "", {
@@ -34,12 +35,27 @@ Sentry.init({
 			return null;
 		}
 
-		// Add custom context
+		// Scrub PII from event data before transmission
 		if (event.user) {
+			event.user = DataScrubber.scrubObject(
+				event.user as Record<string, unknown>,
+			) as typeof event.user;
 			event.tags = {
 				...event.tags,
 				user_type: event.user.email ? "authenticated" : "anonymous",
 			};
+		}
+
+		if (event.contexts) {
+			event.contexts = DataScrubber.scrubObject(
+				event.contexts as Record<string, unknown>,
+			) as typeof event.contexts;
+		}
+
+		if (event.extra) {
+			event.extra = DataScrubber.scrubObject(
+				event.extra as Record<string, unknown>,
+			) as typeof event.extra;
 		}
 
 		return event;

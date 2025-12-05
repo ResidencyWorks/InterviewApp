@@ -6,7 +6,7 @@ import { z } from "zod";
  */
 
 export const apiResponseSchema = z.object({
-	data: z.any().optional(),
+	data: z.unknown().optional(),
 	error: z.string().optional(),
 	message: z.string().optional(),
 	status: z.number().int().min(100).max(599),
@@ -14,7 +14,7 @@ export const apiResponseSchema = z.object({
 
 export const apiErrorSchema = z.object({
 	code: z.string().min(1, "Error code is required"),
-	details: z.any().optional(),
+	details: z.unknown().optional(),
 	message: z.string().min(1, "Error message is required"),
 	status: z.number().int().min(100).max(599),
 });
@@ -32,7 +32,7 @@ export const paginationParamsSchema = z.object({
 });
 
 export const searchParamsSchema = z.object({
-	filters: z.record(z.string(), z.any()).optional(),
+	filters: z.record(z.string(), z.unknown()).optional(),
 	pagination: paginationParamsSchema.optional(),
 	query: z
 		.string()
@@ -98,7 +98,7 @@ export const notificationSchema = z.object({
 });
 
 // Type exports
-export type ApiResponse<T = any> = z.infer<typeof apiResponseSchema> & {
+export type ApiResponse<T = unknown> = z.infer<typeof apiResponseSchema> & {
 	data?: T;
 };
 export type ApiError = z.infer<typeof apiErrorSchema>;

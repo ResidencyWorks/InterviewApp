@@ -16,7 +16,7 @@ export interface ServiceHealthCheck {
 	latency?: number;
 	error?: string;
 	timestamp: string;
-	details?: Record<string, any>;
+	details?: Record<string, unknown>;
 }
 
 /**

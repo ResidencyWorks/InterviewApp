@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+---
+
+# Managed Cloud Providers – Global Rule
+
+**Scope**: Applies to every change in InterviewApp. No work may ship without passing these MCP gates.
+
+## 1. Prime Directive
+Always use the blessed MCP for its domain unless the Constitution/Context7 plan explicitly grants an override. Missing documentation = blocking defect; halt work and update the plan via Context7 before coding.
+
+## 2. Provider Playbooks
+
+### Context7 (Specs & Quality Gates)
+- Pull the latest spec/plan/tasks from Context7 before writing code.
+- Re-run required gates when a plan says to “STOP AND VALIDATE”.
+- Any divergence from Context7 must be documented back into the active plan before implementation resumes.
+
+### Supabase (Auth, Storage, Postgres)
+- Regenerate `src/types/database.types.ts` whenever the schema changes via `pnpm run update-types` or `pnpm run update-types:remote`.
+- Commit regenerated types in the same PR.
+- Only access Supabase through the typed clients in `src/lib/supabase/{client,server,proxy}.ts`.
+- Block merges if types are stale or client usage bypasses the typed helpers.
+
+### PostHog (Product Analytics)
+- All events must pass through `DataScrubber` (PII-safe payloads) before calling PostHog.
+- `distinctId` must be anonymized; no emails or raw identifiers.
+- Required events (e.g., `content_pack_missing`) must fire exactly where specs demand.
+- Fail the build/review if analytics validation or scrubbing tests are missing.
+
+### Sequential-Thinking Workflow
+- When a plan marks “Sequential Strategy (Recommended/Required)”, finish phases in order: Setup → Foundational → Story 1 → Story 2 → …
+- Do not parallelize tasks that the plan marks sequential without first updating the Context7 plan to reflect the change.
+- Treat sequential checkpoints (e.g., “STOP and VALIDATE”) as blocking quality gates.
+
+### Serena (Unresolved)
+- Serena is **not** defined in the Constitution or Context7 plans. Treat any request mentioning Serena as a documentation gap.
+- Before integrating, clarify whether Serena is a rename of an existing MCP (e.g., Sentry) or a new provider, update Context7 + Constitution, and only then proceed.
+
+## 3. Compliance Checklist (run before every PR)
+1. Context7 artifacts synced and gates passed.
+2. Supabase types regenerated (if schema touched) and clients used.
+3. PostHog events scrubbed + required telemetry covered by tests.
+4. Task order respects the latest sequential instructions.
+5. Any “Serena” work blocked until governance documents define it.
+
+Failure to satisfy any item blocks merge until resolved.

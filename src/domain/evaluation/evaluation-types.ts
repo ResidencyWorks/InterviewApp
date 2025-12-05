@@ -24,7 +24,7 @@ export interface EvaluationServiceInterface {
 		limit?: number,
 	) => Promise<EvaluationResult[]>;
 	deleteResult: (id: string) => Promise<void>;
-	getAnalytics: (userId: string) => Promise<Record<string, any>>;
+	getAnalytics: (userId: string) => Promise<Record<string, unknown>>;
 }
 
 /**
@@ -48,7 +48,7 @@ export interface EvaluationContext {
 	sessionId?: string;
 	contentPackId?: string;
 	questionId?: string;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 }
 
 /**

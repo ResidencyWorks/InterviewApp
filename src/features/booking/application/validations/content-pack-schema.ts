@@ -156,7 +156,9 @@ export type Question = z.infer<typeof questionSchema>;
 export type Category = z.infer<typeof categorySchema>;
 export type ContentPackMetadata = z.infer<typeof metadataSchema>;
 
-export function getSchemaForVersion(version: string): z.ZodSchema<any> | null {
+export function getSchemaForVersion(
+	version: string,
+): z.ZodSchema<unknown> | null {
 	return SCHEMA_REGISTRY[version as keyof typeof SCHEMA_REGISTRY] || null;
 }
 

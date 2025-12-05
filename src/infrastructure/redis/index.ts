@@ -6,7 +6,7 @@ import { hasRedis } from "../config/environment";
 import { getServerDatabaseService } from "../db/database-service";
 
 function createRedisFallback() {
-	const store = new Map<string, any>();
+	const store = new Map<string, unknown>();
 	return {
 		async get<T>(key: string): Promise<T | null> {
 			return (store.has(key) ? store.get(key) : null) as T | null;
@@ -274,7 +274,7 @@ export class UserEntitlementCache {
 		try {
 			// Get server database service with Supabase client
 			const dbService = await getServerDatabaseService();
-			const supabase = (dbService as any).supabase;
+			const supabase = dbService.getClient();
 
 			if (!supabase) {
 				console.error("Supabase client not available for database fallback");

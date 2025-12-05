@@ -11,17 +11,23 @@ import { captureEvent } from "../posthog";
 import { getByRequestId, upsertResult } from "../supabase/evaluation_store";
 import { connection, EVALUATION_QUEUE_NAME } from "./queue";
 
+type ScopeLike = { setTag?: (key: string, value: string) => void };
+type FlushableClient = { flush?: (timeout?: number) => PromiseLike<void> };
+type ExtendedSentry = typeof Sentry & {
+	configureScope?: (callback: (scope: ScopeLike) => void) => void;
+	flush?: (timeout?: number) => PromiseLike<void>;
+	getCurrentHub?: () =>
+		| {
+				getClient?: () => FlushableClient | undefined;
+		  }
+		| undefined;
+};
+
+const sentryExtended = Sentry as ExtendedSentry;
 const sentryEnabled = Boolean(process.env.SENTRY_DSN);
 
-// `Sentry.isInitialized` is not available on the newer SDKs used here.
-// Use `getCurrentHub().getClient()` to determine whether a client is installed.
-const _sentryClient = (
-	Sentry as unknown as {
-		getCurrentHub?: () => { getClient?: () => unknown };
-	}
-)
-	.getCurrentHub?.()
-	?.getClient?.();
+// Determine whether a client is installed
+const _sentryClient = sentryExtended.getCurrentHub?.()?.getClient?.();
 
 if (sentryEnabled && !_sentryClient) {
 	Sentry.init({
@@ -31,7 +37,7 @@ if (sentryEnabled && !_sentryClient) {
 		release: process.env.SENTRY_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA,
 		tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.05"),
 	});
-	(Sentry as any).configureScope?.((scope: any) =>
+	sentryExtended.configureScope?.((scope) =>
 		scope.setTag?.("component", "evaluation-worker"),
 	);
 	console.log("[Worker] Sentry initialized for evaluation worker");
@@ -47,11 +53,12 @@ const flushSentry = async () => {
 		// Prefer flushing via the installed client if available, otherwise fall back
 		// to any top-level flush function. Guard both to avoid runtime errors
 		// with different Sentry package shapes in worker environments.
-		const clientFlush = (Sentry as any).getCurrentHub?.()?.getClient?.()?.flush;
+		const client = sentryExtended.getCurrentHub?.()?.getClient?.();
+		const clientFlush = client?.flush;
 		if (typeof clientFlush === "function") {
 			await clientFlush(2000);
-		} else if (typeof (Sentry as any).flush === "function") {
-			await (Sentry as any).flush(2000);
+		} else if (typeof sentryExtended.flush === "function") {
+			await sentryExtended.flush(2000);
 		}
 	} catch (flushError) {
 		console.error("[Worker] Failed to flush Sentry events", flushError);

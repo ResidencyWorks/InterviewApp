@@ -115,7 +115,7 @@ export class ContentPackService implements ContentPackServiceInterface {
 	 * @param id - Content pack ID
 	 * @returns Promise resolving to statistics object
 	 */
-	async getStatistics(id: string): Promise<Record<string, any> | null> {
+	async getStatistics(id: string): Promise<Record<string, unknown> | null> {
 		return await contentPackLoader.getStatistics(id);
 	}
 

@@ -106,10 +106,10 @@ export async function POST(req: NextRequest) {
 			try {
 				// If the job already has a recorded failure (from a previous worker run),
 				// remove it and enqueue a fresh job so the worker can reprocess cleanly.
-				if ((job as any).failedReason) {
+				if (job.failedReason) {
 					console.warn(
 						`[Evaluate API] Job ${jobId} has recorded failure:`,
-						(job as any).failedReason,
+						job.failedReason,
 					);
 					try {
 						await job.remove();
@@ -203,11 +203,8 @@ export async function POST(req: NextRequest) {
 			throw error;
 		}
 	} catch (error) {
-		console.error(
-			"Evaluation endpoint error:",
-			error,
-			(error as any)?.stack ?? null,
-		);
+		const stack = error instanceof Error ? error.stack : undefined;
+		console.error("Evaluation endpoint error:", error, stack ?? null);
 		console.error("Evaluation endpoint error (trace):", new Error().stack);
 		// captureException(error as Error);
 		return NextResponse.json(

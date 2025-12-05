@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { validateUploadPermission } from "@/features/auth/application/entitlements/upload-permissions";
 import { captureUploadError } from "@/features/booking/application/upload/errors";
+import { PhiScrubber } from "@/shared/security/phi-scrubber";
 
 /**
  * POST handler for text submission
@@ -75,13 +76,16 @@ export async function POST(request: NextRequest) {
 			}
 		}
 
+		// Scrub PHI from text before processing
+		const scrubbedText = PhiScrubber.scrubUserInput(text);
+
 		// Generate response ID
 		const responseId = uuidv4();
 
 		// TODO: Store text response in database
 		// For now, we'll just return success
 		// In production, you would:
-		// 1. Store the text in a database table
+		// 1. Store the scrubbed text in a database table
 		// 2. Link it to the recording metadata
 		// 3. Handle it differently than audio recordings
 
@@ -89,7 +93,7 @@ export async function POST(request: NextRequest) {
 		return NextResponse.json({
 			success: true,
 			responseId,
-			textLength: text.length,
+			textLength: scrubbedText.length,
 			submittedAt: new Date().toISOString(),
 		});
 	} catch (error) {

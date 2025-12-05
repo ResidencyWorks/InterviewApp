@@ -1,3 +1,4 @@
+import { serializeError } from "@/infrastructure/db/database-helpers";
 import { createClient } from "@/infrastructure/supabase/client";
 import type { AuthUser } from "@/types/auth";
 
@@ -57,14 +58,17 @@ export class DashboardService {
 
 			const { data: todayEvaluations, error } = await this.supabase
 				.from("evaluation_results")
-				.select("id, status, created_at")
+				.select("request_id, score, created_at")
 				.eq("user_id", user.id)
-				.eq("status", "COMPLETED")
 				.gte("created_at", today.toISOString())
 				.lt("created_at", tomorrow.toISOString());
 
 			if (error) {
-				console.error("Error fetching today's evaluations:", error);
+				const serialized = serializeError(error);
+				console.error(
+					"Error fetching today's evaluations:",
+					JSON.stringify(serialized, null, 2),
+				);
 			}
 
 			const currentValue = todayEvaluations?.length || 0;
@@ -96,7 +100,11 @@ export class DashboardService {
 				estimatedCompletionDate,
 			};
 		} catch (error) {
-			console.error("Error getting user progress:", error);
+			const serialized = serializeError(error);
+			console.error(
+				"Error getting user progress:",
+				JSON.stringify(serialized, null, 2),
+			);
 			return {
 				goal: null,
 				progressPercentage: 0,
@@ -118,22 +126,28 @@ export class DashboardService {
 			// Get user's recent evaluations to determine skill level
 			const { data: recentEvaluations, error } = await this.supabase
 				.from("evaluation_results")
-				.select("score, categories")
+				.select("score")
 				.eq("user_id", user.id)
-				.eq("status", "COMPLETED")
 				.not("score", "is", null)
 				.order("created_at", { ascending: false })
 				.limit(10);
 
 			if (error) {
-				console.error("Error fetching recent evaluations:", error);
+				const serialized = serializeError(error);
+				console.error(
+					"Error fetching recent evaluations:",
+					JSON.stringify(serialized, null, 2),
+				);
 			}
 
 			// Calculate average score to determine difficulty
 			const averageScore =
 				recentEvaluations && recentEvaluations.length > 0
-					? recentEvaluations.reduce((sum, e) => sum + (e.score || 0), 0) /
-						recentEvaluations.length
+					? recentEvaluations.reduce(
+							(sum: number, e: { score: number | null }) =>
+								sum + (e.score || 0),
+							0,
+						) / recentEvaluations.length
 					: 0;
 
 			// Determine difficulty and content based on performance
@@ -163,7 +177,11 @@ export class DashboardService {
 				};
 			}
 		} catch (error) {
-			console.error("Error getting featured content:", error);
+			const serialized = serializeError(error);
+			console.error(
+				"Error getting featured content:",
+				JSON.stringify(serialized, null, 2),
+			);
 			return null;
 		}
 	}
@@ -176,15 +194,18 @@ export class DashboardService {
 			// Get user's recent performance data
 			const { data: recentEvaluations, error } = await this.supabase
 				.from("evaluation_results")
-				.select("score, categories, feedback")
+				.select("score, feedback")
 				.eq("user_id", user.id)
-				.eq("status", "COMPLETED")
 				.not("score", "is", null)
 				.order("created_at", { ascending: false })
 				.limit(20);
 
 			if (error) {
-				console.error("Error fetching recent evaluations:", error);
+				const serialized = serializeError(error);
+				console.error(
+					"Error fetching recent evaluations:",
+					JSON.stringify(serialized, null, 2),
+				);
 			}
 
 			const tips: string[] = [];
@@ -199,10 +220,16 @@ export class DashboardService {
 
 			// Analyze performance patterns
 			const averageScore =
-				recentEvaluations.reduce((sum, e) => sum + (e.score || 0), 0) /
-				recentEvaluations.length;
-			const _lowScores = recentEvaluations.filter((e) => (e.score || 0) < 70);
-			const _highScores = recentEvaluations.filter((e) => (e.score || 0) >= 85);
+				recentEvaluations.reduce(
+					(sum: number, e: { score: number | null }) => sum + (e.score || 0),
+					0,
+				) / recentEvaluations.length;
+			const _lowScores = recentEvaluations.filter(
+				(e: { score: number | null }) => (e.score || 0) < 70,
+			);
+			const _highScores = recentEvaluations.filter(
+				(e: { score: number | null }) => (e.score || 0) >= 85,
+			);
 
 			// Generate personalized tips
 			if (averageScore < 70) {
@@ -224,7 +251,11 @@ export class DashboardService {
 
 			return tips.slice(0, 3); // Return top 3 tips
 		} catch (error) {
-			console.error("Error getting study tips:", error);
+			const serialized = serializeError(error);
+			console.error(
+				"Error getting study tips:",
+				JSON.stringify(serialized, null, 2),
+			);
 			return [
 				"Practice explaining your code out loud. This helps you articulate your thought process during interviews.",
 				"Focus on understanding the 'why' behind each solution, not just the 'how'.",

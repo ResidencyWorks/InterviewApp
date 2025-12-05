@@ -2,6 +2,7 @@
 
 import type { AuthUser } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
+import { serializeError } from "@/infrastructure/db/database-helpers";
 import { createClient } from "@/infrastructure/supabase/client";
 import type { Tables } from "@/types/database";
 
@@ -64,32 +65,38 @@ export function useDashboardData(user: AuthUser | null): DashboardData {
 				const supabase = createClient();
 
 				// Fetch all evaluation results for the user
-				const { data: evaluations, error: evaluationsError } = (await supabase
+				const { data: evaluations, error: evaluationsError } = await supabase
 					.from("evaluation_results")
 					.select("*")
 					.eq("user_id", user?.id ?? "")
-					.order("created_at", { ascending: false })) as {
-					data: Tables<"evaluation_results">[] | null;
-					error: Error | null;
-				};
+					.order("created_at", { ascending: false });
 
 				if (evaluationsError) {
-					throw evaluationsError;
+					const serialized = serializeError(evaluationsError);
+					console.error(
+						"Error fetching evaluations:",
+						JSON.stringify(serialized, null, 2),
+					);
+					throw new Error(
+						(evaluationsError as { message?: string })?.message ||
+							"Failed to fetch evaluation results",
+					);
 				}
 
 				// Calculate statistics
+				// Note: In the new schema, all evaluation results are completed
 				const totalDrills = evaluations?.length || 0;
-				const completedDrills =
-					evaluations?.filter((e) => e.status === "COMPLETED").length || 0;
+				const completedDrills = totalDrills; // All results are completed in new schema
 				const completedEvaluations =
 					evaluations?.filter(
-						(e) => e.status === "COMPLETED" && e.score !== null,
+						(e: { score: number | null }) => e.score !== null,
 					) || [];
 				const averageScore =
 					completedEvaluations.length > 0
 						? Math.round(
 								completedEvaluations.reduce(
-									(sum, e) => sum + (e.score || 0),
+									(sum: number, e: { score: number | null }) =>
+										sum + (e.score || 0),
 									0,
 								) / completedEvaluations.length,
 							)
@@ -104,20 +111,21 @@ export function useDashboardData(user: AuthUser | null): DashboardData {
 
 				const weeklyEvaluations =
 					evaluations?.filter(
-						(e) => new Date(e.created_at ?? "") >= oneWeekAgo,
+						(e: { created_at: string | null }) =>
+							new Date(e.created_at ?? "") >= oneWeekAgo,
 					) || [];
 
-				const weeklyCompleted = weeklyEvaluations.filter(
-					(e) => e.status === "COMPLETED",
-				);
+				// In new schema, all results are completed
+				const weeklyCompleted = weeklyEvaluations;
 				const weeklyCompletedWithScores = weeklyCompleted.filter(
-					(e) => e.score !== null,
+					(e: { score: number | null }) => e.score !== null,
 				);
 				const weeklyAverageScore =
 					weeklyCompletedWithScores.length > 0
 						? Math.round(
 								weeklyCompletedWithScores.reduce(
-									(sum, e) => sum + (e.score || 0),
+									(sum: number, e: { score: number | null }) =>
+										sum + (e.score || 0),
 									0,
 								) / weeklyCompletedWithScores.length,
 							)
@@ -126,22 +134,18 @@ export function useDashboardData(user: AuthUser | null): DashboardData {
 				const weeklyStreak = calculateStreak(weeklyEvaluations);
 
 				// Generate recent activity
+				// Note: New schema uses request_id instead of id, and all results are completed
 				const recentActivity: RecentActivity[] = (evaluations || [])
 					.slice(0, 5)
-					.map((evaluation) => ({
-						id: evaluation.id,
+					.map((evaluation: Tables<"evaluation_results">) => ({
+						id:
+							(evaluation as { request_id?: string })?.request_id ||
+							(evaluation as { id?: string })?.id ||
+							"",
 						title: getEvaluationTitle(evaluation),
 						score: evaluation.score || undefined,
-						status:
-							evaluation.status === "COMPLETED"
-								? "completed"
-								: evaluation.status === "PROCESSING"
-									? "in_progress"
-									: "pending",
-						completedAt:
-							evaluation.status === "COMPLETED"
-								? evaluation.updated_at || undefined
-								: undefined,
+						status: "completed", // All results in new schema are completed
+						completedAt: evaluation.created_at || undefined,
 						createdAt: evaluation.created_at || "",
 					}));
 
@@ -163,7 +167,11 @@ export function useDashboardData(user: AuthUser | null): DashboardData {
 					error: null,
 				});
 			} catch (error) {
-				console.error("Error fetching dashboard data:", error);
+				const serialized = serializeError(error);
+				console.error(
+					"Error fetching dashboard data:",
+					JSON.stringify(serialized, null, 2),
+				);
 				setData((prev) => ({
 					...prev,
 					loading: false,
@@ -235,20 +243,31 @@ function calculateStreak(evaluations: Tables<"evaluation_results">[]): number {
 }
 
 function getEvaluationTitle(evaluation: Tables<"evaluation_results">): string {
-	// Try to extract a meaningful title from the evaluation
-	if (evaluation.response_text) {
-		// Use first 50 characters of the response as title
-		return evaluation.response_text.length > 50
-			? `${evaluation.response_text.substring(0, 50)}...`
-			: evaluation.response_text;
+	// New schema: Try to extract title from feedback
+	const evalWithFeedback = evaluation as { feedback?: string };
+	if (evalWithFeedback.feedback) {
+		// Use first 50 characters of feedback as title
+		const feedback = evalWithFeedback.feedback;
+		return feedback.length > 50 ? `${feedback.substring(0, 50)}...` : feedback;
 	}
 
-	// Fallback to generic titles based on content pack or type
-	if (evaluation.content_pack_id) {
+	// Fallback: Check for old schema fields (for backward compatibility)
+	const evalOld = evaluation as {
+		response_text?: string;
+		content_pack_id?: string;
+		response_type?: string;
+	};
+	if (evalOld.response_text) {
+		return evalOld.response_text.length > 50
+			? `${evalOld.response_text.substring(0, 50)}...`
+			: evalOld.response_text;
+	}
+
+	if (evalOld.content_pack_id) {
 		return "Interview Practice Session";
 	}
 
-	return evaluation.response_type === "audio"
+	return evalOld.response_type === "audio"
 		? "Audio Response Practice"
-		: "Text Response Practice";
+		: "Evaluation Practice Session";
 }

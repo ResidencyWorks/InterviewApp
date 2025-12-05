@@ -1,7 +1,36 @@
+import type { Database, Json } from "@/types/database";
 import type { EvaluationResult } from "../../domain/evaluation/ai-evaluation-schema";
 import { getSupabaseServiceRoleClient } from "../config/clients";
 
 const TABLE_NAME = "evaluation_results";
+type EvaluationResultsRow =
+	Database["public"]["Tables"]["evaluation_results"]["Row"];
+
+function mapRowToEvaluationResult(
+	data: EvaluationResultsRow,
+): EvaluationResult {
+	const fallbackText = (value: string | null, fallback: string) =>
+		value ?? fallback;
+
+	return {
+		requestId: data.request_id ?? data.id,
+		jobId: data.job_id ?? data.id,
+		score: Number(data.score ?? 0),
+		feedback: fallbackText(data.feedback, "Feedback unavailable"),
+		what_changed: fallbackText(data.what_changed, "No changes recorded"),
+		practice_rule: fallbackText(
+			data.practice_rule,
+			"No practice guidance available",
+		),
+		durationMs:
+			data.duration_ms ??
+			(data.duration_seconds != null ? data.duration_seconds * 1000 : 0),
+		tokensUsed: data.tokens_used ?? undefined,
+		transcription: data.transcription ?? data.response_text ?? undefined,
+		metrics: (data.metrics as Record<string, unknown> | null) ?? undefined,
+		createdAt: data.created_at ?? undefined,
+	};
+}
 
 export async function getByRequestId(
 	requestId: string,
@@ -27,18 +56,7 @@ export async function getByRequestId(
 
 	if (!data) return null;
 
-	// Map DB columns to domain model
-	return {
-		requestId: data.request_id,
-		jobId: data.job_id,
-		score: Number(data.score),
-		feedback: data.feedback,
-		what_changed: data.what_changed,
-		practice_rule: data.practice_rule,
-		durationMs: data.duration_ms,
-		tokensUsed: data.tokens_used ?? undefined,
-		createdAt: data.created_at,
-	};
+	return mapRowToEvaluationResult(data);
 }
 
 export async function getByJobId(
@@ -65,18 +83,7 @@ export async function getByJobId(
 
 	if (!data) return null;
 
-	// Map DB columns to domain model
-	return {
-		requestId: data.request_id,
-		jobId: data.job_id,
-		score: Number(data.score),
-		feedback: data.feedback,
-		what_changed: data.what_changed,
-		practice_rule: data.practice_rule,
-		durationMs: data.duration_ms,
-		tokensUsed: data.tokens_used ?? undefined,
-		createdAt: data.created_at,
-	};
+	return mapRowToEvaluationResult(data);
 }
 
 export async function upsertResult(result: EvaluationResult): Promise<void> {
@@ -86,18 +93,23 @@ export async function upsertResult(result: EvaluationResult): Promise<void> {
 	}
 
 	// Map domain model to DB columns
-	const dbRecord = {
-		request_id: result.requestId,
-		job_id: result.jobId,
-		score: result.score,
-		feedback: result.feedback,
-		what_changed: result.what_changed,
-		practice_rule: result.practice_rule,
-		duration_ms: result.durationMs,
-		tokens_used: result.tokensUsed ?? null,
-		// created_at is handled by default now() on insert, but we can preserve it if provided
-		...(result.createdAt ? { created_at: result.createdAt } : {}),
-	};
+	const metricsValue =
+		typeof result.metrics === "undefined" ? null : (result.metrics as Json);
+	const dbRecord: Database["public"]["Tables"]["evaluation_results"]["Insert"] =
+		{
+			request_id: result.requestId,
+			job_id: result.jobId,
+			score: result.score,
+			feedback: result.feedback,
+			what_changed: result.what_changed,
+			practice_rule: result.practice_rule,
+			duration_ms: result.durationMs,
+			tokens_used: result.tokensUsed ?? null,
+			transcription: result.transcription ?? null,
+			metrics: metricsValue,
+			// created_at is handled by default now() on insert, but we can preserve it if provided
+			...(result.createdAt ? { created_at: result.createdAt } : {}),
+		};
 
 	const { error } = await supabase
 		.from(TABLE_NAME)

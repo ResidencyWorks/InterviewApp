@@ -7,6 +7,7 @@ import {
 	setUser,
 } from "@sentry/nextjs";
 import { analytics } from "@/features/notifications/application/analytics";
+import { DataScrubber } from "@/shared/security/data-scrubber";
 
 /**
  * Error monitoring utilities
@@ -18,7 +19,7 @@ export interface ErrorContext {
 	userEmail?: string;
 	component?: string;
 	action?: string;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 }
 
 export interface ErrorReport {
@@ -41,37 +42,50 @@ export class ErrorMonitoringService {
 	reportError(report: ErrorReport): void {
 		const { message, error, context, level = "error" } = report;
 
-		// Set user context in Sentry
-		if (context?.userId) {
+		// Scrub PII from context before sending to Sentry
+		const scrubbedContext = context
+			? {
+					...context,
+					userEmail: context.userEmail ? "[REDACTED]" : undefined,
+					metadata: context.metadata
+						? (DataScrubber.scrubObject(
+								context.metadata as Record<string, unknown>,
+							) as typeof context.metadata)
+						: undefined,
+				}
+			: undefined;
+
+		// Set user context in Sentry (with scrubbed email)
+		if (scrubbedContext?.userId) {
 			setUser({
-				email: context.userEmail,
-				id: context.userId,
+				email: scrubbedContext.userEmail,
+				id: scrubbedContext.userId,
 			});
 		}
 
 		// Set additional context
-		if (context?.component) {
-			setTag("component", context.component);
+		if (scrubbedContext?.component) {
+			setTag("component", scrubbedContext.component);
 		}
 
-		if (context?.action) {
-			setTag("action", context.action);
+		if (scrubbedContext?.action) {
+			setTag("action", scrubbedContext.action);
 		}
 
-		if (context?.metadata) {
-			setContext("metadata", context.metadata);
+		if (scrubbedContext?.metadata) {
+			setContext("metadata", scrubbedContext.metadata);
 		}
 
 		// Capture the error
 		captureException(error, {
 			extra: {
-				context: context?.metadata,
+				context: scrubbedContext?.metadata,
 				message,
 			},
 			level,
 			tags: {
-				action: context?.action,
-				component: context?.component,
+				action: scrubbedContext?.action,
+				component: scrubbedContext?.component,
 			},
 		});
 
@@ -123,7 +137,7 @@ export class ErrorMonitoringService {
 	setUserContext(
 		userId: string,
 		email?: string,
-		additionalContext?: Record<string, any>,
+		additionalContext?: Record<string, unknown>,
 	): void {
 		setUser({
 			email,
@@ -166,7 +180,7 @@ export class ErrorMonitoringService {
 	 * @param context - Context data
 	 * @returns void
 	 */
-	setContext(key: string, context: Record<string, any>): void {
+	setContext(key: string, context: Record<string, unknown>): void {
 		setContext(key, context);
 	}
 

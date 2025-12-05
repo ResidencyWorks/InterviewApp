@@ -33,6 +33,14 @@ export class DatabaseService implements DatabaseServiceInterface {
 	}
 
 	/**
+	 * Return the underlying Supabase client for callers that need direct access.
+	 * Prefer higher-level helpers when possible.
+	 */
+	getClient(): SupabaseClient {
+		return this.supabase;
+	}
+
+	/**
 	 * Execute a query on a table
 	 * @param table - Table name
 	 * @param options - Query options
@@ -123,18 +131,18 @@ export class DatabaseService implements DatabaseServiceInterface {
 	): Promise<DatabaseResult<T>> {
 		try {
 			const sanitizedTable = sanitizeTableName(table);
-			let query = this.supabase.from(sanitizedTable).insert(data);
+			const query = this.supabase.from(sanitizedTable).insert(data);
 
-			if (options?.returning) {
-				query = query.select(options.returning) as any;
-			}
+			const queryWithReturning = options?.returning
+				? query.select(options.returning)
+				: query;
 
 			if (options?.ignoreDuplicates) {
 				// For now, just insert - upsert can be added later
 				// query = query.upsert(data)
 			}
 
-			const { data: result, error } = await query;
+			const { data: result, error } = await queryWithReturning;
 
 			if (error) {
 				return handleDatabaseError(error) as DatabaseResult<T>;
@@ -164,18 +172,21 @@ export class DatabaseService implements DatabaseServiceInterface {
 	): Promise<DatabaseResult<T>> {
 		try {
 			const sanitizedTable = sanitizeTableName(table);
-			let query = this.supabase.from(sanitizedTable).update(data).eq("id", id);
+			const query = this.supabase
+				.from(sanitizedTable)
+				.update(data)
+				.eq("id", id);
 
-			if (options?.returning) {
-				query = query.select(options.returning) as any;
-			}
+			const queryWithReturning = options?.returning
+				? query.select(options.returning)
+				: query;
 
 			if (options?.count) {
 				// Count functionality can be added later
 				// query = query.select('*', { count: options.count })
 			}
 
-			const { data: result, error } = await query;
+			const { data: result, error } = await queryWithReturning;
 
 			if (error) {
 				return handleDatabaseError(error) as DatabaseResult<T>;
@@ -203,18 +214,18 @@ export class DatabaseService implements DatabaseServiceInterface {
 	): Promise<DatabaseResult<boolean>> {
 		try {
 			const sanitizedTable = sanitizeTableName(table);
-			let query = this.supabase.from(sanitizedTable).delete().eq("id", id);
+			const query = this.supabase.from(sanitizedTable).delete().eq("id", id);
 
-			if (options?.returning) {
-				query = query.select(options.returning) as any;
-			}
+			const queryWithReturning = options?.returning
+				? query.select(options.returning)
+				: query;
 
 			if (options?.count) {
 				// Count functionality can be added later
 				// query = query.select('*', { count: options.count })
 			}
 
-			const { error } = await query;
+			const { error } = await queryWithReturning;
 
 			if (error) {
 				return handleDatabaseError(error) as DatabaseResult<boolean>;

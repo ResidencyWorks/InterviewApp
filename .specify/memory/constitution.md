@@ -33,6 +33,14 @@ Follow test-first approach: Unit test (e.g., Zod schema), Integration test (e.g.
 
 Use `pnpm` as the sole package manager. Devcontainer must include: Node.js LTS, `biome` for lint/format, `lefthook` for git hooks. All PRs and commits must pass: `lefthook` pre-commit: biome lint & format, `lefthook` pre-push: type check + tests. No ESLint or Prettier — Biome replaces both.
 
+**MCP Workflow & Tooling (NON-NEGOTIABLE)**:
+
+- Every planning task, architectural decision, or implementation change MUST start by invoking the sequential thinking tool to capture goals, unknowns, and validation steps.
+- Serena semantic tools are the only acceptable interface for code discovery, symbol navigation, refactors, and diffs. Full-file reads happen only when Serena cannot retrieve the necessary context.
+- Context7 lookups are mandatory whenever referencing third-party packages or MCP behavior; cite the latest retrieved documentation (e.g., Model Context Protocol specification 2025-11-25 for `tools/list`, `tools/call`, `tool_use`, `tool_results`, and `execution.taskSupport` semantics).
+- MCP tool usage MUST follow spec-compliant flows: enumerate capabilities via `tools/list`, send schema-conformant `tools/call` payloads, bubble up tool errors verbatim, and re-submit `tool_results` when relaying outputs to the model.
+- Plans, task breakdowns, and implementation notes must explicitly reference the Serena/Context7/MCP steps that were performed so reviewers can trace compliance.
+
 ### V. UX & UI Standards
 
 Use `shadcn/ui` for components, built on Tailwind CSS. All screens must include: Loading states, Error fallbacks, Responsive layouts. Accessibility required: keyboard navigation, screen reader compatibility.

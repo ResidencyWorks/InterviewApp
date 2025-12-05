@@ -14,7 +14,7 @@ export interface BaseEntity {
 /**
  * API response wrapper
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
 	data?: T;
 	error?: string;
 	message?: string;
@@ -53,14 +53,14 @@ export interface PaginatedResponse<T> {
 export interface ErrorResponse {
 	error: string;
 	code?: string;
-	details?: Record<string, any>;
+	details?: Record<string, unknown>;
 	timestamp: string;
 }
 
 /**
  * Success response
  */
-export interface SuccessResponse<T = any> {
+export interface SuccessResponse<T = unknown> {
 	data: T;
 	message?: string;
 	timestamp: string;
@@ -82,7 +82,7 @@ export interface FileUploadResponse {
  */
 export interface SearchParams {
 	query?: string;
-	filters?: Record<string, any>;
+	filters?: Record<string, unknown>;
 	pagination?: PaginationParams;
 }
 
@@ -95,8 +95,8 @@ export interface AuditEntry {
 	action: string;
 	resource_type: string;
 	resource_id: string;
-	changes?: Record<string, any>;
-	metadata?: Record<string, any>;
+	changes?: Record<string, unknown>;
+	metadata?: Record<string, unknown>;
 	created_at: string;
 }
 
@@ -118,7 +118,7 @@ export interface FeatureFlag {
 	name: string;
 	enabled: boolean;
 	description?: string;
-	conditions?: Record<string, any>;
+	conditions?: Record<string, unknown>;
 }
 
 /**

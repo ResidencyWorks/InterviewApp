@@ -1,4 +1,5 @@
 bullmq
+Lefthook
 openai
 opentelemetry
 posthog

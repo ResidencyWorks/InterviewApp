@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import { validateUploadPermission } from "@/features/auth/application/entitlements/upload-permissions";
 import { validateTextSubmissionRequest } from "@/features/booking/application/upload/schemas";
 import { getSupabaseServiceRoleClient } from "@/infrastructure/config/clients";
+import { PhiScrubber } from "@/shared/security/phi-scrubber";
 
 /**
  * POST handler for text submission
@@ -79,25 +80,33 @@ export async function POST(request: NextRequest) {
 		// Generate recording ID
 		const recordingId = uuidv4();
 		const now = new Date();
+		const recordedAt = now.toISOString();
+		const uploadedAt = now.toISOString();
 		const expiresAt = new Date(now);
 		expiresAt.setDate(expiresAt.getDate() + 30);
+		const expiresAtIso = expiresAt.toISOString();
+
+		// Scrub PHI from textContent before database insert
+		const scrubbedTextContent = PhiScrubber.scrubUserInput(
+			validatedData.textContent,
+		);
 
 		// Create recording record in database
 		const { error: dbError } = await supabase.from("recordings").insert({
 			id: recordingId,
-			user_id: validatedData.userId,
-			session_id: validatedData.sessionId,
-			question_id: validatedData.questionId,
+			user_id: validatedData.userId ?? null,
+			session_id: validatedData.sessionId ?? null,
+			question_id: validatedData.questionId ?? null,
 			response_type: "text",
-			text_content: validatedData.textContent,
+			text_content: scrubbedTextContent,
 			file_name: null,
 			mime_type: null,
 			file_size: null,
 			duration: null,
 			storage_path: null,
-			recorded_at: now,
-			uploaded_at: now,
-			expires_at: expiresAt,
+			recorded_at: recordedAt,
+			uploaded_at: uploadedAt,
+			expires_at: expiresAtIso,
 			status: "completed",
 			upload_attempts: 1,
 			upload_duration_ms: 0,
@@ -122,7 +131,7 @@ export async function POST(request: NextRequest) {
 			data: {
 				recordingId,
 				status: "completed",
-				textLength: validatedData.textContent.length,
+				textLength: scrubbedTextContent.length,
 			},
 		});
 	} catch (error) {

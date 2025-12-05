@@ -7,7 +7,11 @@
 
 import { createHash } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
-import { createContentPack } from "@/features/booking/domain/entities/ContentPack";
+import {
+	type ContentPackData,
+	type ContentPackMetadata,
+	createContentPack,
+} from "@/features/booking/domain/entities/ContentPack";
 import { createContentPackValidator } from "@/features/booking/domain/services/ContentPackValidator";
 import { createFilesystemContentPackRepository } from "@/features/booking/infrastructure/filesystem/ContentPackRepository";
 import { createSupabaseContentPackRepository } from "@/features/booking/infrastructure/supabase/ContentPackRepository";
@@ -313,15 +317,37 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		const parsedContent = contentData as ContentPackData;
+		const parsedVersion = (parsedContent as { version?: unknown }).version;
+		if (
+			typeof parsedVersion !== "string" ||
+			parsedVersion.trim().length === 0
+		) {
+			return NextResponse.json(
+				{
+					error: "VALIDATION_FAILED",
+					message: "Content pack version is missing or invalid",
+					timestamp: new Date().toISOString(),
+				},
+				{ status: 400 },
+			);
+		}
+
+		const rawMetadata = (parsedContent as { metadata?: unknown }).metadata;
+		const parsedMetadata: ContentPackMetadata =
+			rawMetadata && typeof rawMetadata === "object"
+				? (rawMetadata as ContentPackMetadata)
+				: {};
+
 		// Create content pack entity
 		const checksum = createHash("sha256").update(fileContent).digest("hex");
 		const contentPack = createContentPack({
-			version: (contentData as any).version,
+			version: parsedVersion,
 			name: name.trim(),
 			description: description?.trim() || undefined,
 			schemaVersion: "1.0.0", // Default to latest schema version
-			content: contentData as any,
-			metadata: (contentData as any).metadata,
+			content: parsedContent,
+			metadata: parsedMetadata,
 			uploadedBy: user.id,
 			fileSize: file.size,
 			checksum,

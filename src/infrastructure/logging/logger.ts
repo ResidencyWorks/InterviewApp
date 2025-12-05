@@ -4,6 +4,7 @@ import {
 	type LoggerContract,
 	LogLevel,
 } from "@/shared/logger/types";
+import { DataScrubber } from "@/shared/security/data-scrubber";
 /**
  * Structured logger for application-wide logging
  */
@@ -44,12 +45,17 @@ export class Logger implements LoggerContract {
 
 		// Send to Sentry in production
 		if (!this.isDevelopment && error) {
+			// Scrub PII from context metadata before sending to Sentry
+			const scrubbedMetadata = context?.metadata
+				? DataScrubber.scrubObject(context.metadata as Record<string, unknown>)
+				: undefined;
+
 			captureException(error, {
 				tags: {
 					component: context?.component,
 					action: context?.action,
 				},
-				extra: context?.metadata,
+				extra: scrubbedMetadata,
 			});
 		}
 	}

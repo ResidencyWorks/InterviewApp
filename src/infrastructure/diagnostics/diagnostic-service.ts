@@ -217,10 +217,19 @@ export class DiagnosticService {
 			const dbHealth = health.services.find(
 				(service) => service.service === "database",
 			);
+			let version = "unknown";
+
+			if (dbHealth?.details && typeof dbHealth.details === "object") {
+				const maybeVersion = (dbHealth.details as Record<string, unknown>)
+					.version;
+				if (typeof maybeVersion === "string") {
+					version = maybeVersion;
+				}
+			}
 
 			return {
 				connected: dbHealth?.status === "healthy",
-				version: dbHealth?.details?.version || "unknown",
+				version,
 				connectionCount: 0, // Would need database-specific implementation
 				queryCount: 0, // Would need database-specific implementation
 				slowQueries: 0, // Would need database-specific implementation

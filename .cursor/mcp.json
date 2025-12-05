@@ -17,16 +17,9 @@
 			"url": "https://mcp.supabase.com/mcp"
 		},
 		"posthog": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"mcp-remote@latest",
-				"https://mcp.posthog.com/sse",
-				"--header",
-				"Authorization:phc_brrAbclz40ktRCQXXuuFwjn7DnGaQrIpc0rf5QdkR0d"
-			],
-			"env": {
-				"POSTHOG_AUTH_HEADER": "Bearer phx_oTBn2rqlO21QWV496bJ5Vh6pWlfhvpwyqSQSuOkCdr4bFfB"
+			"url": "https://mcp.posthog.com/mcp",
+			"headers": {
+				"Authorization": "Bearer phx_cbwu63ltwwl6ngJMSparLrqXkBwkPu8b82OYhF3fFETD2QV"
 			}
 		},
 		"sequential-thinking": {

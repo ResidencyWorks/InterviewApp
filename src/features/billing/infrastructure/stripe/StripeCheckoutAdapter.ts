@@ -25,7 +25,7 @@ export class StripeCheckoutAdapter implements ICheckoutRepository {
 		}
 
 		this.stripe = new Stripe(secretKey, {
-			apiVersion: "2025-10-29.clover",
+			apiVersion: "2025-11-17.clover",
 		});
 	}
 

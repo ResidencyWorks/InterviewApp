@@ -7,7 +7,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Tables } from "@/types/database";
+import type { Json, Tables } from "@/types/database";
 import {
 	type ContentPack,
 	ContentPackStatus,
@@ -34,8 +34,8 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 				name: contentPack.name,
 				description: contentPack.description ?? null,
 				schema_version: contentPack.schemaVersion,
-				content: contentPack.content as any, // ContentPackData to Json
-				metadata: contentPack.metadata as any, // ContentPackMetadata to Json
+				content: contentPack.content as Json, // ContentPackData to Json
+				metadata: contentPack.metadata as Json, // ContentPackMetadata to Json
 				status: contentPack.status,
 				is_active: contentPack.status === "activated",
 				created_at: contentPack.createdAt.toISOString(),
@@ -207,9 +207,9 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 			if (updates.schemaVersion !== undefined)
 				supabaseUpdates.schema_version = updates.schemaVersion;
 			if (updates.content !== undefined)
-				supabaseUpdates.content = updates.content as any; // ContentPackData to Json
+				supabaseUpdates.content = updates.content as Json; // ContentPackData to Json
 			if (updates.metadata !== undefined)
-				supabaseUpdates.metadata = updates.metadata as any; // ContentPackMetadata to Json
+				supabaseUpdates.metadata = updates.metadata as Json; // ContentPackMetadata to Json
 			if (updates.status !== undefined) supabaseUpdates.status = updates.status;
 			if (updates.activatedAt !== undefined)
 				supabaseUpdates.activated_at =
@@ -374,8 +374,8 @@ export class SupabaseContentPackRepository implements IContentPackRepository {
 			name: data.name,
 			description: data.description ?? undefined,
 			schemaVersion: data.schema_version,
-			content: data.content as any, // Json to ContentPackData
-			metadata: data.metadata as any, // Json to ContentPackMetadata
+			content: data.content as ContentPack["content"], // Json to ContentPackData
+			metadata: data.metadata as ContentPack["metadata"], // Json to ContentPackMetadata
 			status: data.status as ContentPackStatus,
 			createdAt: new Date(data.created_at),
 			updatedAt: new Date(data.updated_at),

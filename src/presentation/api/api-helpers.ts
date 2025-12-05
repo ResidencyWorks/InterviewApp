@@ -44,7 +44,7 @@ export function createErrorResponse(
 	error: string,
 	code?: string,
 	status = 400,
-	details?: Record<string, any>,
+	details?: Record<string, unknown>,
 ): NextResponse {
 	const response: ErrorResponse = {
 		code,
@@ -134,7 +134,7 @@ export function createRateLimitResponse(retryAfter: number): NextResponse {
  */
 export function createServerErrorResponse(
 	message = "Internal server error",
-	details?: Record<string, any>,
+	details?: Record<string, unknown>,
 ): NextResponse {
 	return createErrorResponse(message, "INTERNAL_SERVER_ERROR", 500, details);
 }
@@ -144,7 +144,7 @@ export function createServerErrorResponse(
  * @param request - NextRequest object
  * @returns Promise resolving to parsed JSON or null
  */
-export async function getRequestBody<T = any>(
+export async function getRequestBody<T = unknown>(
 	request: NextRequest,
 ): Promise<T | null> {
 	try {

@@ -280,6 +280,31 @@ docs/
 | Content pack won't load | Verify JSON structure matches sample pack |
 | Spinner never stops | Check server logs; might indicate timeout |
 
+## Support & SLA
+
+### Critical Bug Response SLA
+
+During the initial 30-day launch window, we commit to addressing critical bugs within **72 hours** of report.
+
+**Critical bugs** are defined as:
+- Security vulnerabilities
+- Data loss or corruption
+- Complete service unavailability
+- Critical functionality failures preventing core use cases
+
+**Response Process**:
+1. Bug report received and triaged
+2. Acknowledgment within 24 hours
+3. Resolution or workaround within 72 hours
+4. Post-resolution communication and documentation
+
+**Reporting Critical Bugs**:
+- Email: [Configure your support email]
+- Include: Description, steps to reproduce, environment details, error logs
+- Mark subject line with `[CRITICAL]` for priority handling
+
+**Note**: This SLA applies during the first 30 days post-launch. After the initial window, standard support processes apply.
+
 ## Contact & Support
 
 - **Owner Runbook**: See [docs/owner-runbook.md](docs/owner-runbook.md)

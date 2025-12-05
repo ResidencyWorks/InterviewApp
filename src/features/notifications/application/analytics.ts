@@ -87,7 +87,7 @@ export class AnalyticsService {
 	 * @param properties - Optional properties to include with the event
 	 * @returns void
 	 */
-	track(eventName: string, properties?: Record<string, any>): void {
+	track(eventName: string, properties?: Record<string, unknown>): void {
 		if (!this.posthog) {
 			this.init();
 		}
@@ -106,7 +106,7 @@ export class AnalyticsService {
 	 * @param properties - Optional properties to include with the page view
 	 * @returns void
 	 */
-	trackPageView(pageName?: string, properties?: Record<string, any>): void {
+	trackPageView(pageName?: string, properties?: Record<string, unknown>): void {
 		if (!this.posthog) {
 			this.init();
 		}
@@ -124,7 +124,7 @@ export class AnalyticsService {
 	 * @param properties - Key-value pairs of user properties to set
 	 * @returns void
 	 */
-	setUserProperties(properties: Record<string, any>): void {
+	setUserProperties(properties: Record<string, unknown>): void {
 		if (this.posthog) {
 			this.posthog.people.set(properties);
 		}
@@ -333,7 +333,7 @@ export class AnalyticsService {
 	 * @param context - Optional context data about the error
 	 * @returns void
 	 */
-	trackError(error: string, context?: Record<string, any>): void {
+	trackError(error: string, context?: Record<string, unknown>): void {
 		this.track("error_occurred", {
 			context,
 			error,

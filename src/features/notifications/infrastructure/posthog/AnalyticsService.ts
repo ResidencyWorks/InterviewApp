@@ -12,6 +12,8 @@ import type {
 	IAnalyticsService,
 	UserProperties,
 } from "@/features/notifications/domain/analytics/interfaces/IAnalyticsService";
+import { AnalyticsValidator } from "@/shared/security/analytics-validator";
+import { DataScrubber } from "@/shared/security/data-scrubber";
 
 export class PostHogAnalyticsService implements IAnalyticsService {
 	private posthog: PostHog | null = null;
@@ -74,8 +76,20 @@ export class PostHogAnalyticsService implements IAnalyticsService {
 
 		try {
 			const distinctId = userId || "anonymous";
+
+			// Scrub PII from properties before transmission
+			const scrubbedProperties = properties
+				? DataScrubber.scrubObject(properties)
+				: {};
+
+			// Validate event contains no PII
+			AnalyticsValidator.validateEvent(eventName, {
+				...scrubbedProperties,
+				distinctId,
+			});
+
 			const eventProperties: AnalyticsEventProperties = {
-				...properties,
+				...scrubbedProperties,
 				timestamp: new Date().toISOString(),
 			};
 

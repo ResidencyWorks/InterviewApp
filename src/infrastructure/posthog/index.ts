@@ -8,7 +8,7 @@ import { getPostHogClient } from "../config/clients";
  */
 export function captureEvent(
 	eventName: string,
-	properties: Record<string, any>,
+	properties: Record<string, unknown>,
 	distinctId: string = "system-worker",
 ): void {
 	const client = getPostHogClient();

@@ -72,7 +72,7 @@ export interface UserActivity extends BaseEntity {
 	action: string;
 	resource_type?: string;
 	resource_id?: string;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 	ip_address?: string;
 	user_agent?: string;
 }

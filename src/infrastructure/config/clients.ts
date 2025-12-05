@@ -21,7 +21,7 @@ import {
 
 type SupabaseServerClient = SupabaseClient<Database>;
 
-let supabaseServiceRoleClient: SupabaseClient<any> | null = null;
+let supabaseServiceRoleClient: SupabaseClient<Database> | null = null;
 let redisClient: Redis | null = null;
 let posthogClient: PostHog | null = null;
 
@@ -56,7 +56,7 @@ export async function createSupabaseServerClient(): Promise<SupabaseServerClient
 /**
  * Return a singleton Supabase service-role client for background/infrastructure work
  */
-export function getSupabaseServiceRoleClient(): SupabaseClient<any> | null {
+export function getSupabaseServiceRoleClient(): SupabaseClient<Database> | null {
 	if (!hasSupabaseServiceRole) {
 		return null;
 	}
@@ -65,7 +65,7 @@ export function getSupabaseServiceRoleClient(): SupabaseClient<any> | null {
 		// Use SUPABASE_URL if provided, otherwise fall back to NEXT_PUBLIC_SUPABASE_URL
 		// They are typically the same value
 		const supabaseUrl = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
-		supabaseServiceRoleClient = createSupabaseClient<any>(
+		supabaseServiceRoleClient = createSupabaseClient<Database>(
 			supabaseUrl,
 			env.SUPABASE_SERVICE_ROLE_KEY,
 		);

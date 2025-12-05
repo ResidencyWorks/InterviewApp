@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { healthService } from "@/features/scheduling/infrastructure/monitoring/health-service";
 import { performanceOptimizer } from "@/features/scheduling/infrastructure/scaling/performance-optimizer";
 import { logger } from "@/infrastructure/logging/logger";
+import { contentPackCache } from "@/infrastructure/redis";
 
 /**
  * System status data interface matching the frontend component
@@ -65,14 +66,33 @@ export async function GET(): Promise<NextResponse> {
 			databaseStatus = "disconnected";
 		}
 
-		// Default content pack status (no active content pack)
-		const contentPackStatus = {
+		// Check for active content pack
+		let contentPackStatus: SystemStatusData["contentPack"] = {
 			isActive: false,
-			name: undefined,
-			version: undefined,
-			activatedAt: undefined,
-			activatedBy: undefined,
 		};
+
+		try {
+			const activeContentPack = await contentPackCache.getActive();
+			if (activeContentPack) {
+				// ContentPackData from cache has name and version
+				contentPackStatus = {
+					isActive: true,
+					name: activeContentPack.name,
+					version: activeContentPack.version,
+					// activatedAt and activatedBy are not in ContentPackData cache
+					activatedAt: undefined,
+					activatedBy: undefined,
+				};
+			}
+		} catch (error) {
+			logger.warn("Failed to check content pack status", {
+				component: "SystemStatusAPI",
+				metadata: {
+					errorMessage: error instanceof Error ? error.message : String(error),
+				},
+			});
+			// Continue with default inactive status
+		}
 
 		// Default fallback status (fallback mode is active when no content pack is loaded)
 		const fallbackStatus = {

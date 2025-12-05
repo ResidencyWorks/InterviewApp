@@ -1,3 +1,5 @@
+import { DataScrubber } from "@/shared/security/data-scrubber";
+
 export type AnalyticsEventName =
 	| "drill_started"
 	| "drill_submitted"
@@ -57,6 +59,14 @@ class PostHogAnalyticsClient implements IAnalyticsClient {
 		const distinctId =
 			event.context?.userId || event.context?.sessionId || "anonymous";
 
+		// Scrub PII from event payload before transmission
+		const scrubbedPayload = event.payload
+			? DataScrubber.scrubObject(event.payload)
+			: {};
+		const scrubbedContext = event.context
+			? DataScrubber.scrubObject(event.context as Record<string, unknown>)
+			: {};
+
 		// Build PostHog event payload
 		const payload = {
 			api_key: this.projectKey,
@@ -65,8 +75,8 @@ class PostHogAnalyticsClient implements IAnalyticsClient {
 					distinct_id: distinctId,
 					event: event.name,
 					properties: {
-						...(event.payload || {}),
-						sessionId: event.context?.sessionId,
+						...scrubbedPayload,
+						sessionId: scrubbedContext.sessionId,
 						timestamp: new Date().toISOString(),
 					},
 					timestamp: new Date().toISOString(),

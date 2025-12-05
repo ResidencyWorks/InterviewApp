@@ -12,6 +12,7 @@ import {
 	setUser,
 	withScope,
 } from "@sentry/nextjs";
+import { DataScrubber } from "@/shared/security/data-scrubber";
 import { extractErrorInfo } from "../../domain/errors/LLMErrors";
 import type { AnalyticsConfig } from "../../types/config";
 
@@ -42,6 +43,26 @@ export class SentryMonitoring {
 					if (event.tags?.service !== "llm-feedback-engine") {
 						return null;
 					}
+
+					// Scrub PII from event data before transmission
+					if (event.user) {
+						event.user = DataScrubber.scrubObject(
+							event.user as Record<string, unknown>,
+						) as typeof event.user;
+					}
+
+					if (event.contexts) {
+						event.contexts = DataScrubber.scrubObject(
+							event.contexts as Record<string, unknown>,
+						) as typeof event.contexts;
+					}
+
+					if (event.extra) {
+						event.extra = DataScrubber.scrubObject(
+							event.extra as Record<string, unknown>,
+						) as typeof event.extra;
+					}
+
 					return event;
 				},
 			});
@@ -75,14 +96,20 @@ export class SentryMonitoring {
 			scope.setTag("service", "llm-feedback-engine");
 			scope.setTag("component", "llm-service");
 
-			// Set context data
+			// Set context data (scrubbed)
 			if (context.submissionId) {
 				scope.setTag("submission_id", context.submissionId);
-				scope.setContext("submission", {
+				const submissionContext = {
 					id: context.submissionId,
 					userId: context.userId,
 					questionId: context.questionId,
-				});
+				};
+				scope.setContext(
+					"submission",
+					DataScrubber.scrubObject(
+						submissionContext as Record<string, unknown>,
+					) as typeof submissionContext,
+				);
 			}
 
 			if (context.operation) {

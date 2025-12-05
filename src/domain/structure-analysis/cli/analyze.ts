@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import { access } from "node:fs/promises";
 import { ProjectStructureAnalyzer } from "../services/ProjectStructureAnalyzer";
+import {
+	type AnalysisOptions,
+	DEFAULT_ANALYSIS_OPTIONS,
+} from "../types/analysis-options";
 
 async function main() {
 	const args = process.argv.slice(2);
@@ -34,10 +38,12 @@ async function main() {
 
 	// Run analysis
 	const analyzer = new ProjectStructureAnalyzer();
-	const result = await analyzer.analyze({
+	const analysisOptions: AnalysisOptions = {
+		...DEFAULT_ANALYSIS_OPTIONS,
 		directories: existingDirs,
 		targetDirectories: existingDirs,
-	} as any);
+	};
+	const result = await analyzer.analyze(analysisOptions);
 
 	// Output results
 	console.log(

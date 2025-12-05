@@ -11,7 +11,7 @@ export interface ContentPackSchema {
 	version: string; // Schema version
 	name: string; // Schema name
 	description?: string; // Schema description
-	schema: z.ZodSchema<any>; // The actual Zod schema
+	schema: z.ZodSchema<unknown>; // The actual Zod schema
 	createdAt: Date; // When schema was created
 	isActive: boolean; // Whether this schema is currently active
 	supportedVersions: string[]; // Content pack versions this schema supports
@@ -23,7 +23,7 @@ export interface ContentPackSchema {
 export function createContentPackSchema(
 	version: string,
 	name: string,
-	schema: z.ZodSchema<any>,
+	schema: z.ZodSchema<unknown>,
 	supportedVersions: string[],
 	description?: string,
 ): ContentPackSchema {

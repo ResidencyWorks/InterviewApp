@@ -25,7 +25,7 @@ export interface MagicLinkRequest {
 	email: string;
 	options?: {
 		emailRedirectTo?: string;
-		data?: Record<string, any>;
+		data?: Record<string, unknown>;
 	};
 }
 

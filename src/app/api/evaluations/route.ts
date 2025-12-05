@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServerAuthService } from "@/features/auth/application/services/server-auth-service";
 import { getServerDatabaseService } from "@/infrastructure/db/database-service";
+import { PhiScrubber } from "@/shared/security/phi-scrubber";
 
 const SaveEvaluationSchema = z.object({
 	id: z.uuid().optional(),
@@ -56,13 +57,18 @@ export async function POST(request: NextRequest) {
 			| "COMPLETED"
 			| "FAILED";
 
+		// Scrub PHI from response_text before database insert
+		const scrubbedResponseText = payload.response_text
+			? PhiScrubber.scrubUserInput(payload.response_text)
+			: payload.response_text;
+
 		const db = await getServerDatabaseService();
 
 		const insertPayload = {
 			id: payload.id,
 			user_id: payload.user_id || user.id,
 			content_pack_id: payload.content_pack_id ?? null,
-			response_text: payload.response_text,
+			response_text: scrubbedResponseText,
 			response_audio_url: payload.response_audio_url,
 			response_type: payload.response_type,
 			duration_seconds: payload.duration_seconds ?? null,

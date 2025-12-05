@@ -6,6 +6,7 @@
 
 import { PostHog } from "posthog-node";
 import type { AnalyticsServiceConfig } from "@/features/notifications/domain/analytics/interfaces/IAnalyticsService";
+import { DataScrubber } from "@/shared/security/data-scrubber";
 import { getPostHogClient } from "../config/clients";
 import { env, hasPostHog } from "../config/environment";
 
@@ -118,11 +119,14 @@ export async function trackEvent(
 	userId?: string,
 ): Promise<void> {
 	try {
+		// Scrub PII from properties before transmission
+		const scrubbedProperties = DataScrubber.scrubObject(properties);
+
 		client.capture({
 			distinctId: userId || "anonymous",
 			event: eventName,
 			properties: {
-				...properties,
+				...scrubbedProperties,
 				timestamp: new Date().toISOString(),
 			},
 		});

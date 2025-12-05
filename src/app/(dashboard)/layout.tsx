@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { ContentPackMissingBanner } from "@/components/content/ContentPackMissingBanner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -119,6 +120,9 @@ export default function DashboardLayout({
 					</div>
 				</div>
 			</header>
+
+			{/* Content Pack Missing Banner */}
+			<ContentPackMissingBanner />
 
 			{/* Main Content */}
 			<main className="flex-1">{children}</main>

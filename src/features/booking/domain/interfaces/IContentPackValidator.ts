@@ -94,7 +94,7 @@ export interface ValidationContext {
 	userId?: string;
 	requestId?: string;
 	timestamp?: Date;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 }
 
 /**
